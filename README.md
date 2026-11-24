@@ -9,7 +9,23 @@ Explanation in the top bar for the notation, mathematics, and worked examples.
 Its source is [explanation.qmd](docs/explanation.qmd)
 ([rendered HTML](docs/explanation.html)).
 
-![Fireball sigil in the Constellations theme](docs/fireball-sigil.png)
+## Gallery
+
+![Sigil workbench showing the spell picker, appearance controls, and a gold Fireball sigil in the Obsidian theme](docs/gallery/workbench.webp)
+
+Fireball in two themes shows how the same spell can look different without
+changing what it encodes. Moonward and Tideglass are custom spells with
+different attributes and drawing settings. All four sigils were exported
+from Sigil with rank filtering turned off.
+
+| Fireball · Constellations | Fireball · Obsidian |
+| --- | --- |
+| ![Fireball sigil in the Constellations theme](docs/fireball-sigil.png) | ![Fireball drawn as gold curves on dark volcanic stone](docs/gallery/fireball-obsidian.webp) |
+| **Moonward · Divine** | **Tideglass · Tattoo** |
+| ![Moonward drawn as an angular gold sigil on ivory parchment](docs/gallery/moonward-divine.webp) | ![Tideglass drawn in tapered charcoal ink on a warm skin tone](docs/gallery/tideglass-tattoo.webp) |
+
+- **Moonward:** rank 5, Divine, touch, 1 hour, light, spirit damage, emanation.
+- **Tideglass:** rank 7, Primal, 60 feet, sustained, water, cold damage, cone.
 
 ## Development and verification
 
