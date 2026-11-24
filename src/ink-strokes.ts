@@ -1,3 +1,4 @@
+import { DRAWING_DEFAULTS } from './constants';
 import { styleNumber } from './drawing-style';
 import type { DrawingSettings, Point, PathContext } from './drawing-style';
 interface InkPoint extends Point {
@@ -209,7 +210,12 @@ export function strokeInk(
     return;
   }
   const wobble = styleNumber(settings.inkWobble, 0.5, 0, 3);
-  const pressure = styleNumber(settings.inkPressure, 0.35, 0, 2.5);
+  const pressure = styleNumber(
+    settings.inkPressure,
+    DRAWING_DEFAULTS.inkPressure,
+    0,
+    2.5,
+  );
   const feather = styleNumber(settings.inkFeather, 0.3, 0, 1);
   const flattened = flattenInkPath(trace);
   ctx.save();

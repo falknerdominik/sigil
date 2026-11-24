@@ -93,9 +93,11 @@ their order affects their encoded bits. See
 
 The sidebar has three scroll destinations: **Spell**, **Style**, and
 **Notation**. Spell contains the picker, name and card details. Style contains
-Appearance, Ink & Ornament, and Layout & Guides; Notation contains the three
-independently collapsible layers. The complete Style group is reparented once
-before Notation during controller setup, preserving its original controls.
+Appearance, Visual Options, Ink & Ornament, and Layout & Guides. Visual Options
+groups the styling controls for Edges, Orbits, and Spell Fingerprint. Notation
+contains the spell inputs in three independently collapsible layers.
+The complete Style group is reparented once before Notation during controller
+setup, preserving its original controls.
 
 The sticky workbench navigation uses buttons with `aria-current="location"`,
 not tabs or routes. Above 850 px it scrolls the sidebar; at smaller widths it
@@ -198,8 +200,8 @@ for the preview, normal PNG, transparent PNG and spell-card exports.
 Each layer's visual options include a 0–1 opacity multiplier; 0 hides its
 encoded strokes and 1 preserves the theme's original opacity. Encoding and
 geometry fitting are unaffected.
-Layers 1–3, their visual options, Ink & Ornament and Layout & Guides are
-collapsed initially. The latter two sections belong to Style.
+Visual Options and Ink & Ornament are expanded initially. Layout & Guides and
+the three Notation panels are collapsed.
 Layer 3 defaults to 1 px line markers and a 0.45 opacity multiplier.
 Style's Ink & Ornament section has a Corner ornaments toggle (on by
 default), independent of randomized decorations. It controls the fixed corner
@@ -213,6 +215,7 @@ retain their own switches. The same settings apply to previews and spell cards.
 Only Layers 1 and 2, on by default, restricts feather-and-ink treatment to
 edges and orbit strokes. All Layer 3 marker shapes stay crisp.
 Its checked state is retained while Feather & ink strokes is disabled.
+Nib taper / stroke start defaults to 200%.
 Ten base themes supply distinct materials and marginal motifs; the 31 trait
 presets still inherit their base theme. Texture and randomized ornament are
 deterministic. Tattoo uses fine charcoal ink, nodes without opaque background

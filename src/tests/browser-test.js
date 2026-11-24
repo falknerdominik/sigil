@@ -467,8 +467,9 @@ async function navigationTest(browser) {
     assert.deepEqual(await page.locator('.control-panel > section').evaluateAll(sections =>
       sections.map(section => section.id)), ['spellSection', 'designSection', 'notationSection']);
     assert.equal(await page.locator('#spellSection #spellCardDetails').count(), 1);
-    for (const id of ['inkworkSection', 'transformsSection'])
-      assert.equal(await page.locator(`#designSection > #${id}`).count(), 1);
+    assert.deepEqual(await page.locator('#designSection > details').evaluateAll(sections =>
+      sections.map(section => [section.id, section.open])),
+    [['visualOptionsSection', true], ['inkworkSection', true], ['transformsSection', false]]);
     for (const id of ['layer1Panel', 'moreAttributes', 'layer3Panel'])
       assert.equal(await page.locator(`#notationSection > #${id}`).count(), 1);
     assert.equal(await page.locator('.preview-toolbar #exportPng, .preview-toolbar #exportTransparentPng, .preview-toolbar #exportSpellCard').count(), 3);
@@ -498,13 +499,14 @@ async function navigationTest(browser) {
     assert.equal(await page.locator('#colorLines').inputValue(), '#e4f4ff');
     await selectTheme(page, 'obsidian');
 
-    await page.locator('#inkworkSection > summary').click();
     assert.equal(await page.locator('#inkWobble').isDisabled(), true);
     assert.equal(await page.locator('#inkOnlyLayers1And2').isDisabled(), true);
     assert.equal(await page.locator('#inkOnlyLayers1And2').isChecked(), true);
     assert.equal(await page.locator('#inkWobble').inputValue(), '0.5');
     assert.equal(await page.locator('#inkWobbleValue').textContent(), '0.5 px');
     assert.equal(await page.evaluate(() => window.eval('drawing.settings.inkWobble')), 0.5);
+    assert.equal(await page.locator('#inkPressure').inputValue(), '2');
+    assert.equal(await page.locator('#inkPressureValue').textContent(), '200%');
     await page.locator('label[for="handDrawnInk"]').click();
     assert.equal(await page.locator('#inkWobble').isEnabled(), true);
     await page.locator('label[for="inkOnlyLayers1And2"]').click();
@@ -532,7 +534,6 @@ async function navigationTest(browser) {
     await page.locator('#vertexLabelMode').selectOption('numbers');
     for (const id of ['layer1Panel', 'moreAttributes', 'layer3Panel']) {
       await page.locator(`#${id} > summary`).click();
-      await page.locator(`#${id} details > summary`).click();
     }
     await page.locator('#baseShape').selectOption('quadratic');
     assert.equal(await page.locator('#baseBend').isVisible(), true);
@@ -646,12 +647,6 @@ async function smokeTest(page) {
   // Catalogue capture explicitly selects Fireball for the historical pixel fixtures.
   assert.equal(await page.locator('#spellName').inputValue(), 'Fireball');
 
-  for (const id of ['inkworkSection', 'transformsSection']) {
-    const section = page.locator(`.design-group > #${id}`);
-    assert.equal(await section.count(), 1, 'Presentation sections must belong to Theme');
-    assert.equal(await section.getAttribute('open'), null);
-  }
-  await page.locator('#inkworkSection > summary').click();
   const cornerOrnaments = page.locator('#cornerOrnaments');
   assert.equal(await cornerOrnaments.isChecked(), true);
   assert.equal(await page.locator('#backgroundOrnaments').isChecked(), true);
@@ -670,25 +665,25 @@ async function smokeTest(page) {
   await selectTheme(page, originalTheme);
   await page.locator('#inkworkSection > summary').click();
 
-  for (const [layer, control] of [
-    ['layer1Panel', 'connectionStyle'], ['moreAttributes', 'orbitWidth'], ['layer3Panel', 'identityTickShape']
-  ]) {
+  for (const layer of ['layer1Panel', 'moreAttributes', 'layer3Panel']) {
     const panel = page.locator(`#${layer}`);
     assert.equal(await panel.getAttribute('open'), null);
     assert.equal(await panel.locator('.layer-panel-body').isVisible(), false);
     await panel.locator(':scope > summary').click();
     assert.equal(await panel.locator('.layer-panel-body').isVisible(), true);
-    const options = page.locator(`#${layer} details`).filter({has:page.locator(`#${control}`)});
-    assert.equal(await options.locator('summary').textContent(), 'Visual options');
-    assert.equal(await options.getAttribute('open'), null);
-    assert.equal(await page.locator(`#${control}`).isVisible(), false);
-    await options.locator('summary').click();
-    assert.equal(await page.locator(`#${control}`).isVisible(), true);
-    await options.locator('summary').click();
-    assert.equal(await page.locator(`#${control}`).isVisible(), false);
-    await options.locator('summary').click();
-    assert.equal(await page.locator(`#${control}`).isVisible(), true);
   }
+  const visual = page.locator('#visualOptionsSection');
+  const visualSummary = visual.locator(':scope > summary');
+  const visualFields = ['connectionStyle', 'orbitWidth', 'orbitLineStyle', 'identityTickShape']
+    .map(id => visual.locator(`#${id}`));
+  assert.equal(await visualSummary.textContent(), 'VISUAL OPTIONS');
+  assert.deepEqual(await visual.getByRole('heading', {includeHidden:true}).allTextContents(),
+    ['LAYER 1. EDGES', 'LAYER 2. ORBITS', 'LAYER 3. SPELL FINGERPRINT']);
+  for (const field of visualFields) assert.equal(await field.isVisible(), true);
+  await visualSummary.click();
+  for (const field of visualFields) assert.equal(await field.isVisible(), false);
+  await visualSummary.click();
+  for (const field of visualFields) assert.equal(await field.isVisible(), true);
   const layout = page.locator('#transformsSection');
   assert.equal(await layout.getAttribute('open'), null);
   assert.equal(await page.locator('#rotation').isVisible(), false);
@@ -702,10 +697,8 @@ async function smokeTest(page) {
   assert.equal(await page.evaluate(() => Boolean(
     document.getElementById('polygonSides').compareDocumentPosition(document.getElementById('baseShape')) &
       Node.DOCUMENT_POSITION_FOLLOWING)), true, 'Polygon contour must precede base curve');
-  for (const [layer, id] of [
-    ['layer1Panel', 'edgeOpacity'], ['moreAttributes', 'orbitOpacity'], ['layer3Panel', 'identityMarkerOpacity']
-  ]) {
-    const control = page.locator(`#${layer} details #${id}`);
+  for (const id of ['edgeOpacity', 'orbitOpacity', 'identityMarkerOpacity']) {
+    const control = visual.locator(`#${id}`);
     assert.equal(await control.getAttribute('min'), '0');
     assert.equal(await control.getAttribute('max'), '1');
     const initial = await control.inputValue();
@@ -875,8 +868,6 @@ async function smokeTest(page) {
   await selectTheme(page, 'plain');
   assert.equal(await page.locator('#colorLines').inputValue(), '#325c7f');
 
-  await page.locator('#layer1Panel > summary').click();
-  await page.locator('#layer1Panel details summary').click();
   await layout.locator('summary').click();
   await page.locator('#dotStyle').selectOption('diamond');
   await page.locator('#vertexSize').fill('1.5');
@@ -885,8 +876,9 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#dotStyle').inputValue(), 'diamond');
   assert.equal(await page.locator('#vertexSize').inputValue(), '1.5');
   await page.locator('label[for="mirror"]').click();
-  await page.locator('#inkworkSection > summary').click();
   await page.locator('label[for="cornerOrnaments"]').click();
+  await page.locator('label[for="handDrawnInk"]').click();
+  await page.locator('#inkPressure').fill('1');
   await page.locator('#resetSpell').click();
   assert.equal(await page.locator('#designTheme').inputValue(), 'constellations');
   assert.equal(await page.locator('#spellName').inputValue(), 'Scrying');
@@ -894,6 +886,9 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#mirror').isChecked(), false);
   assert.equal(await page.locator('#inkWobble').inputValue(), '0.5');
   assert.equal(await page.evaluate(() => window.eval('drawing.settings.inkWobble')), 0.5);
+  assert.equal(await page.locator('#inkPressure').inputValue(), '2');
+  assert.equal(await page.locator('#inkPressureValue').textContent(), '200%');
+  assert.equal(await page.evaluate(() => window.eval('drawing.settings.inkPressure')), 2);
   assert.equal(await page.locator('#identityTickWidth').inputValue(), '1');
   assert.equal(await page.locator('#identityMarkerOpacity').inputValue(), '0.45');
   assert.equal(await cornerOrnaments.isChecked(), true);

@@ -357,7 +357,7 @@ export const DRAWING_DEFAULTS: DrawingSettings = {
   handDrawnInk: false,
   inkOnlyLayers1And2: true,
   inkWobble: 0.5,
-  inkPressure: 0.35,
+  inkPressure: 2,
   inkFeather: 0.3,
   rankComplexity: true,
   base: 'polygon',

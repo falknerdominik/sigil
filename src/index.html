@@ -94,9 +94,72 @@
 <div class="field-label"><label for="effectTrait">Primary trait</label><span class="k-chip">k=5</span></div>
 <select id="effectTrait"></select>
 </div>
-<details class="advanced-panel">
-<summary>Visual options</summary>
+</div></details><details class="field-group layer-panel layer2-panel" id="moreAttributes"><summary class="layer-panel-summary"><span class="group-label">LAYER 2. ORBITS</span></summary><div class="layer-panel-body">
+<p class="field-help">Each orbit combines up to four parts: 24&deg;, 48&deg;, 96&deg; and 192&deg;. All four make a complete circle.</p>
+<div class="additional-fields">
+<div class="field"><div class="field-label"><label for="damage">Damage type</label><span class="k-chip">+24&deg;</span></div><select id="damage"></select></div>
+<div class="field"><div class="field-label"><label for="area">Area shape</label><span class="k-chip">+48&deg;</span></div><select id="area"></select></div>
+<div class="field"><div class="field-label"><label for="castActions">Casting time</label><span class="k-chip">+96&deg;</span></div><select id="castActions"></select></div>
+<div class="field"><div class="field-label"><label for="castTraits">Casting traits</label><span class="k-chip">+192&deg;</span></div><select id="castTraits"></select></div>
+</div>
+</div></details>
+<details class="field-group layer-panel layer3-panel" id="layer3Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 3. SPELL FINGERPRINT</span></summary><div class="layer-panel-body">
+<p class="field-help">The fingerprint encodes the source / variant ID in binary: a mark is 1, a gap is 0.</p>
+<div class="field">
+<label for="spellVariant">Spell ID / source ID</label>
+<input id="spellVariant" maxlength="70" placeholder="e.g. aon-1461 or a custom ID" spellcheck="false" type="text" value=""/>
+</div>
+<p class="field-help">Bundled spells use their source / variant IDs automatically. Custom spells receive an editable generated ID. Keep it distinct for same-named spells.</p>
+</div></details>
+</section>
+<p class="render-error" hidden="" id="renderError" role="alert"></p>
+<section aria-labelledby="styleHeading" class="field-group design-group editor-section" id="designSection">
+<h3 class="group-label" id="styleHeading">STYLE</h3>
+<div class="group-label" id="designHeading">APPEARANCE</div>
+<div class="field" hidden>
+<label for="designTheme">Appearance</label>
+<select id="designTheme">
+<option value="plain">Plain - manuscript parchment</option>
+<option selected="" value="constellations">Constellations - celestial atlas</option>
+<option value="blueprint">Blueprint - drafting paper</option>
+<option value="obsidian">Obsidian - volcanic inlay</option>
+<option value="herbarium">Herbarium - specimen journal</option>
+<option value="tattoo">Tattoo - fine blackwork on skin</option>
+<optgroup label="Pathfinder traditions">
+<option value="arcane">Arcane - aether lattice</option>
+<option value="divine">Divine - illuminated ivory</option>
+<option value="occult">Occult - lunar ritual</option>
+<option value="primal">Primal - fern canopy</option>
+</optgroup>
+<optgroup label="Primary trait themes"><option value="trait-none">Unbound / no trait</option><option value="trait-healing">Healing</option><option value="trait-mental">Mental</option><option value="trait-illusion">Illusion</option><option value="trait-fire">Fire</option><option value="trait-cold">Cold</option><option value="trait-electricity">Electricity</option><option value="trait-acid">Acid</option><option value="trait-poison">Poison</option><option value="trait-water">Water</option><option value="trait-air">Air</option><option value="trait-earth">Earth</option><option value="trait-plant">Plant</option><option value="trait-wood">Wood</option><option value="trait-metal">Metal</option><option value="trait-light">Light</option><option value="trait-darkness">Darkness</option><option value="trait-polymorph">Polymorph</option><option value="trait-teleportation">Teleportation</option><option value="trait-summon">Summon</option><option value="trait-force">Force</option><option value="trait-spirit">Spirit</option><option value="trait-vitality">Vitality</option><option value="trait-void">Void</option><option value="trait-incapacitation">Incapacitation</option><option value="trait-emotion">Emotion</option><option value="trait-detection">Detection</option><option value="trait-shadow">Shadow</option><option value="trait-sonic">Sonic</option><option value="trait-attack">Attack</option><option value="trait-other">Other</option></optgroup></select>
+</div>
+<div class="theme-browser">
+<div class="theme-categories" role="group" aria-label="Theme categories">
+<button type="button" id="surfacesCategory" data-theme-group="surfaces" aria-pressed="true" aria-controls="surfacesThemes">Surfaces</button>
+<button type="button" id="traditionsCategory" data-theme-group="traditions" aria-pressed="false" aria-controls="traditionsThemes">Traditions</button>
+<button type="button" id="traitsCategory" data-theme-group="traits" aria-pressed="false" aria-controls="traitsThemes">Traits</button>
+</div>
+<div id="themeChoices" role="radiogroup" aria-labelledby="designHeading">
+<div class="theme-choices" id="surfacesThemes"></div>
+<div class="theme-choices" id="traditionsThemes" hidden></div>
+<div class="theme-choices" id="traitsThemes" hidden></div>
+</div>
+</div>
+<p class="field-help" id="designDescription">A silver star chart with a sweeping galactic haze and celestial coordinates.</p>
+<div aria-labelledby="paletteHeading" class="palette-settings">
+<div class="palette-heading" id="paletteHeading">Theme colors</div>
+<div class="palette-grid">
+<label for="colorBackground">Background <input aria-label="Theme background color" id="colorBackground" type="color" value="#0e1c35"/></label>
+<label for="colorLines">Connections <input aria-label="Theme connections color" id="colorLines" type="color" value="#e4f4ff"/></label>
+<label for="colorVertices">Vertices <input aria-label="Theme vertices color" id="colorVertices" type="color" value="#f4faff"/></label>
+</div>
+<button class="btn-import palette-reset" id="resetThemeColors" type="button">Reset theme colors</button>
+</div>
+<details class="field-group layer-panel layer-style-panel" id="visualOptionsSection" open>
+<summary class="layer-panel-summary"><span class="group-label">VISUAL OPTIONS</span></summary>
+<div class="layer-panel-body">
 <div class="advanced-content">
+<h4 class="layer-style-heading">LAYER 1. EDGES</h4>
 <div class="field slider-field">
 <div class="field-label"><label for="edgeOpacity">Layer 1 opacity</label><span class="slider-value" id="edgeOpacityValue">1</span></div>
 <input id="edgeOpacity" max="1" min="0" step="0.05" type="range" value="1"/>
@@ -169,42 +232,25 @@
 <option selected="" value="alternate">Alternating</option>
 </select>
 </div>
-</div>
-</details>
-</div></details><details class="field-group layer-panel layer2-panel" id="moreAttributes"><summary class="layer-panel-summary"><span class="group-label">LAYER 2. ORBITS</span></summary><div class="layer-panel-body">
-<p class="field-help">Each orbit combines up to four parts: 24&deg;, 48&deg;, 96&deg; and 192&deg;. All four make a complete circle.</p>
-<div class="additional-fields">
-<div class="field"><div class="field-label"><label for="damage">Damage type</label><span class="k-chip">+24&deg;</span></div><select id="damage"></select></div>
-<div class="field"><div class="field-label"><label for="area">Area shape</label><span class="k-chip">+48&deg;</span></div><select id="area"></select></div>
-<div class="field"><div class="field-label"><label for="castActions">Casting time</label><span class="k-chip">+96&deg;</span></div><select id="castActions"></select></div>
-<div class="field"><div class="field-label"><label for="castTraits">Casting traits</label><span class="k-chip">+192&deg;</span></div><select id="castTraits"></select></div>
-</div>
-<details class="advanced-panel">
-<summary>Visual options</summary>
-<div class="advanced-content"><div class="field slider-field">
+<h4 class="layer-style-heading">LAYER 2. ORBITS</h4>
+<div class="field slider-field">
 <div class="field-label"><label for="orbitOpacity">Layer 2 opacity</label><span class="slider-value" id="orbitOpacityValue">1</span></div>
 <input id="orbitOpacity" max="1" min="0" step="0.05" type="range" value="1"/>
-</div><div class="field slider-field">
+</div>
+<div class="field slider-field">
 <div class="field-label"><label for="orbitWidth">Orbit thickness</label><span class="slider-value" id="orbitWidthValue">1.25 px</span></div>
 <input id="orbitWidth" max="3" min="0.5" step="0.25" type="range" value="1.25"/>
-</div><div class="field">
+</div>
+<div class="field">
 <label for="orbitLineStyle">Orbit line type</label>
 <select id="orbitLineStyle">
 <option selected="" value="solid">Solid</option>
 <option value="dashed">Dashed</option>
 <option value="dotted">Dotted</option>
 </select>
-</div></div></details></div></details>
-<details class="field-group layer-panel layer3-panel" id="layer3Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 3. SPELL FINGERPRINT</span></summary><div class="layer-panel-body">
-<p class="field-help">The fingerprint encodes the source / variant ID in binary: a mark is 1, a gap is 0.</p>
-<div class="field">
-<label for="spellVariant">Spell ID / source ID</label>
-<input id="spellVariant" maxlength="70" placeholder="e.g. aon-1461 or a custom ID" spellcheck="false" type="text" value=""/>
 </div>
-<p class="field-help">Bundled spells use their source / variant IDs automatically. Custom spells receive an editable generated ID. Keep it distinct for same-named spells.</p>
-<details class="advanced-panel">
-<summary>Visual options</summary>
-<div class="advanced-content"><div class="field">
+<h4 class="layer-style-heading">LAYER 3. SPELL FINGERPRINT</h4>
+<div class="field">
 <label for="identityTickShape">Marker shape</label>
 <select id="identityTickShape">
 <option selected="" value="line">Lines</option>
@@ -266,52 +312,11 @@
 </div><div class="field slider-field">
 <div class="field-label"><label for="identityMarkerOpacity">Layer 3 opacity</label><span class="slider-value" id="identityMarkerOpacityValue">0.45</span></div>
 <input id="identityMarkerOpacity" max="1" min="0" step="0.05" type="range" value="0.45"/>
-</div><p class="field-help">Mixed uses all three marker styles. Large markers may overlap.</p></div></details></div></details>
-</section>
-<p class="render-error" hidden="" id="renderError" role="alert"></p>
-<section aria-labelledby="styleHeading" class="field-group design-group editor-section" id="designSection">
-<h3 class="group-label" id="styleHeading">STYLE</h3>
-<div class="group-label" id="designHeading">APPEARANCE</div>
-<div class="field" hidden>
-<label for="designTheme">Appearance</label>
-<select id="designTheme">
-<option value="plain">Plain - manuscript parchment</option>
-<option selected="" value="constellations">Constellations - celestial atlas</option>
-<option value="blueprint">Blueprint - drafting paper</option>
-<option value="obsidian">Obsidian - volcanic inlay</option>
-<option value="herbarium">Herbarium - specimen journal</option>
-<option value="tattoo">Tattoo - fine blackwork on skin</option>
-<optgroup label="Pathfinder traditions">
-<option value="arcane">Arcane - aether lattice</option>
-<option value="divine">Divine - illuminated ivory</option>
-<option value="occult">Occult - lunar ritual</option>
-<option value="primal">Primal - fern canopy</option>
-</optgroup>
-<optgroup label="Primary trait themes"><option value="trait-none">Unbound / no trait</option><option value="trait-healing">Healing</option><option value="trait-mental">Mental</option><option value="trait-illusion">Illusion</option><option value="trait-fire">Fire</option><option value="trait-cold">Cold</option><option value="trait-electricity">Electricity</option><option value="trait-acid">Acid</option><option value="trait-poison">Poison</option><option value="trait-water">Water</option><option value="trait-air">Air</option><option value="trait-earth">Earth</option><option value="trait-plant">Plant</option><option value="trait-wood">Wood</option><option value="trait-metal">Metal</option><option value="trait-light">Light</option><option value="trait-darkness">Darkness</option><option value="trait-polymorph">Polymorph</option><option value="trait-teleportation">Teleportation</option><option value="trait-summon">Summon</option><option value="trait-force">Force</option><option value="trait-spirit">Spirit</option><option value="trait-vitality">Vitality</option><option value="trait-void">Void</option><option value="trait-incapacitation">Incapacitation</option><option value="trait-emotion">Emotion</option><option value="trait-detection">Detection</option><option value="trait-shadow">Shadow</option><option value="trait-sonic">Sonic</option><option value="trait-attack">Attack</option><option value="trait-other">Other</option></optgroup></select>
-</div>
-<div class="theme-browser">
-<div class="theme-categories" role="group" aria-label="Theme categories">
-<button type="button" id="surfacesCategory" data-theme-group="surfaces" aria-pressed="true" aria-controls="surfacesThemes">Surfaces</button>
-<button type="button" id="traditionsCategory" data-theme-group="traditions" aria-pressed="false" aria-controls="traditionsThemes">Traditions</button>
-<button type="button" id="traitsCategory" data-theme-group="traits" aria-pressed="false" aria-controls="traitsThemes">Traits</button>
-</div>
-<div id="themeChoices" role="radiogroup" aria-labelledby="designHeading">
-<div class="theme-choices" id="surfacesThemes"></div>
-<div class="theme-choices" id="traditionsThemes" hidden></div>
-<div class="theme-choices" id="traitsThemes" hidden></div>
+</div><p class="field-help">Mixed uses all three marker styles. Large markers may overlap.</p>
 </div>
 </div>
-<p class="field-help" id="designDescription">A silver star chart with a sweeping galactic haze and celestial coordinates.</p>
-<div aria-labelledby="paletteHeading" class="palette-settings">
-<div class="palette-heading" id="paletteHeading">Theme colors</div>
-<div class="palette-grid">
-<label for="colorBackground">Background <input aria-label="Theme background color" id="colorBackground" type="color" value="#0e1c35"/></label>
-<label for="colorLines">Connections <input aria-label="Theme connections color" id="colorLines" type="color" value="#e4f4ff"/></label>
-<label for="colorVertices">Vertices <input aria-label="Theme vertices color" id="colorVertices" type="color" value="#f4faff"/></label>
-</div>
-<button class="btn-import palette-reset" id="resetThemeColors" type="button">Reset theme colors</button>
-</div>
-<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes.</p><div class="hand-ink-settings">
+</details>
+<details class="field-group inkwork-group layer-panel" id="inkworkSection" open><summary class="layer-panel-summary"><span class="group-label">INK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes.</p><div class="hand-ink-settings">
 <label class="toggle-row" for="handDrawnInk"><span>Feather &amp; ink strokes</span><input id="handDrawnInk" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <div class="hand-ink-parameters" id="handInkParameters">
 <label class="toggle-row" for="inkOnlyLayers1And2"><span>Only Layers 1 and 2</span><input checked="" id="inkOnlyLayers1And2" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
@@ -320,8 +325,8 @@
 <input id="inkWobble" max="3" min="0" step="0.1" type="range" value="0.5"/>
 </div>
 <div class="field slider-field">
-<div class="field-label"><label for="inkPressure">Nib taper / stroke start</label><span class="slider-value" id="inkPressureValue">35%</span></div>
-<input id="inkPressure" max="2.5" min="0" step="0.05" type="range" value="0.35"/>
+<div class="field-label"><label for="inkPressure">Nib taper / stroke start</label><span class="slider-value" id="inkPressureValue">200%</span></div>
+<input id="inkPressure" max="2.5" min="0" step="0.05" type="range" value="2"/>
 </div>
 <div class="field slider-field">
 <div class="field-label"><label for="inkFeather">Ink feathering</label><span class="slider-value" id="inkFeatherValue">30%</span></div>

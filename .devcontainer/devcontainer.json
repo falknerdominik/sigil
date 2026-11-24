@@ -1,5 +1,5 @@
 {
-  "name": "Sigil · Pathfinder 2e",
+  "name": "Sigil",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."
