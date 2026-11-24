@@ -1,106 +1,56 @@
 # Sigil
 
-**Create sigils for Pathfinder spells.** Sigil is a free, offline, unofficial Pathfinder 2e spell-sigil editor. Browse **1,400 bundled spells** from Legacy and Remaster, build a custom spell, and export its sigil or a themed spell card. No account or network connection is needed.
+Offline Pathfinder 2e spell-sigil editor built with TypeScript and Canvas 2D.
+Includes 1,400 spells, custom spell editing, and PNG, transparent PNG, and
+spell-card exports. No runtime dependencies or network connection are required.
 
-![Fireball sigil in the Constellations theme, with rank-based filtering enabled](docs/fireball-sigil.png)
+Open [standalone.html](standalone.html) in a browser. See
+[Sigil Encoding](docs/explanation.qmd) for the notation, mathematics, and worked
+examples ([rendered HTML](docs/explanation.html)).
 
-*Example: Fireball with the Constellations theme and rank-filtered view. Generated directly from the offline app; not concept art.*
-
-## Get started
-
-1. Open **`standalone.html`** in a modern browser. All source data and styles are embedded.
-2. Under **Spell**, search or scroll **Find a spell**, or select **Custom spell**. Edit the name and optional **Spell card details** here.
-3. Use **Style** for appearance, inkwork and layout. Under **Notation**, expand the three layer panels to adjust attributes and **Visual options**. The workbench navigation scrolls between sections without resetting values or closing panels.
-4. Use **Export PNG** to download the current sigil at 1800 × 1500 pixels, **Transparent PNG** for the same sigil without the theme background or ornaments, or **Export Spell Card** to include the spell's text and details.
-
-The spell-card export uses the current theme across the whole card. It includes the sigil, name, nine mechanical attributes as labeled chips, the catalogue traits, and the full description. You can edit the card traits and description under **Spell card details** without changing the encoded sigil.
-
-The editor starts with **Scrying**. **Reset** restores this example and the drawing defaults while keeping saved theme colors.
-
-## What the layers mean
-
-| Layer | Encodes | Appearance |
-|---|---|---|
-| **1 · Vertices** | Rank, Tradition, Range, Duration, Primary Trait | Connections between vertices using one of five connection distances per attribute |
-| **2 - Orbits** | Damage, Area, Casting time, Casting traits | One circle or arc per active vertex; all four active bits make a full circle |
-| **3 · Spell Fingerprint** | Source/variant ID only | Binary markers (lines, dots, squares, or mixed) along the contour |
-
-The spell fingerprint encodes the ID, not a hash of the spell's contents. Editing mechanics or card text does not change it unless the ID changes.
-
-Sigil uses **11 encoding vertices**, five Layer 1 attribute groups, and four additional attributes represented by vertex-centered orbits. The **Filter details by rank** setting hides some non-Rank vertex connections and complete orbits for lower-rank spells, but never changes their stored bits or the complete Layer 3 ID. Switch it off to see full notation; filter details remain beside the setting in Layer 1.
-
-For the mathematics, worked examples and decoding caveats, read **[How a Sigil Is Calculated](docs/explanation.qmd)**. For the codebase structure and drawing contract, see [Architecture](docs/ARCHITECTURE.md).
-
-## Customize the appearance
-
-- **Style → Appearance:** Browse **Surfaces**, **Traditions**, and **Traits** for all 41 themes, each with independent editable colors. Choose manuscript parchment, a celestial atlas, drafting paper, volcanic inlay, a specimen journal, an aether lattice, illuminated ivory, lunar ritual, a fern canopy, or Tattoo blackwork, plus 31 Primary Trait presets. Theme selection does not change the spell's mechanical traits.
-- **Tattoo:** Fine charcoal ink on subtly textured skin. Use the Background color to adjust the skin tone; **Transparent PNG** exports just the sigil, without skin or ornaments.
-- **Notation → Visual options (per layer):** Layer 1 contains polygon contours, base curves, connection styles, and vertex sizing; Layers 2 and 3 contain orbit and fingerprint marker styling. Each layer has an independent 0–1 opacity control. Fingerprint line markers default to 1 px and 0.45 opacity.
-- **Style → Ink & Ornament:** Optional feather-and-ink strokes, a directional nib-pressure taper from 0–250%, irregularity, and feathering. **Only Layers 1 and 2** starts enabled and keeps the Spell Fingerprint crisp. **Background ornaments** and **Corner ornaments** start enabled and toggle independently; background colors and textures remain. **Randomized decorations** start disabled. Reroll changes decorations without changing the spell.
-- **Style → Layout & Guides:** Rotation, horizontal stretch, mirroring, construction guides, and vertex annotations. This section and **Ink & Ornament** start collapsed, as do the layer panels and their **Visual options**.
-- **Light / Dark:** Changes the editor interface only, never the canvas theme or exported artwork. The preference is saved locally when browser storage is available.
-
-The original attribute controls and source IDs remain available, and the edition selector is intentionally absent: **the spell picker contains both editions**.
+![Fireball sigil in the Constellations theme](docs/fireball-sigil.png)
 
 ## Development and verification
 
-Sigil runs in the browser without runtime dependencies. For development, use Node.js 22 (22.13 or newer) or 24+, then install tools with `npm ci`; application code uses TypeScript. See [Architecture](docs/ARCHITECTURE.md) for the source layout. Run `npm run build` after source changes; do not edit generated files directly.
+Use Node.js 22 (22.13 or newer) or 24+.
 
-Use `npm run format` after editing, then `npm run check` before building or
-submitting changes. Prettier uses two-space indentation, single quotes,
-semicolons and trailing commas; ESLint uses the recommended TypeScript rules.
-Generated files are excluded. The calculation audit reads the canonical example
-and its numerical results directly from the calculation guide.
-After changing that guide, run `npm run docs:example` to refresh its annotated
-picture, then `quarto render docs/explanation.qmd` to rebuild the HTML reference.
+```sh
+npm ci
+npm run dev
+```
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start the Node.js development server at `http://localhost:4173` (serves `src/index.html`) |
-| `npm run compile` | Type-check and compile the TypeScript modules |
-| `npm run format` | Format maintained TypeScript, the calculation audit and lint configuration |
-| `npm run format:check` | Verify formatting without editing files |
-| `npm run lint` | Run ESLint with recommended TypeScript rules |
-| `npm run typecheck` | Type-check without emitting files |
-| `npm run check` | Run type checking, linting, formatting verification and all `npm test` tests |
-| `npm run build` | Generate `data/spell-data.js` and the offline `standalone.html` using Node.js |
-| `npm test` | Run renderer, catalogue, spell-card, and calculation audit tests |
-| `npm run test:browser` | Rebuild and check the offline app; compare pixels on the baseline platform |
-| `npm run test:visual` | Require the controlled platform and compare rendering and export pixels |
-| `npm run test:math` | Check mathematical formulas and documented caveats |
-| `npm run docs:example` | Regenerate the guide's annotated example with Playwright Chromium |
-| `npm run optimize` | Analyze categorical attribute sets with Node.js |
+The development server runs at http://localhost:4173. Before submitting changes:
 
-For browser tests, run `npm ci` and `npx playwright install --only-shell chromium` first.
-The pixel baseline requires the controlled environment described in
-[Architecture](docs/ARCHITECTURE.md); the app itself still needs no runtime dependencies.
+```sh
+npm run format
+npm run check
+npm run build
+```
 
-Source provenance is recorded in [`SPELL-SOURCES.md`](docs/SPELL-SOURCES.md) and [`CREDITS-AND-LICENSES.md`](docs/CREDITS-AND-LICENSES.md).
+`check` runs type checking, ESLint, Prettier verification, and automated tests.
+`build` regenerates the embedded catalogue and standalone application; do not
+edit generated files directly.
+
+For browser tests, install Chromium with
+`npx playwright install --only-shell chromium`, then run `npm run test:browser`.
+See [Architecture](docs/ARCHITECTURE.md) for module contracts, controlled pixel
+tests, and documentation-build instructions.
+
+For GitHub Pages, select GitHub Actions as the publishing source. The
+[workflow](.github/workflows/pages.yml) verifies, builds, and deploys `main`.
 
 ## AI use
 
-AI was used to implement this project, primarily GPT-6.1 Sol and DeepSeek V4.
-The concept and idea, mathematics, and notation extensions were developed by
-me (human), building on the spell-writing work credited below. Implementation of
-the drawing logic and HTML relied heavily on AI assistance. The code that
-generates the notation was written manually and/or reviewed by humans.
-
-## GitHub Pages
-
-Select **GitHub Actions** in **Settings > Pages > Build and deployment**.
-The [workflow](.github/workflows/pages.yml) runs `npm ci`, `npm run check` and `npm run build`
-on pushes to `main` or manual runs, then publishes `index.html` and
-`standalone.html`. Deployment is restricted to `main`; no custom secrets are needed.
-
-**Licensing note:** Sigil's source code is included, but **no standalone software license has yet been selected for it**; publishing the source does not by itself grant open-source redistribution rights. Pathfinder materials and the original guide have separate rights. Review the source-specific notices before distributing the bundled spell texts.
+Implementation was AI-assisted, primarily using GPT-6.1 Sol and DeepSeek V4,
+especially for drawing code and HTML. The concept, mathematics, and notation
+extensions are human-designed. Notation-generation code was written manually
+and/or reviewed by humans.
 
 ## Copyright and attribution
 
-**Pathfinder spell names, rules text, and descriptions © Paizo Inc. and other applicable rightsholders.** Pathfinder is a trademark of Paizo Inc.
-
-> Sigil uses trademarks and/or copyrights owned by Paizo Inc., used under [Paizo's Community Use Policy](https://paizo.com/licenses/communityuse). We are expressly prohibited from charging you to use or access this content. Sigil is not published, endorsed, or specifically approved by Paizo. For more information about Paizo Inc. and Paizo products, visit [paizo.com](https://paizo.com).
-
-The underlying spell-writing idea is credited to **The Gorilla of Destiny**, author of [*The Spell Writing Guide*](https://www.gorillaofdestiny.com/books-and-compendiums) and the [SpellWriting project](https://github.com/GorillaOfDestiny/SpellWriting). Sigil is not affiliated with or endorsed by the original guide's author.
-
-Sigil is free to use; donations through [Buy me a coffee](https://www.buymeacoffee.com/dominikfalkner) are optional. See [`CREDITS-AND-LICENSES.md`](docs/CREDITS-AND-LICENSES.md) for additional copyright and licensing details.
-
+Pathfinder content © Paizo Inc. and other credited rightsholders. Sigil is
+unofficial and is not endorsed by Paizo or The Gorilla of Destiny, whose
+Spell Writing Guide inspired the notation. Code licensing and catalogue
+redistribution rights remain unresolved. See
+[Credits and licenses](docs/CREDITS-AND-LICENSES.md) and the
+[source index](docs/SPELL-SOURCES.md).

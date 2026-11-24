@@ -136,6 +136,12 @@ rebuilds the standalone page and runs the offline browser checks. The other file
 `data/` contain analysis results and a historical control manifest, not runtime
 inputs to this build.
 
+The calculation guide's input table, numerical results, and fingerprint form the
+canonical worked example read by the audit. After editing the guide, run
+`npm run docs:example` to regenerate its annotated picture using Playwright
+Chromium, then `quarto render docs/explanation.qmd` to rebuild the self-contained
+HTML reference. The example is a synthetic spell, not a published spell.
+
 ### Using calculation without a canvas
 
 After `npm run compile`, run this example from the repository root:
@@ -201,11 +207,6 @@ presets still inherit their base theme. Texture and randomized ornament are
 deterministic. Tattoo uses fine charcoal ink, nodes without opaque background
 fills, and subtle skin grain; its skin tone uses the existing background
 color control. Transparent PNG omits materials and ornaments.
-
-The existing calculation audit checks representative formulas, not every
-statement in the guide. The guide's worked example was also checked against
-the editor's actual options; it is a synthetic combination, not a claim about
-a published spell.
 
 ### Browser baseline
 
