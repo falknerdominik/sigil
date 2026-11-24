@@ -1,0 +1,341 @@
+---
+title: "How a Sigil Is Calculated"
+subtitle: "A concise reference for the standalone editor"
+from: markdown-smart
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    include-in-header:
+      text: |
+        <style>
+        @media print {
+          @page { size: A4; margin: 16mm; }
+          body { font-size: 10pt; line-height: 1.35; }
+          #quarto-content { display: block !important; }
+          main { width: auto !important; max-width: none !important; margin: 0; }
+          h1 { font-size: 22pt; }
+          h2 { font-size: 15pt; }
+          h3 { font-size: 12pt; }
+          h2, h3 { break-after: avoid; }
+          table, pre, mjx-container { break-inside: avoid; }
+          table { font-size: 9pt; }
+          th, td { padding: .2rem .3rem !important; }
+          #what-the-editor-displays { break-inside: avoid; }
+          #worked-example-tables { display: flex !important; break-inside: avoid; }
+          #worked-example-tables > div:first-child { width: 44%; }
+          #worked-example-tables > div:last-child { width: 56%; }
+          pre code { font-size: 8pt; }
+          code { color: inherit; background: none; }
+          a { color: inherit; text-decoration: none; }
+          #TOC, .anchorjs-link, .code-copy-button { display: none !important; }
+        }
+        #worked-example-tables {
+          display: grid;
+          grid-template-columns: 1fr 1.25fr;
+          gap: 1rem;
+          align-items: start;
+        }
+        #worked-example-tables > div { min-width: 0; }
+        @media screen and (max-width: 700px) {
+          #worked-example-tables { display: block; }
+        }
+        #attribute-optimization th:first-child { width: 40%; }
+        </style>
+execute:
+  eval: false
+---
+
+The goal is to create **sigils**, meaning spell drawings, for Pathfinder Second
+Edition spells. Each drawing represents selected game mechanics and the spell's
+source ID.
+
+Putting every attribute into vertex-to-vertex connections made the drawings
+too crowded. The notation is split into layers to keep them readable: five
+attributes use connections, four use orbits, and the ID has its own markers.
+These are the layers shown under **Notation** in the editor:
+
+| Layer | On the canvas | Encodes |
+|---|---|---|
+| **1 - Vertices** | Connections between numbered points | Five primary fields |
+| **2 - Orbits** | An arc or ring around a point | Four secondary fields |
+| **3 - Spell fingerprint** | Ordered marks and gaps | Source / variant ID |
+
+Sigil independently adapts [*The Spell Writing Guide*](https://www.gorillaofdestiny.com/books-and-compendiums)
+and [SpellWriting](https://github.com/GorillaOfDestiny/SpellWriting), by The Gorilla
+of Destiny. Orbits, the fingerprint, and rank filtering are Sigil extensions.
+The original work is background, not required reading.
+
+## Spell data and preprocessing
+
+The bundled [data/spell.json](../data/spell.json) contains **1,400 spells** with
+links to [Archives of Nethys](https://2e.aonprd.com/Spells.aspx). Each record
+retains its `nethysUrl`, source book and page, and description. The
+[source index](SPELL-SOURCES.md) lists the publications represented.
+
+Before bundling, one duplicate record each for Light, Invisibility, and
+Clairvoyance was removed from the original 1,403-record list. When loaded,
+the catalogue parser converts raw fields into the editor's categories:
+rank, exact tradition combinations, damage, area, range, casting time,
+duration, Primary Trait, and casting traits. For bundled records, the
+Archives of Nethys page ID becomes the source / variant ID, such as `aon-1662`.
+The original descriptions and source references remain separate from these
+calculated categories.
+
+## From fields to bits
+
+With eleven vertices, connection steps 1 through 5 give five different families
+of undirected connections. Steps 6 through 10 would repeat those families in
+reverse. This gives each primary field its own connection rule without assigning
+the same vertex pair to two fields.
+
+The sizing rule uses the five primary fields (`m = 5`):
+
+$$
+n = \operatorname{nextPrime}(2m+1) = 11.
+$$
+
+`nextPrime` means the smallest prime number at least as large as its input.
+The prime size also makes the rotation groups below equal in size.
+
+A **binary word** is a sequence of zeros and ones. Both mechanical layers use
+one bit per vertex, read left to right from index `0` to `10`: `1` is active,
+`0` inactive. The editor's optional number labels show these as `01` to `11`.
+`none` bypasses the dictionary and gives only zeros.
+
+A **binary necklace** groups words that are rotations of one another. Keep the
+lexically smallest rotation from each group: compare digits from left to right,
+with `0` before `1`. Exclude the all-zero and all-one words. Because 11 is prime,
+every remaining group has 11 members:
+
+$$
+N = \frac{2^{11}-2}{11} = 186.
+$$
+
+Sort representatives by `|active-bit count - 4|`, then lexically. This favors
+four active bits for readability; it is a heuristic, not a proven optimum.
+For an option's zero-based index `q` in its field's list, **excluding `none`**,
+take dictionary entry `q` and rotate left by
+
+$$
+r(q) = (7q+3)\bmod 11.
+$$
+
+This rotation formula is specific to the shipped layout. Reproducing its words
+requires the same ordered dictionary and option lists, including catalogue-added
+Range choices. Combined traditions are one option for the exact subset, such as
+`Arcane+Primal`.
+
+## Calculate the layers
+
+### Layer 1 - Vertices
+
+Each primary field has a step `k`:
+
+| Attribute | Step `k` |
+|---|---:|
+| Rank | 1 |
+| Tradition | 2 |
+| Range | 3 |
+| Duration | 4 |
+| Primary Trait | 5 |
+
+For each active bit at vertex `i`, add a **chord**: an undirected connection
+
+$$
+\{i,\ (i+k)\bmod 11\}.
+$$
+
+`mod 11` wraps after vertex `10`. The five steps partition all
+`11 * 10 / 2 = 55` vertex pairs without overlap.
+
+### Layer 2 - Orbits
+
+At each vertex `i`, combine that position's four secondary bits (`b`):
+
+$$
+\begin{aligned}
+U_i &= b_{\text{Damage},i} + 2b_{\text{Area},i}
+     + 4b_{\text{Casting time},i} + 8b_{\text{Casting traits},i},\\
+\theta_i &= \frac{360^\circ U_i}{15} = 24^\circ U_i.
+\end{aligned}
+$$
+
+The weights distinguish all sixteen combinations. `U = 0` gives no orbit;
+`1..14` gives a partial arc; `15` gives a complete **360-degree circle**.
+Completion requires all four bits **at the same vertex**, not simply four
+non-`none` selections. Each orbit is centered on its vertex.
+
+### Layer 3 - Spell fingerprint
+
+Serialize `["spell-id", variant]` as compact JSON, with the source / variant ID
+as a string (empty if absent), and convert it to UTF-8 bytes. Prefix these with
+their byte count as an unsigned 16-bit integer. Write the header and each byte
+most significant bit first:
+
+$$
+L = 16 + 8B,\qquad B \leq 192,
+$$
+
+Here `B` counts the **complete JSON payload's bytes**, not ID characters.
+Every bit has a marker slot: `1` is marked, `0` is a gap. This stores the ID,
+not a name or mechanics hash; reusing an ID reuses its fingerprint.
+
+## What the editor displays {#what-the-editor-displays}
+
+**Filter details by rank** is enabled by default. After encoding and before
+drawing, it keeps all `R` Rank chords and the full fingerprint. Other chords and
+**whole orbits** form an optional pool of size `M`. The visible mechanical count is
+
+$$
+V = R + \lceil fM\rceil.
+$$
+
+The ceiling brackets mean **round upward**: show `f * M` optional elements,
+rounded up to a whole element, plus all Rank chords.
+
+The fraction `f` is **20%** for cantrips, **40%** for ranks 1-3, **60%** for 4-6,
+**80%** for 7-8, and **100%** for 9-10. Turning the filter off sets `f = 1`.
+Selection takes one item per round from Tradition, vertex-sorted orbits, Range,
+Duration, and Primary Trait pools, skipping exhausted pools.
+
+The renderer fits the complete geometry to the chosen contour, then draws the
+visible view. Style controls (including curvature, orbit size, colors, ink, and
+marker shape) change appearance, not calculated data. Hidden details remain
+encoded, but a **filtered or styled image is not guaranteed to be losslessly
+decodable**.
+
+## Worked example
+
+This is a constructed example, not a published spell. Enter these values in
+**Notation**; `none` means no selected value for that field.
+
+The first rows of the results trace Acid from its option index to active
+vertices. The remaining rows count the complete geometry and the cantrip-filtered
+view; arrays are in vertex order.
+
+:::: {#worked-example-tables}
+::: {}
+<!-- worked-example-input -->
+| Field | Value |
+|---|---|
+| Spell rank | cantrip |
+| Tradition | Arcane |
+| Range category | Self |
+| Duration | Instant |
+| Primary trait | Healing |
+| Damage type | Acid |
+| Area shape | none |
+| Casting time | 1 action |
+| Casting traits | none |
+| Source / variant ID | demo-1 |
+<!-- /worked-example-input -->
+
+**Fingerprint bits** for `["spell-id","demo-1"]`: the first line is the length
+header; the remaining lines are payload bytes. Whitespace is for readability.
+
+```{.text #worked-example-fingerprint}
+0000000000010101
+01011011 00100010 01110011
+01110000 01100101 01101100
+01101100 00101101 01101001
+01100100 00100010 00101100
+00100010 01100100 01100101
+01101101 01101111 00101101
+00110001 00100010 01011101
+```
+
+:::
+::: {}
+<!-- worked-example-results -->
+| Property | Result |
+|---|---|
+| Option index (Acid) | `0` |
+| Dictionary entry | `"00000001111"` |
+| Left rotation | `3` |
+| Non-none bits | `"00001111000"` |
+| None bits | `"00000000000"` |
+| Active vertices | `[4, 5, 6, 7]` |
+| Rank chords | `4` |
+| Other chords | `16` |
+| Orbits | `4` |
+| Orbit units | `[5, 5, 5, 5]` |
+| Orbit sweeps (degrees) | `[120, 120, 120, 120]` |
+| Fingerprint payload bytes | `21` |
+| Fingerprint bits | `184` |
+| Optional elements | `20` |
+| Optional elements shown | `4` |
+| Visible mechanical elements | `8` |
+| Total mechanical elements | `24` |
+<!-- /worked-example-results -->
+:::
+::::
+
+### Follow the calculation
+
+1. **Choose the word.** Acid is the first non-`none` Damage option, so its
+   zero-based index is `q = 0`. Take dictionary entry `0`, then rotate left by
+   `(7 * 0 + 3) mod 11 = 3`: move the first three digits to the end. Read the
+   resulting word from left to right to find the active vertices. Every other
+   non-`none` selection here also has option index `0`, so it gets the same word.
+2. **Connect the vertices.** Each active vertex adds one chord for each primary
+   field, using that field's step. Rank has step `1`, giving connections
+   **4 to 5, 5 to 6, 6 to 7, and 7 to 8**.
+3. **Calculate the orbits.** At each active vertex, Damage contributes `1` and
+   Casting time contributes `4`. Area and Casting traits contribute zero.
+   Thus `U = 1 + 4 = 5` and the sweep is `5 * 24 = 120` degrees.
+4. **Apply the display filter.** Keep all four Rank chords and round
+   `0.2 * (16 + 4)` upward to four optional elements: eight visible mechanical
+   elements in total. The fingerprint remains complete.
+
+![The worked example with the rank filter off, showing all four orbits. Small numbers are encoding indices (0-10); optional editor labels run from 01 to 11. Colored highlights and badges are annotations, not extra encoded elements.](calculation-example.png){#fig-calculation-example fig-alt="Annotated sigil showing encoding vertex 4, the Rank connection from 4 to 5, a 120-degree orbit, and the outer spell fingerprint marks."}
+
+## Select optimal attributes for pathfinder spells {#attribute-optimization}
+
+The chosen nine attributes balance spell distinctiveness with a manageable
+drawing. The following search explains the selection; the earlier sections
+explain how those attributes are drawn.
+
+The selection search used the original **1,403 records**. Rank, Tradition,
+Damage, Area, Range, Casting time, and Duration were required, with at most
+nine categorical fields. It tested all **21** two-field additions from spell
+type, defense, targets, rarity, Primary Trait, Casting traits, and heightening,
+plus **2,002** unrestricted nine-of-fourteen combinations.
+
+A spell is **uniquely identified within the analysed catalogue** when no other
+record has the same combination of selected attribute values. This does not
+guarantee uniqueness for future or custom spells. Names, editions, IDs, and
+descriptions are not compared. **Distinct combinations** counts the different
+attribute combinations; **matching pairs** counts pairs of spells with identical
+combinations, counting each pair once. The search first maximized uniquely
+identified spells, then preferred fewer matching pairs when that count was tied.
+
+| Fields | Uniquely identified spells | Distinct combinations | Matching pairs |
+|---|---:|---:|---:|
+| Required seven | 1,098 | 1,222 | 307 |
+| Seven + heightening | 1,215 | 1,294 | 170 |
+| **Seven + Primary Trait + Casting traits** | **1,288** | **1,338** | **87** |
+| Seven + Casting traits + heightening | 1,287 | 1,340 | 76 |
+| Best unrestricted nine | 1,332 | 1,362 | 55 |
+| All fourteen | 1,352 | 1,374 | 38 |
+
+The chosen nine fields uniquely identify **91.8%** of spells in this dataset.
+Adding Casting traits and heightening instead gives fewer matching pairs but
+uniquely identifies one fewer spell. The unrestricted nine-field choice omits
+required Damage, Area, and Range, so it does not meet the requirements. Even
+all fourteen fields cannot distinguish every spell by mechanics alone.
+
+## Verification
+
+`npm run test:math` reads this example's input table, results, and fingerprint
+directly and checks the implementation, including all sixteen orbit masks.
+It does not rerun attribute selection. For that, use `npm run optimize`
+(optionally `-- /path/to/spell.json`); JSON output is available after
+`npm run compile` via `node src/tools/optimize-attributes.js --json`.
+
+Implementation: [encoding](../src/spell-encoding.ts),
+[calculation](../src/spell-calculation.ts),
+[options](../src/constants.ts), and [drawing](../src/spell-drawing.ts).
+Regenerate the annotated picture from this same example with
+`npm run docs:example` (requires Playwright Chromium).

@@ -11,17 +11,17 @@ const {
 const { SpellDrawing } = require('../generated/spell-drawing.cjs');
 const root = path.resolve(__dirname, '..', '..');
 const calculation = fs.readFileSync(
-  path.join(root, 'docs', 'HOW-IT-IS-CALCULATED.qmd'),
+  path.join(root, 'docs', 'explanation.qmd'),
   'utf8',
 );
+assert.match(calculation, /^[\x00-\x7F]*$/, 'The guide source must be ASCII');
 const exampleInput = calculation.match(
-  /```\{\.json #worked-example\}\r?\n([\s\S]*?)\r?\n```/,
+  /<!-- worked-example-input -->\r?\n([\s\S]*?)\r?\n<!-- \/worked-example-input -->/,
 );
 assert(
   exampleInput,
   'The guide must contain its machine-readable worked example',
 );
-const guideSpell = JSON.parse(exampleInput[1]);
 const exampleResults = calculation.match(
   /<!-- worked-example-results -->\r?\n([\s\S]*?)\r?\n<!-- \/worked-example-results -->/,
 );
@@ -160,11 +160,27 @@ const guideCalculation = new SpellCalculation(
     SPELL_ATTRIBUTES.find((attribute) => attribute.id === id),
   ),
 );
-const guideNotation = guideCalculation.encode(guideSpell);
 const guideAttributes = [
   ...guideCalculation.chordAttributes,
   ...guideCalculation.orbitAttributes,
 ];
+const exampleFields = new Map(
+  guideAttributes.map((attribute) => [attribute.label, attribute.id]),
+);
+exampleFields.set('Source / variant ID', 'variant');
+const guideSpell = {};
+for (const row of exampleInput[1].trim().split(/\r?\n/).slice(2)) {
+  const cells = row.match(/^\| ([^|]+?) \| ([^|]+?) \|$/);
+  assert(cells, `Invalid worked-example input row: ${row}`);
+  const id = exampleFields.get(cells[1]);
+  assert(id, `Unknown worked-example field: ${cells[1]}`);
+  assert(
+    !Object.hasOwn(guideSpell, id),
+    `Duplicate worked-example field: ${id}`,
+  );
+  guideSpell[id] = cells[2];
+}
+const guideNotation = guideCalculation.encode(guideSpell);
 assert.deepEqual(
   Object.keys(guideSpell).sort(),
   [...guideAttributes.map((attribute) => attribute.id), 'variant'].sort(),
@@ -187,7 +203,24 @@ const guideRank = guideNotation.chords.find((group) => group.id === 'rank');
 const guidePayloadBytes = new TextEncoder().encode(
   JSON.stringify(['spell-id', guideSpell.variant]),
 ).length;
+const guideDamage = guideCalculation.orbitAttributes.find(
+  (attribute) => attribute.id === 'damage',
+);
+const guideOptionIndex = guideDamage.options
+  .filter((option) => option.value !== 'none')
+  .findIndex((option) => option.value === guideSpell.damage);
+const guideDictionaryEntry = SpellEncoding.preferredDictionary(
+  guideNotation.vertexCount,
+)[guideOptionIndex];
+const guideRotation = (7 * guideOptionIndex + 3) % guideNotation.vertexCount;
+assert.equal(
+  SpellEncoding.rotate(guideDictionaryEntry, guideRotation),
+  guideDamage.lookup.get(guideSpell.damage),
+);
 const actualResults = {
+  'Option index (Acid)': guideOptionIndex,
+  'Dictionary entry': guideDictionaryEntry,
+  'Left rotation': guideRotation,
   'Non-none bits': guideCalculation.chordAttributes[0].lookup.get(
     guideSpell.rank,
   ),
@@ -240,6 +273,19 @@ assert.equal(guideNotation.identityBits.length, 16 + 8 * guidePayloadBytes);
 assert.equal(
   SpellCalculation.decodeIdentity(guideNotation.identityBits).variant,
   guideSpell.variant,
+);
+const exampleFingerprint = calculation.match(
+  /```\{\.text #worked-example-fingerprint\}\r?\n([\s\S]*?)\r?\n```/,
+);
+assert(
+  exampleFingerprint,
+  'The guide must show its worked-example fingerprint bits',
+);
+assert.match(exampleFingerprint[1], /^[01\s]+$/);
+assert.equal(
+  exampleFingerprint[1].replace(/\s/g, ''),
+  guideNotation.identityBits,
+  'Documented fingerprint bits must match the encoded example',
 );
 const identityBits = full.identityBits;
 const byteLength = new TextEncoder().encode(
@@ -332,6 +378,25 @@ assert(
     readme.indexOf('## Development and verification'),
 );
 assert.match(readme, /© Paizo Inc/);
+if (process.argv.includes('--render-example')) {
+  require('./render-calculation-example')({
+    complete: guideNotation,
+    visible: SpellCalculation.applyRankComplexity(
+      guideNotation,
+      guideSpell,
+      false,
+    ),
+  }).catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+} else {
+  assert.match(calculation, /!\[[^\]]+\]\(calculation-example\.png\)/);
+  const exampleImage = fs.readFileSync(
+    path.join(root, 'docs', 'calculation-example.png'),
+  );
+  assert.equal(exampleImage.toString('hex', 0, 8), '89504e470d0a1a0a');
+}
 console.log(
-  'PASS - 11 vertices; 55 chord pairs; 186 necklaces; option rotations; all 16 orbit masks; ID UTF-8; paths; rank tiers; nib profile; calculation reference and README image.',
+  'PASS - 11 vertices; 55 chord pairs; 186 necklaces; option rotations; all 16 orbit masks; ID UTF-8; paths; rank tiers; nib profile; worked-example trace; guide and README images.',
 );

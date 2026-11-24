@@ -87,7 +87,7 @@ Source/variant IDs are unique within a catalogue, and picker IDs are derived
 from them. Missing or colliding source IDs receive deterministic IDs based on
 normalized spell data. Extra range options come from the active catalogue;
 their order affects their encoded bits. See
-[the calculation reference](HOW-IT-IS-CALCULATED.qmd) for the formulas.
+[the calculation reference](explanation.qmd) for the formulas.
 
 ### Editor navigation
 

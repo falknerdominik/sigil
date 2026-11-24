@@ -29,7 +29,7 @@ The spell fingerprint encodes the ID, not a hash of the spell's contents. Editin
 
 Sigil uses **11 encoding vertices**, five Layer 1 attribute groups, and four additional attributes represented by vertex-centered orbits. The **Filter details by rank** setting hides some non-Rank vertex connections and complete orbits for lower-rank spells, but never changes their stored bits or the complete Layer 3 ID. Switch it off to see full notation; filter details remain beside the setting in Layer 1.
 
-For the mathematics, worked examples and decoding caveats, read **[How Sigil Is Calculated](docs/HOW-IT-IS-CALCULATED.qmd)**. For the codebase structure and drawing contract, see [Architecture](docs/ARCHITECTURE.md).
+For the mathematics, worked examples and decoding caveats, read **[How a Sigil Is Calculated](docs/explanation.qmd)**. For the codebase structure and drawing contract, see [Architecture](docs/ARCHITECTURE.md).
 
 ## Customize the appearance
 
@@ -51,6 +51,8 @@ submitting changes. Prettier uses two-space indentation, single quotes,
 semicolons and trailing commas; ESLint uses the recommended TypeScript rules.
 Generated files are excluded. The calculation audit reads the canonical example
 and its numerical results directly from the calculation guide.
+After changing that guide, run `npm run docs:example` to refresh its annotated
+picture, then `quarto render docs/explanation.qmd` to rebuild the HTML reference.
 
 | Command | Purpose |
 |---|---|
@@ -66,6 +68,7 @@ and its numerical results directly from the calculation guide.
 | `npm run test:browser` | Rebuild and check the offline app; compare pixels on the baseline platform |
 | `npm run test:visual` | Require the controlled platform and compare rendering and export pixels |
 | `npm run test:math` | Check mathematical formulas and documented caveats |
+| `npm run docs:example` | Regenerate the guide's annotated example with Playwright Chromium |
 | `npm run optimize` | Analyze categorical attribute sets with Node.js |
 
 For browser tests, run `npm ci` and `npx playwright install --only-shell chromium` first.
