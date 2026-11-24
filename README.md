@@ -74,6 +74,14 @@ The pixel baseline requires the controlled environment described in
 
 Source provenance is recorded in [`SPELL-SOURCES.md`](docs/SPELL-SOURCES.md) and [`CREDITS-AND-LICENSES.md`](docs/CREDITS-AND-LICENSES.md).
 
+## AI use
+
+AI was used to implement this project, primarily GPT-6.1 Sol and DeepSeek V4.
+The concept and idea, mathematics, and notation extensions were developed by
+me (human), building on the spell-writing work credited below. Implementation of
+the drawing logic and HTML relied heavily on AI assistance. The code that
+generates the notation was written manually and/or reviewed by humans.
+
 ## GitHub Pages
 
 Select **GitHub Actions** in **Settings > Pages > Build and deployment**.
