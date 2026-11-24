@@ -374,10 +374,9 @@ assert.equal(
   'README illustration must be a real PNG',
 );
 assert(
-  readme.indexOf('## Copyright and attribution') >
+  readme.indexOf('## Licensing and credits') >
     readme.indexOf('## Development and verification'),
 );
-assert.match(readme, /© Paizo Inc/);
 if (process.argv.includes('--render-example')) {
   require('./render-calculation-example')({
     complete: guideNotation,

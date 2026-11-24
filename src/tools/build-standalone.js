@@ -19,6 +19,18 @@ const embedded = '/* Embedded offline spell library: generated from data/spell.j
   'window.DEFAULT_SPELL_CATALOG = ' + JSON.stringify(spells).replace(/</g, '\\u003c') + ';\n';
 fs.writeFileSync(path.join(root, 'data/spell-data.js'), embedded);
 let html = read('src/index.html');
+for (const [file, type] of [
+  ['LICENSE', 'text/plain'],
+  ['NOTICE.md', 'text/markdown'],
+  ['docs/CREDITS.md', 'text/markdown'],
+  ['LICENSES/ORC.pdf', 'application/pdf'],
+]) {
+  const link = `href="../${file}" download`;
+  if (html.split(link).length !== 2)
+    throw new Error(`Expected one download link for ${file}`);
+  const contents = fs.readFileSync(path.join(root, file)).toString('base64');
+  html = html.replace(link, `href="data:${type};base64,${contents}" download="${path.basename(file)}"`);
+}
 let frames = 0;
 html = html.replace(/<iframe\b(?=[^>]*\bid="encodingFrame")[^>]*>/g, tag => {
   frames++;

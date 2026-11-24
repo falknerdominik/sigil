@@ -54,11 +54,10 @@ especially for drawing code and HTML. The concept, mathematics, and notation
 extensions are human-designed. Notation-generation code was written manually
 and/or reviewed by humans.
 
-## Copyright and attribution
+## Licensing and credits
 
-Pathfinder content © Paizo Inc. and other credited rightsholders. Sigil is
-unofficial and is not endorsed by Paizo or The Gorilla of Destiny, whose
-Spell Writing Guide inspired the notation. Code licensing and catalogue
-redistribution rights remain unresolved. See
-[Credits and licenses](docs/CREDITS-AND-LICENSES.md) and the
-[source index](docs/SPELL-SOURCES.md).
+Sigil's original code is [GPL-3.0-or-later](LICENSE). The bundled Pathfinder
+catalogue is not GPL-licensed: the [ORC License](LICENSES/ORC.pdf) applies
+only to covered rules material and does not clear the mixed catalogue for
+redistribution. See the [licensing notice](NOTICE.md),
+[credits](docs/CREDITS.md), and [source index](docs/SPELL-SOURCES.md).

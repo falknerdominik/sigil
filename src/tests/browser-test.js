@@ -735,7 +735,10 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#creditsDialog').isVisible(), true);
   assert.equal(await page.locator('#creditsLead').textContent(), 'Sigil is a free, unofficial Pathfinder fan project.');
   assert.match(await page.locator('#creditsSpellWritingHeading + p').textContent(), /independent adaptation and extension/);
-  assert.match(await page.locator('.credits-policy-notice').textContent(), /Paizo/);
+  const credits = page.locator('#creditsDialog');
+  assert.match(await credits.getByRole('link', { name: 'GNU GPL v3 or later' }).getAttribute('href'), /^data:text\/plain;base64,/);
+  assert.match(await credits.getByRole('link', { name: 'ORC License', exact: true }).getAttribute('href'), /^data:application\/pdf;base64,/);
+  assert.equal(await credits.getByRole('link', { name: 'paizo.com/licenses/communityuse' }).getAttribute('href'), 'https://paizo.com/licenses/communityuse');
   await page.locator('#creditsClose').click();
   assert.equal(await page.locator('#creditsDialog').isVisible(), false);
   await page.evaluate(() => {
