@@ -5,7 +5,7 @@ Includes 1,400 spells, custom spell editing, and PNG, transparent PNG, and
 spell-card exports. No runtime dependencies or network connection are required.
 
 Open [standalone.html](standalone.html) in a browser. See
-Sigil Encoding in the top bar for the notation, mathematics, and worked examples.
+Explanation in the top bar for the notation, mathematics, and worked examples.
 Its source is [explanation.qmd](docs/explanation.qmd)
 ([rendered HTML](docs/explanation.html)).
 

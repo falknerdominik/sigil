@@ -28,7 +28,7 @@ declare global {
 }
 const {
   SPELL_ATTRIBUTES,
-  CHORD_ATTRIBUTE_IDS,
+  EDGE_ATTRIBUTE_IDS,
   ORBIT_ATTRIBUTE_IDS,
   UI_MODE_STORAGE,
   COLOR_STORAGE,
@@ -46,7 +46,7 @@ const attributesFor = (attributes: UiAttribute[], ids: UiAttribute['id'][]) =>
   ids
     .map((id) => attributes.find((attribute) => attribute.id === id))
     .filter((attribute): attribute is UiAttribute => attribute !== undefined);
-// Both editions use five chord attributes and four orbit attributes.
+// Both editions use five edge attributes and four orbit attributes.
 const fieldIDs = SPELL_ATTRIBUTES.map((attribute) => attribute.id);
 function $(id: string): HTMLElement {
   const element = document.getElementById(id);
@@ -194,7 +194,7 @@ button('uiModeToggle').addEventListener('click', () =>
 );
 const canvas = canvasElement('spellCanvas');
 const calculation = new SpellCalculation(
-  attributesFor(SPELL_ATTRIBUTES, CHORD_ATTRIBUTE_IDS),
+  attributesFor(SPELL_ATTRIBUTES, EDGE_ATTRIBUTE_IDS),
   attributesFor(SPELL_ATTRIBUTES, ORBIT_ATTRIBUTE_IDS),
 );
 const drawing = new SpellDrawing();
@@ -405,7 +405,7 @@ function attributesForDataset(entries: SpellEntry[]): UiAttribute[] {
   );
   observed.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   const capacity = SpellEncoding.uniqueNecklaces(
-    SpellEncoding.nextPrime(2 * CHORD_ATTRIBUTE_IDS.length + 1),
+    SpellEncoding.nextPrime(2 * EDGE_ATTRIBUTE_IDS.length + 1),
   ).length;
   // Refuse a catalogue we cannot faithfully represent instead of silently
   // falling back to "other" for arbitrary explicit range values.
@@ -487,8 +487,8 @@ function updateNotationInfo(
     ? `${visible.optionalVisible} of ${visible.optionalTotal} non-Rank elements shown.`
     : '';
   $('rankViewHint').textContent = filtered
-    ? 'Turn off to show all details in Vertices and Orbits. The ID stays complete.'
-    : 'All details in Vertices and Orbits are visible. The ID stays complete.';
+    ? 'Turn off to show all details in Edges and Orbits. The ID stays complete.'
+    : 'All details in Edges and Orbits are visible. The ID stays complete.';
 }
 function render() {
   const spell = readState();
@@ -551,8 +551,8 @@ function loadAllSpells(keepSelection = false) {
   activeAttributes = attributesForDataset(catalogue.entries);
   for (const attribute of activeAttributes)
     replaceOptions(select(attribute.id), attribute.options);
-  calculation.setChordAttributes(
-    attributesFor(activeAttributes, CHORD_ATTRIBUTE_IDS),
+  calculation.setEdgeAttributes(
+    attributesFor(activeAttributes, EDGE_ATTRIBUTE_IDS),
   );
   calculation.setOrbitAttributes(
     attributesFor(activeAttributes, ORBIT_ATTRIBUTE_IDS),
@@ -614,7 +614,7 @@ function updateCanvasOptions() {
     `${Number(input('identitySquareSize').value)} px`;
   $('identityPointStrokeWidthValue').textContent =
     `${Number(input('identityPointStrokeWidth').value)} px`;
-  for (const id of ['chordOpacity', 'orbitOpacity', 'identityMarkerOpacity'])
+  for (const id of ['edgeOpacity', 'orbitOpacity', 'identityMarkerOpacity'])
     $(`${id}Value`).textContent = input(id).value;
   $('inkWobbleValue').textContent =
     `${Number(input('inkWobble').value).toFixed(1)} px`;
@@ -679,7 +679,7 @@ function updateCanvasOptions() {
     dotStyle: select('dotStyle').value,
     vertexSize: Number(input('vertexSize').value),
     vertexStroke: Number(input('vertexStroke').value),
-    chordOpacity: Number(input('chordOpacity').value),
+    edgeOpacity: Number(input('edgeOpacity').value),
     orbitOpacity: Number(input('orbitOpacity').value),
     orbitWidth: Number(input('orbitWidth').value),
     orbitLineStyle: select('orbitLineStyle').value,
@@ -792,8 +792,7 @@ for (const name of ['credits', 'encoding']) {
   if (frame) {
     frame.addEventListener('load', () => {
       const content = frame.contentDocument;
-      if (!content)
-        throw new Error('Sigil Encoding must load a local document.');
+      if (!content) throw new Error('Explanation must load a local document.');
       content.addEventListener('keydown', onEscape);
       for (const link of Array.from(
         content.querySelectorAll<HTMLAnchorElement>('a[href]'),

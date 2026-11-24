@@ -15,13 +15,13 @@ spell.variant = 'demo-1';
 
 const notation = calculation.encode(spell);
 assert.deepEqual(Object.keys(notation).sort(),
-  ['vertexCount','chords','orbits','identityBits'].sort());
+  ['vertexCount','edgeGroups','orbits','identityBits'].sort());
 const representation = calculation.represent(spell, false);
 assert.deepEqual(representation.complete, notation);
 assert.equal(representation.visible.revealCount, representation.visible.totalRevealable);
 assert.equal(notation.vertexCount, 11);
-assert.equal(notation.chords.reduce((sum, group) => sum + group.edges.length, 0), 20);
-assert.deepEqual(Object.keys(notation.chords[0]).sort(), ['id','label','color','k','edges'].sort());
+assert.equal(notation.edgeGroups.reduce((sum, group) => sum + group.edges.length, 0), 20);
+assert.deepEqual(Object.keys(notation.edgeGroups[0]).sort(), ['id','label','color','k','edges'].sort());
 assert.equal(notation.orbits.length, 4);
 assert(notation.orbits.every(orbit => orbit.units === 15 && orbit.sweep === 2 * Math.PI));
 for (const count of [1, 2, 4, 8]) {
@@ -45,14 +45,14 @@ assert.deepEqual(notation, original, 'Filtering must not modify complete notatio
 assert.equal(visible.revealCount, 8);
 assert.equal(visible.totalRevealable, 24);
 assert.deepEqual(Object.keys(visible).sort(),
-  ['chords','orbits','revealFraction','optionalVisible','optionalTotal','revealCount','totalRevealable'].sort());
-assert.deepEqual(visible.chords[0].edges, notation.chords[0].edges);
+  ['edgeGroups','orbits','revealFraction','optionalVisible','optionalTotal','revealCount','totalRevealable'].sort());
+assert.deepEqual(visible.edgeGroups[0].edges, notation.edgeGroups[0].edges);
 assert.equal(SpellCalculation.applyRankComplexity(notation, spell, false).revealCount, 24);
 
 assert.throws(() => calculation.encode({...spell, range:'unknown'}), /Unknown range value/);
 assert.throws(() => calculation.encode({...spell, damage:'unknown'}), /Unknown damage value/);
 const empty = calculation.represent({variant:'empty'});
-assert(empty.complete.chords.every(group => group.edges.length === 0));
+assert(empty.complete.edgeGroups.every(group => group.edges.length === 0));
 assert.deepEqual(empty.complete.orbits, []);
 assert.equal(empty.visible.revealCount, 0);
 assert.equal(empty.visible.totalRevealable, 0);
@@ -63,7 +63,7 @@ assert.deepEqual(SpellCalculation.decodeIdentity(unicode), {variant:'book-ñ-§'
 assert.throws(() => SpellCalculation.encodeIdentity({variant:'x'.repeat(200)}), /too long/);
 
 const sixth = {id:'extra', options:[option('one')]};
-calculation.setChordAttributes([...primary, sixth]);
+calculation.setEdgeAttributes([...primary, sixth]);
 const updated = calculation.encode({...spell, extra:'one'});
 assert.equal(updated.vertexCount, 13);
 assert(calculation.orbitAttributes.every(attribute => attribute.lookup.get('one').length === 13),

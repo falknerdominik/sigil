@@ -22,7 +22,7 @@ export type {
 } from './drawing-style';
 import { DRAWING_DEFAULTS, TRAIT_THEMES, THEME_PALETTES } from './constants';
 import type {
-  ChordGroup,
+  EdgeGroup,
   SpellRepresentation,
   Orbit,
 } from './spell-calculation';
@@ -35,11 +35,11 @@ interface IdentityTick {
 export class SpellDrawing {
   settings: DrawingSettings;
   drawingVertexCount: number;
-  drawingChords: ChordGroup[];
+  drawingEdgeGroups: EdgeGroup[];
   constructor(options: Partial<DrawingSettings> = {}) {
     this.settings = { ...DRAWING_DEFAULTS, ...options };
     this.drawingVertexCount = 0;
-    this.drawingChords = [];
+    this.drawingEdgeGroups = [];
   }
 
   static rgb = parseHexColor;
@@ -103,15 +103,15 @@ export class SpellDrawing {
       !visible ||
       !Number.isInteger(encoded.vertexCount) ||
       encoded.vertexCount < 1 ||
-      encoded.chords.length !== visible.chords.length
+      encoded.edgeGroups.length !== visible.edgeGroups.length
     ) {
       throw new Error(
-        'Complete and visible notation must have matching chord groups.',
+        'Complete and visible notation must have matching edge groups.',
       );
     }
-    for (let i = 0; i < encoded.chords.length; i++) {
-      const full = encoded.chords[i],
-        shown = visible.chords[i];
+    for (let i = 0; i < encoded.edgeGroups.length; i++) {
+      const full = encoded.edgeGroups[i],
+        shown = visible.edgeGroups[i];
       const edges = new Set(full.edges.map((edge) => edge.join(',')));
       if (
         full.id !== shown.id ||
@@ -125,7 +125,7 @@ export class SpellDrawing {
           return false;
         })
       ) {
-        throw new Error('Visible chords must belong to complete notation.');
+        throw new Error('Visible edges must belong to complete notation.');
       }
     }
     const orbitKey = (orbit: Orbit) =>
@@ -142,13 +142,13 @@ export class SpellDrawing {
       throw new Error('Visible orbits must belong to complete notation.');
     }
     this.drawingVertexCount = encoded.vertexCount;
-    this.drawingChords = encoded.chords;
+    this.drawingEdgeGroups = encoded.edgeGroups;
     // Clear the last fractional device-pixel row as well.
     ctx.clearRect(0, 0, width + 1, height + 1);
     // Fit using the COMPLETE encoded geometry; changing visibility must never
     // rescale a sigil (especially with deep outward-curved connections).
     const { center, radius, points, basePath, identityTicks } =
-      this.getGeometry(width, height, encoded.identityBits, encoded.chords);
+      this.getGeometry(width, height, encoded.identityBits, encoded.edgeGroups);
     const design = this.baseTheme();
     // A card uses the same theme texture with the sigil on top. Suppressing
     // only the backdrop keeps the ink, vertex styling and encoding identical.
@@ -158,7 +158,7 @@ export class SpellDrawing {
     if (this.settings.guides)
       this.paintGuides(ctx, center, radius, points, basePath);
     if (!options.transparentBackground) this.recolorBackground(ctx);
-    // Primary attributes draw chords; secondary attributes form orbits.
+    // Primary attributes draw edges; secondary attributes form orbits.
     // Resolve theme ink once, rather than rebuilding these palettes per layer.
     const palettes: Record<string, string[]> = {
       blueprint: ['#a6e5f3', '#6bc2dd', '#d3f3f4', '#88bcd5', '#97d6ca'],
@@ -173,7 +173,7 @@ export class SpellDrawing {
     const customInk = this.themeColor('lines');
     const defaultInk = SpellDrawing.themePalettes[design]?.lines;
     const hasCustomInk = customInk.toLowerCase() !== defaultInk?.toLowerCase();
-    visible.chords.forEach((group) => {
+    visible.edgeGroups.forEach((group) => {
       ctx.save();
       ctx.strokeStyle = String(
         hasCustomInk
@@ -224,9 +224,9 @@ export class SpellDrawing {
                         : design === 'primal'
                           ? 0.7
                           : 0.8;
-      ctx.globalAlpha *= this.drawingChords.length > 8 ? 0.77 : 1;
+      ctx.globalAlpha *= this.drawingEdgeGroups.length > 8 ? 0.77 : 1;
       ctx.globalAlpha *= SpellDrawing.styleNumber(
-        this.settings.chordOpacity,
+        this.settings.edgeOpacity,
         1,
         0,
         1,
@@ -375,7 +375,7 @@ export class SpellDrawing {
   }
   /**
    * Lay out every encoded layer together and fit it into the available canvas.
-   * Chords, vertex orbits, and identity ticks share the same affine transform.
+   * Edges, vertex orbits, and identity ticks share the same affine transform.
    * The Layer 3 spell-ID ticks contribute to the fit bounds so they cannot be clipped
    * when rotated, mirrored, or horizontally stretched.
    */
@@ -383,7 +383,7 @@ export class SpellDrawing {
     width: number,
     height: number,
     identityBits = '',
-    chords: ChordGroup[] = [],
+    edgeGroups: EdgeGroup[] = [],
   ) {
     const center = { x: width / 2, y: height / 2 };
     const degrees = Math.max(
@@ -492,10 +492,10 @@ export class SpellDrawing {
       }
       offset += count;
     }
-    // Curved chords can bulge beyond their endpoints, especially with a large
+    // Curved edges can bulge beyond their endpoints, especially with a large
     // outward arc depth. Include their exact cardinal-point extrema in the fit
     // rather than clipping the drawing at the canvas edge.
-    if (chords.length && this.settings.style !== 'straight') {
+    if (edgeGroups.length && this.settings.style !== 'straight') {
       const projectedVertices = vertices.map(transform);
       const tau = 2 * Math.PI;
       const positive = (value: number) => ((value % tau) + tau) % tau;
@@ -515,7 +515,7 @@ export class SpellDrawing {
           }
         },
       };
-      for (const group of chords) {
+      for (const group of edgeGroups) {
         for (const [a, b] of group.edges) {
           this.traceConnection(
             recorder,
@@ -918,8 +918,8 @@ export class SpellDrawing {
     const dot =
       normal.x * (spellCenter.x - middle.x) +
       normal.y * (spellCenter.y - middle.y);
-    // Each true circular arc is defined by its chord and sagitta; the circle
-    // center is off the chord midpoint except for the centred semicircle mode.
+    // Each true circular arc is defined by its edge and sagitta; the circle
+    // center is off the edge midpoint except for the centred semicircle mode.
     const inward = dot >= 0 ? 1 : -1;
     const side =
       this.settings.arcSide === 'outward'
@@ -935,8 +935,8 @@ export class SpellDrawing {
             0.47,
             Math.max(0.05, Number(this.settings.curvature) || 0.22),
           );
-    // Exact circle geometry for a chord with length d and bulge s:
-    // R = d^2/(8s) + s/2. It is safe for vertical chords as well.
+    // Exact circle geometry for an edge with endpoint distance d and bulge s:
+    // R = d^2/(8s) + s/2. It is safe for vertical edges as well.
     const circleRadius = (length * length) / (8 * sagitta) + sagitta / 2;
     const offset = sagitta - circleRadius;
     const circle = {
@@ -1343,7 +1343,7 @@ export class SpellDrawing {
   }
   /**
    * Optional attribute names at evenly spaced reference vertices.
-   * This is purely a reading aid: UBS attributes are encoded by k (chord
+   * This is purely a reading aid: UBS attributes are encoded by k (edge
    * distance), not by owning a vertex. Remaining vertices stay unlabelled.
    */
   paintAttributeVertexLabels(
@@ -1363,10 +1363,10 @@ export class SpellDrawing {
     ctx.font = `${width < 620 ? '600 10px' : '600 11px'} ui-sans-serif, system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    this.drawingChords.forEach((attribute, attributeIndex) => {
+    this.drawingEdgeGroups.forEach((attribute, attributeIndex) => {
       const index =
         Math.round(
-          (attributeIndex * points.length) / this.drawingChords.length,
+          (attributeIndex * points.length) / this.drawingEdgeGroups.length,
         ) % points.length;
       const point = points[index];
       let nx = point.x - mean.x,

@@ -58,9 +58,9 @@ const renderer = new SpellCalculation(p, s);
 const drawing = new SpellDrawing();
 drawing.drawingVertexCount = renderer.vertexCount;
 assert.equal(renderer.vertexCount, 11);
-assert.equal(renderer.chordAttributes.length, 5);
+assert.equal(renderer.edgeAttributes.length, 5);
 assert.deepEqual(
-  renderer.chordAttributes.map((a) => a.k),
+  renderer.edgeAttributes.map((a) => a.k),
   [1, 2, 3, 4, 5],
 );
 assert.equal(renderer.orbitAttributes.length, 4);
@@ -82,7 +82,7 @@ for (let i = 1; i < dictionary.length; i++) {
   if (Math.abs(weight(a) - 4) === Math.abs(weight(b) - 4)) assert(a < b);
 }
 for (const attribute of [
-  ...renderer.chordAttributes,
+  ...renderer.edgeAttributes,
   ...renderer.orbitAttributes,
 ]) {
   const options = attribute.options.filter((opt) => opt.value !== 'none');
@@ -105,7 +105,7 @@ for (let k = 1; k <= 5; k++)
     const a = Math.min(i, (i + k) % 11),
       b = Math.max(i, (i + k) % 11);
     const key = `${a}/${b}`;
-    assert(!edges.has(key), `duplicate chord ${key}`);
+    assert(!edges.has(key), `duplicate edge ${key}`);
     edges.add(key);
   }
 assert.equal(edges.size, 55);
@@ -150,10 +150,10 @@ vm.runInNewContext(
   ),
   constantsContext,
 );
-const { SPELL_ATTRIBUTES, CHORD_ATTRIBUTE_IDS, ORBIT_ATTRIBUTE_IDS } =
+const { SPELL_ATTRIBUTES, EDGE_ATTRIBUTE_IDS, ORBIT_ATTRIBUTE_IDS } =
   JSON.parse(JSON.stringify(constantsContext.SigilConstants));
 const guideCalculation = new SpellCalculation(
-  CHORD_ATTRIBUTE_IDS.map((id) =>
+  EDGE_ATTRIBUTE_IDS.map((id) =>
     SPELL_ATTRIBUTES.find((attribute) => attribute.id === id),
   ),
   ORBIT_ATTRIBUTE_IDS.map((id) =>
@@ -161,7 +161,7 @@ const guideCalculation = new SpellCalculation(
   ),
 );
 const guideAttributes = [
-  ...guideCalculation.chordAttributes,
+  ...guideCalculation.edgeAttributes,
   ...guideCalculation.orbitAttributes,
 ];
 const exampleFields = new Map(
@@ -199,7 +199,7 @@ const guideVisible = SpellCalculation.applyRankComplexity(
   guideNotation,
   guideSpell,
 );
-const guideRank = guideNotation.chords.find((group) => group.id === 'rank');
+const guideRank = guideNotation.edgeGroups.find((group) => group.id === 'rank');
 const guidePayloadBytes = new TextEncoder().encode(
   JSON.stringify(['spell-id', guideSpell.variant]),
 ).length;
@@ -221,15 +221,15 @@ const actualResults = {
   'Option index (Acid)': guideOptionIndex,
   'Dictionary entry': guideDictionaryEntry,
   'Left rotation': guideRotation,
-  'Non-none bits': guideCalculation.chordAttributes[0].lookup.get(
+  'Non-none bits': guideCalculation.edgeAttributes[0].lookup.get(
     guideSpell.rank,
   ),
   'None bits': guideCalculation.orbitAttributes
     .find((attribute) => guideSpell[attribute.id] === 'none')
     .lookup.get('none'),
   'Active vertices': guideNotation.orbits.map((orbit) => orbit.vertex),
-  'Rank chords': guideRank.edges.length,
-  'Other chords': guideNotation.chords
+  'Rank edges': guideRank.edges.length,
+  'Other edges': guideNotation.edgeGroups
     .filter((group) => group.id !== 'rank')
     .reduce((sum, group) => sum + group.edges.length, 0),
   Orbits: guideNotation.orbits.length,
@@ -296,7 +296,7 @@ assert.equal(
   SpellCalculation.decodeIdentity(identityBits).variant,
   spell.variant,
 );
-const geometry = drawing.getGeometry(800, 600, identityBits, full.chords);
+const geometry = drawing.getGeometry(800, 600, identityBits, full.edgeGroups);
 const expectedSlots = Math.max(
   48,
   Math.floor((2 * Math.PI * (0.39 * 600) * 1.21) / 7),
@@ -324,10 +324,10 @@ for (const [rank, f] of [
     true,
   );
   assert.equal(ranked.optionalVisible, Math.ceil(ranked.optionalTotal * f));
-  assert.deepEqual(ranked.chords[0].edges, full.chords[0].edges);
+  assert.deepEqual(ranked.edgeGroups[0].edges, full.edgeGroups[0].edges);
   assert.equal(
     ranked.revealCount,
-    full.chords[0].edges.length + ranked.optionalVisible,
+    full.edgeGroups[0].edges.length + ranked.optionalVisible,
   );
   assert.deepEqual(renderer.encode(spell), full);
 }
@@ -398,5 +398,5 @@ if (process.argv.includes('--render-example')) {
   assert.equal(exampleImage.toString('hex', 0, 8), '89504e470d0a1a0a');
 }
 console.log(
-  'PASS - 11 vertices; 55 chord pairs; 186 necklaces; option rotations; all 16 orbit masks; ID UTF-8; paths; rank tiers; nib profile; worked-example trace; guide and README images.',
+  'PASS - 11 vertices; 55 edges; 186 necklaces; option rotations; all 16 orbit masks; ID UTF-8; paths; rank tiers; nib profile; worked-example trace; guide and README images.',
 );

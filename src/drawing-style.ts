@@ -16,7 +16,7 @@ export interface DrawingSettings {
   dotStyle: string;
   vertexSize: number;
   vertexStroke: number;
-  chordOpacity: number;
+  edgeOpacity: number;
   orbitOpacity: number;
   orbitWidth: number;
   orbitLineStyle: string;

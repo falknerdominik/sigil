@@ -74,10 +74,10 @@ module.exports = async function renderCalculationExample(representation) {
           800,
           720,
           complete.identityBits,
-          complete.chords,
+          complete.edgeGroups,
         );
         const { points, center, radius, identityTicks } = geometry;
-        const rank = complete.chords.find((group) => group.id === 'rank');
+        const rank = complete.edgeGroups.find((group) => group.id === 'rank');
         const [from, to] = rank.edges[0];
         const orbit = complete.orbits[complete.orbits.length - 1];
         const tick = identityTicks.reduce((best, candidate) =>
@@ -196,11 +196,11 @@ module.exports = async function renderCalculationExample(representation) {
           `Editor number label: ${String(from + 1).padStart(2, '0')}`,
           'One position in each binary word.',
         ]);
-        label(2, 380, colors.rank, 'Layer 1 - Rank', [
+        label(2, 380, colors.rank, 'Layer 1 - Edges', [
           `Connection ${from} to ${to}; step ${rank.k}.`,
           'Other primary fields use other steps.',
         ]);
-        label(3, 530, colors.orbit, 'Layer 2 - Orbit', [
+        label(3, 530, colors.orbit, 'Layer 2 - Orbits', [
           `U = ${orbit.units}; sweep = ${Math.round((orbit.sweep * 180) / Math.PI)} degrees.`,
           'One arc combines the secondary bits.',
         ]);

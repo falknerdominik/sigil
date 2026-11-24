@@ -16,13 +16,13 @@ export interface AttributeDefinition {
 interface PreparedAttribute extends AttributeDefinition {
   lookup: Map<string, string>;
 }
-interface ChordAttribute extends PreparedAttribute {
+interface EdgeAttribute extends PreparedAttribute {
   k: number;
 }
 interface OrbitAttribute extends PreparedAttribute {
   sectionUnits: number;
 }
-export interface ChordGroup extends Pick<
+export interface EdgeGroup extends Pick<
   AttributeDefinition,
   'id' | 'label' | 'color'
 > {
@@ -37,13 +37,13 @@ export interface Orbit {
 }
 export interface SpellNotation {
   vertexCount: number;
-  chords: ChordGroup[];
+  edgeGroups: EdgeGroup[];
   orbits: Orbit[];
   identityBits: string;
 }
 export interface VisibleNotation extends Pick<
   SpellNotation,
-  'chords' | 'orbits'
+  'edgeGroups' | 'orbits'
 > {
   revealFraction: number;
   optionalVisible: number;
@@ -58,7 +58,7 @@ export interface SpellRepresentation {
 type Detail =
   | {
       kind: 'edge';
-      chordIndex: number;
+      edgeGroupIndex: number;
       edge: number[];
     }
   | {
@@ -66,30 +66,30 @@ type Detail =
       orbit: Orbit;
     };
 
-/** Encodes spell attributes as chords, vertex orbits, and source-ID bits. */
+/** Encodes spell attributes as edges, vertex orbits, and source-ID bits. */
 export class SpellCalculation {
   vertexCount = 0;
   dictionary: string[] = [];
-  chordAttributes: ChordAttribute[] = [];
+  edgeAttributes: EdgeAttribute[] = [];
   orbitAttributes: OrbitAttribute[] = [];
   constructor(
-    chordAttributes: AttributeDefinition[],
+    edgeAttributes: AttributeDefinition[],
     orbitAttributes: AttributeDefinition[] = [],
   ) {
-    this.setChordAttributes(chordAttributes);
+    this.setEdgeAttributes(edgeAttributes);
     this.setOrbitAttributes(orbitAttributes);
   }
-  setChordAttributes(attributes: AttributeDefinition[]): void {
+  setEdgeAttributes(attributes: AttributeDefinition[]): void {
     if (!Array.isArray(attributes) || !attributes.length) {
       throw new TypeError('At least one attribute is required.');
     }
-    // Prime n >= 2m + 1 gives m chord families and rotation-unique words.
+    // Prime n >= 2m + 1 gives m edge families and rotation-unique words.
     this.vertexCount = SpellEncoding.nextPrime(2 * attributes.length + 1);
     const limit = Math.floor((this.vertexCount - 1) / 2);
     if (attributes.length > limit)
-      throw new Error('Not enough distinct chord families.');
+      throw new Error('Not enough distinct edge families.');
     this.dictionary = SpellEncoding.preferredDictionary(this.vertexCount);
-    this.chordAttributes = this.prepareAttributes(attributes).map(
+    this.edgeAttributes = this.prepareAttributes(attributes).map(
       (attribute, index) => ({
         ...attribute,
         k: index + 1,
@@ -131,7 +131,7 @@ export class SpellCalculation {
     // Powers of two make each combination at a vertex distinguishable.
     this.orbitAttributes = this.prepareAttributes(
       attributes,
-      this.chordAttributes.length,
+      this.edgeAttributes.length,
     ).map((attribute, index) => ({
       ...attribute,
       sectionUnits: 2 ** index,
@@ -218,8 +218,8 @@ export class SpellCalculation {
       .map((attribute) => attribute.id);
   }
   encode(spell: SpellValues): SpellNotation {
-    // Layer 1 maps active starting vertices to a chord family.
-    const chords = this.chordAttributes.map((attribute) => ({
+    // Layer 1 maps active starting vertices to an edge family.
+    const edgeGroups = this.edgeAttributes.map((attribute) => ({
       id: attribute.id,
       label: attribute.label,
       color: attribute.color,
@@ -236,7 +236,7 @@ export class SpellCalculation {
     }));
     return {
       vertexCount: this.vertexCount,
-      chords,
+      edgeGroups,
       orbits: SpellCalculation.combineOrbits(this.vertexCount, orbitAttributes),
       identityBits: SpellCalculation.encodeIdentity(spell),
     };
@@ -263,16 +263,23 @@ export class SpellCalculation {
     return 1;
   }
   static detailDrawOrder(encoded: SpellNotation): Detail[] {
-    const edgePools: Detail[][] = encoded.chords.flatMap((group, chordIndex) =>
-      group.id === 'rank'
-        ? []
-        : [group.edges.map((edge) => ({ kind: 'edge', chordIndex, edge }))],
+    const edgePools: Detail[][] = encoded.edgeGroups.flatMap(
+      (group, edgeGroupIndex) =>
+        group.id === 'rank'
+          ? []
+          : [
+              group.edges.map((edge) => ({
+                kind: 'edge',
+                edgeGroupIndex,
+                edge,
+              })),
+            ],
     );
     const orbitPool: Detail[] = encoded.orbits
       .slice()
       .sort((a, b) => a.vertex - b.vertex)
       .map((orbit) => ({ kind: 'orbit', orbit }));
-    // Interleave chord families and whole orbits for balanced rank filtering.
+    // Interleave edge families and whole orbits for balanced rank filtering.
     const pools = edgePools.length
       ? [edgePools[0], orbitPool, ...edgePools.slice(1)]
       : [orbitPool];
@@ -288,10 +295,12 @@ export class SpellCalculation {
     spell: SpellValues,
     enabled = true,
   ): VisibleNotation {
-    // Keep rank chords and identity intact; filter only the visible view.
-    const rankIndex = encoded.chords.findIndex((group) => group.id === 'rank');
+    // Keep rank edges and identity intact; filter only the visible view.
+    const rankIndex = encoded.edgeGroups.findIndex(
+      (group) => group.id === 'rank',
+    );
     const rankEdges =
-      rankIndex >= 0 ? encoded.chords[rankIndex].edges.length : 0;
+      rankIndex >= 0 ? encoded.edgeGroups[rankIndex].edges.length : 0;
     const detail = SpellCalculation.detailDrawOrder(encoded);
     const revealFraction = enabled
       ? SpellCalculation.rankRevealFraction(spell.rank)
@@ -300,19 +309,20 @@ export class SpellCalculation {
       detail.length,
       Math.ceil(detail.length * revealFraction),
     );
-    const chords = encoded.chords.map((group) => ({
+    const edgeGroups = encoded.edgeGroups.map((group) => ({
       ...group,
       edges: [] as number[][],
     }));
     if (rankIndex >= 0)
-      chords[rankIndex].edges = encoded.chords[rankIndex].edges.slice();
+      edgeGroups[rankIndex].edges = encoded.edgeGroups[rankIndex].edges.slice();
     const orbits: Orbit[] = [];
     for (const item of detail.slice(0, optionalCount)) {
-      if (item.kind === 'edge') chords[item.chordIndex].edges.push(item.edge);
+      if (item.kind === 'edge')
+        edgeGroups[item.edgeGroupIndex].edges.push(item.edge);
       else orbits.push(item.orbit);
     }
     return {
-      chords,
+      edgeGroups,
       orbits,
       revealFraction,
       optionalVisible: optionalCount,

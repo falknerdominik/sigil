@@ -1,5 +1,5 @@
 ---
-title: "Sigil Encoding"
+title: "Explanation"
 subtitle: "Encoding Pathfinder Second Edition spells"
 from: markdown-smart
 format:
@@ -51,11 +51,11 @@ Sigil generates drawings that encode nine mechanical attributes of a
 Pathfinder Second Edition spell and its source / variant ID. The annotated
 example below shows the complete encoding before rank-based display filtering.
 
-![Complete encoding of the worked example with the rank filter disabled. Colored highlights and numbered badges are annotations, not additional encoded elements.](calculation-example.png){#fig-calculation-example fig-alt="Annotated sigil showing vertex 4, the Rank chord from 4 to 5, a 120-degree orbit, and the outer spell fingerprint marks."}
+![Complete encoding of the worked example with the rank filter disabled. Colored highlights and numbered badges are annotations, not additional encoded elements.](calculation-example.png){#fig-calculation-example fig-alt="Annotated sigil showing vertex 4, the Rank edge from 4 to 5, a 120-degree orbit, and the outer spell fingerprint marks."}
 
-Representing every attribute as vertex-to-vertex connections (chords) produced
+Representing every attribute as an edge between two vertices produced
 crowded drawings. The notation therefore separates five primary attributes into
-chord families and four secondary attributes into vertex-centered orbits.
+edge families and four secondary attributes into vertex-centered orbits.
 A third layer stores the ID because different spells can share the same
 mechanical attributes.
 
@@ -64,8 +64,8 @@ panels:
 
 | Layer | On the canvas | Encodes |
 |---|---|---|
-| 1 - Vertices | Chords between numbered points | Five primary attributes |
-| 2 - Orbits | An arc or ring around a point | Four secondary attributes |
+| 1 - Edges | Connections between numbered vertices | Five primary attributes |
+| 2 - Orbits | An arc or ring around a vertex | Four secondary attributes |
 | 3 - Spell fingerprint | Ordered marks and gaps | Source / variant ID |
 
 Sigil is an independent adaptation of [*The Spell Writing Guide*](https://www.gorillaofdestiny.com/books-and-compendiums)
@@ -103,7 +103,7 @@ $$ {#eq-vertex-count}
 
 Here $m = 5$, and `nextPrime` selects the smallest prime at least as large as
 $2m+1$. At eleven vertices, steps 1 through 5 define distinct undirected
-chord families; steps 6 through 10 repeat them in reverse. No vertex pair
+edge families; steps 6 through 10 repeat them in reverse. No vertex pair
 therefore belongs to two attribute families. A prime vertex count also ensures
 that all nonconstant binary necklaces have the same number of distinct rotations.
 
@@ -138,9 +138,9 @@ Range choices appended from a catalogue. A tradition subset such as
 
 ## Calculate the layers
 
-### Layer 1 - Vertices
+### Layer 1 - Edges
 
-Each primary attribute is assigned a chord step $k$:
+Each primary attribute is assigned an edge step $k$:
 
 | Attribute | Step $k$ |
 |---|---:|
@@ -150,13 +150,13 @@ Each primary attribute is assigned a chord step $k$:
 | Duration | 4 |
 | Primary Trait | 5 |
 
-Each active bit at vertex index $i$ contributes the undirected chord
+Each active bit at vertex index $i$ contributes the undirected edge
 
 $$
 \{i,\ (i+k)\bmod 11\}.
-$$ {#eq-chord}
+$$ {#eq-edge}
 
-With the vertex count from @eq-vertex-count, the five families in @eq-chord
+With the vertex count from @eq-vertex-count, the five families in @eq-edge
 partition all $11 \cdot 10 / 2 = 55$ vertex pairs without overlap.
 
 ### Layer 2 - Orbits
@@ -198,8 +198,8 @@ reusing an ID produces the same fingerprint.
 ## What the editor displays {#what-the-editor-displays}
 
 The editor enables Filter details by rank by default. Applied after complete
-encoding and before rendering, it retains all $R$ Rank chords and the complete
-fingerprint. The remaining chords and whole orbits form an optional pool of
+encoding and before rendering, it retains all $R$ Rank edges and the complete
+fingerprint. The remaining edges and whole orbits form an optional pool of
 size $M$. For display fraction $f$, the visible mechanical count is
 
 $$
@@ -274,8 +274,8 @@ header; subsequent lines contain payload bytes. Whitespace is not encoded.
 | Non-none bits | `"00001111000"` |
 | None bits | `"00000000000"` |
 | Active vertices | `[4, 5, 6, 7]` |
-| Rank chords | `4` |
-| Other chords | `16` |
+| Rank edges | `4` |
+| Other edges | `16` |
 | Orbits | `4` |
 | Orbit units | `[5, 5, 5, 5]` |
 | Orbit sweeps (degrees) | `[120, 120, 120, 120]` |
@@ -295,9 +295,9 @@ header; subsequent lines contain payload bytes. Whitespace is not encoded.
    is `00000001111`. Using @eq-rotation gives $r(0) = 3$, producing
    `00001111000` and active vertex indices `4, 5, 6, 7`. Every other non-`none`
    selection in this example also has index `0` and receives the same word.
-2. Applying @eq-chord at each active vertex index produces one chord per primary
+2. Applying @eq-edge at each active vertex index produces one edge per primary
    attribute. Rank has $k = 1$, yielding 4 to 5, 5 to 6, 6 to 7, and 7 to 8.
-   The four other families contribute sixteen further chords.
+   The four other families contribute sixteen further edges.
 3. Damage and Casting time contribute `1` and `4` at each active vertex;
    Area and Casting traits contribute zero. By @eq-orbit, each of the four
    orbits has $U_i = 1 + 4 = 5$ and a sweep of $5 \cdot 24 = 120$ degrees.
@@ -353,12 +353,3 @@ but identifies one fewer spell uniquely. The unrestricted nine-attribute optimum
 omits required Damage, Area, and Range and is therefore ineligible. Even all
 fourteen attributes leave mechanically indistinguishable records, motivating the
 separate ID fingerprint.
-
-## Verification
-
-`npm run test:math` reads the example's input table, results, and fingerprint
-directly from this document and checks them against the implementation. It also
-checks all sixteen orbit masks. The tests do not repeat the attribute selection
-search. Use `npm run optimize`, optionally with `-- /path/to/spell.json`, to run the
-search on a catalogue. After `npm run compile`, machine-readable results are
-available through `node src/tools/optimize-attributes.js --json`.

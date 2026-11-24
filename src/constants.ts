@@ -264,7 +264,7 @@ export const SPELL_ATTRIBUTES: UiAttribute[] = /* @__PURE__ */ (() => [
     ],
   },
 ])();
-export const CHORD_ATTRIBUTE_IDS: AttributeId[] = [
+export const EDGE_ATTRIBUTE_IDS: AttributeId[] = [
   'rank',
   'tradition',
   'range',
@@ -304,7 +304,7 @@ export const DRAWING_CONTROLS = [
   'vertexStroke',
   'curvature',
   'arcSide',
-  'chordOpacity',
+  'edgeOpacity',
   'orbitOpacity',
   'orbitWidth',
   'orbitLineStyle',
@@ -340,7 +340,7 @@ export const DRAWING_DEFAULTS: DrawingSettings = {
   dotStyle: 'star',
   vertexSize: 0.7,
   vertexStroke: 1,
-  chordOpacity: 1,
+  edgeOpacity: 1,
   orbitOpacity: 1,
   orbitWidth: 1.25,
   orbitLineStyle: 'solid',

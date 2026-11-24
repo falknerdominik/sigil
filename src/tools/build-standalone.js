@@ -6,7 +6,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
 if (!fs.existsSync(path.join(root, 'docs/explanation.html')))
-  throw new Error('Missing docs/explanation.html. Run npm run build to render and bundle Sigil Encoding.');
+  throw new Error('Missing docs/explanation.html. Run npm run build to render and bundle Explanation.');
 const documentation = read('docs/explanation.html');
 if (!documentation.includes('<head>'))
   throw new Error('Invalid docs/explanation.html: expected a complete rendered HTML document.');
@@ -24,7 +24,7 @@ html = html.replace(/<iframe\b(?=[^>]*\bid="encodingFrame")[^>]*>/g, tag => {
   frames++;
   return tag.replace(/\s+src="[^"]*"/, '').replace(/>$/, () => ` srcdoc="${embeddedDocumentation}">`);
 });
-if (frames !== 1) throw new Error(`Expected one Sigil Encoding iframe; found ${frames}`);
+if (frames !== 1) throw new Error(`Expected one Explanation iframe; found ${frames}`);
 let replacements = 0;
 html = html.replace(/<link\b(?=[^>]*\brel="stylesheet")(?=[^>]*\bhref="styles\.css")[^>]*>/g, () => {
   replacements++;

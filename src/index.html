@@ -18,7 +18,7 @@
 </div>
 <div class="topbar-attribution">
   <button class="ui-mode-button" id="uiModeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode"><span id="uiModeIcon" aria-hidden="true">☼</span><span id="uiModeLabel">Light mode</span></button>
-  <button class="credits-open" id="encodingOpen" type="button" aria-haspopup="dialog" aria-controls="encodingDialog">Sigil Encoding</button>
+  <button class="credits-open" id="encodingOpen" type="button" aria-haspopup="dialog" aria-controls="encodingDialog">Explanation</button>
   <button class="credits-open" id="creditsOpen" type="button" aria-haspopup="dialog" aria-controls="creditsDialog">Credits &amp; licenses</button>
   <a class="coffee-button" href="https://www.buymeacoffee.com/dominikfalkner" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee (external link)"><span aria-hidden="true">☕</span> Buy me a coffee</a>
 </div>
@@ -67,8 +67,8 @@
 </section>
 <section class="editor-section" id="notationSection" aria-labelledby="notationHeading">
 <h3 class="group-label" id="notationHeading">NOTATION</h3>
-<details class="field-group layer-panel attributes-group" id="layer1Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 1. VERTICES</span></summary><div class="layer-panel-body">
-<p class="field-help">Five attribute groups connect 11 vertices.</p>
+<details class="field-group layer-panel attributes-group" id="layer1Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 1. EDGES</span></summary><div class="layer-panel-body">
+<p class="field-help">Five attribute groups define edges between 11 vertices.</p>
 <div class="field">
 <div class="field-label"><label for="rank">Spell rank</label><span class="k-chip">k=1</span></div>
 <select id="rank"></select>
@@ -76,7 +76,7 @@
 <div class="rank-view-control">
 <label class="toggle-row" for="rankComplexity"><span>Filter details by rank</span><input checked="" id="rankComplexity" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <div class="rank-view-meta"><span class="k-chip" id="rankRevealBadge">40% optional detail</span><span id="rankRevealHelp"></span></div>
-<p class="field-help" id="rankViewHint">Turn off to show all details in Vertices and Orbits. The ID stays complete.</p>
+<p class="field-help" id="rankViewHint">Turn off to show all details in Edges and Orbits. The ID stays complete.</p>
 </div>
 <div class="field">
 <div class="field-label"><label for="tradition">Tradition</label><span class="k-chip">k=2</span></div>
@@ -98,8 +98,8 @@
 <summary>Visual options</summary>
 <div class="advanced-content">
 <div class="field slider-field">
-<div class="field-label"><label for="chordOpacity">Layer 1 opacity</label><span class="slider-value" id="chordOpacityValue">1</span></div>
-<input id="chordOpacity" max="1" min="0" step="0.05" type="range" value="1"/>
+<div class="field-label"><label for="edgeOpacity">Layer 1 opacity</label><span class="slider-value" id="edgeOpacityValue">1</span></div>
+<input id="edgeOpacity" max="1" min="0" step="0.05" type="range" value="1"/>
 </div>
 <div class="field" id="polygonSidesRow">
 <label for="polygonSides">Polygon contour</label>
@@ -376,7 +376,7 @@
 </div>
 </div>
 <div class="canvas-frame">
-<canvas aria-label="Spell sigil with vertex connections, orbits, and a spell fingerprint encoding the source / variant ID; rank-based visualization may hide some encoded mechanical geometry." id="spellCanvas" role="img"></canvas>
+<canvas aria-label="Spell sigil with edges, orbits, and a spell fingerprint encoding the source / variant ID; rank-based visualization may hide some encoded mechanical geometry." id="spellCanvas" role="img"></canvas>
 </div>
 </section>
 </main>
@@ -407,15 +407,11 @@
     </section>
   </div>
 </dialog>
-<dialog class="credits-dialog encoding-dialog" id="encodingDialog" aria-labelledby="encodingTitle">
+<dialog class="credits-dialog encoding-dialog" id="encodingDialog" aria-labelledby="encodingOpen">
   <div class="credits-header">
-    <div>
-      <p class="credits-eyebrow">SIGIL</p>
-      <h2 id="encodingTitle">Sigil Encoding</h2>
-    </div>
-    <button class="credits-close" type="button" id="encodingClose" aria-label="Close Sigil Encoding" autofocus>&times;</button>
+    <button class="credits-close" type="button" id="encodingClose" aria-label="Close Explanation" autofocus>&times;</button>
   </div>
-  <iframe class="encoding-frame" id="encodingFrame" title="Sigil Encoding documentation" src="../docs/explanation.html" loading="lazy"></iframe>
+  <iframe class="encoding-frame" id="encodingFrame" title="Sigil notation guide" src="../docs/explanation.html" loading="lazy"></iframe>
 </dialog>
 <script src="generated/spell-calculation.browser.js"></script>
 <script src="generated/spell-drawing.browser.js"></script>

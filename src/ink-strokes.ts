@@ -63,7 +63,7 @@ export function flattenInkPath(trace: (path: PathContext) => void, step = 8) {
  * A directional calligraphy-nib profile: thick ink deposits at pen-down,
  * gradually declining to a fine pen-lift. Pressure 0 retains uniform width.
  * Progress is measured along the actual stroke length (not point index),
- * so long chords, short ID lines and circular arcs behave consistently.
+ * so long edges, short ID lines and circular arcs behave consistently.
  */
 export function inkNibWidth(
   progress: number,

@@ -31,13 +31,13 @@ for (const word of necklaces) {
     if (shift) assert.notEqual(SpellEncoding.rotate(word,shift),word);
   }
 }
-const chords = new Set();
+const edges = new Set();
 for (let k=1;k<=5;k++) for (let i=0;i<n;i++) {
-  const chord=[i,(i+k)%n].sort((a,b)=>a-b).join(':');
-  assert(!chords.has(chord));
-  chords.add(chord);
+  const edge=[i,(i+k)%n].sort((a,b)=>a-b).join(':');
+  assert(!edges.has(edge));
+  edges.add(edge);
 }
-assert.equal(chords.size,55);
+assert.equal(edges.size,55);
 
 const attrs=[
   {id:'rank',label:'Rank',color:'#aaa',options:[{value:'1',label:'Rank 1'},{value:'2',label:'Rank 2'}]},
@@ -50,11 +50,11 @@ renderer.drawingVertexCount=calculation.vertexCount;
 assert.equal(calculation.vertexCount,7);
 const spell={edition:'remaster',name:'Fireball',variant:'',rank:'1',area:'none',range:'Touch'};
 const encoded=calculation.encode(spell);
-renderer.drawingChords=encoded.chords;
-assert.equal(encoded.chords.length,3);
-assert.equal(encoded.chords[1].edges.length,0);
-assert(encoded.chords[0].edges.length>0);
-assert.notDeepEqual(encoded.chords[0].edges,calculation.encode({...spell,rank:'2'}).chords[0].edges);
+renderer.drawingEdgeGroups=encoded.edgeGroups;
+assert.equal(encoded.edgeGroups.length,3);
+assert.equal(encoded.edgeGroups[1].edges.length,0);
+assert(encoded.edgeGroups[0].edges.length>0);
+assert.notDeepEqual(encoded.edgeGroups[0].edges,calculation.encode({...spell,rank:'2'}).edgeGroups[0].edges);
 assert.throws(()=>calculation.encode({...spell,rank:'99'}));
 
 // Feather & ink: flatten true circular geometry without changing endpoints.
@@ -116,18 +116,18 @@ assert.throws(()=>SpellCalculation.decodeIdentity(identity+'0'));
 assert.throws(()=>SpellCalculation.encodeIdentity({...spell,variant:'A'.repeat(200)}),/too long/);
 const full=calculation.encode({...spell,name:'Different name'});
 assert.equal(full.identityBits,encoded.identityBits);
-assert.deepEqual(full.chords, encoded.chords);
+assert.deepEqual(full.edgeGroups, encoded.edgeGroups);
 
-// The circular modes always pass through the two chord endpoints.
+// The circular modes always pass through the two edge endpoints.
 const arcs=[];
 const ctx={moveTo(){},lineTo(){},arc(...args){arcs.push(args);}};
-const chordsToTest=[
+const edgesToTest=[
   [{x:30,y:20},{x:30,y:100}],
   [{x:10,y:50},{x:90,y:50}],
   [{x:10,y:10},{x:50,y:80}]
 ];
 renderer.settings.style='centered';
-for (const [p,q] of chordsToTest) {
+for (const [p,q] of edgesToTest) {
   renderer.traceConnection(ctx,p,q,{x:50,y:60});
   const [cx,cy,r,a0,a1]=arcs.at(-1);
   assert(Math.abs(Math.hypot(p.x-cx,p.y-cy)-r)<1e-7);
@@ -166,7 +166,7 @@ for (const shape of ['semicircle', 'quarter', 'quadratic', 'cubic']) {
   const sampled = SpellDrawing.sampleFunctionBase(shape, 11, 1.15);
   assert.equal(sampled.vertices.length, 11);
   assert.equal(sampled.guidePath.length, 601);
-  // Test arc-length parameterization, not Euclidean chord lengths (which
+  // Test arc-length parameterization, not Euclidean edge lengths (which
   // legitimately shrink near tight bends of a cubic).
   const pathArc=[0];
   sampled.guidePath.slice(1).forEach((point,i) => {
@@ -197,7 +197,7 @@ for (const shape of ['semicircle', 'quarter', 'quadratic', 'cubic']) {
 renderer.settings.base = 'polygon';
 
 // Different vertex styles affect only drawing. None draws no vertex;
-// empty space erases the underlying chords and leaves a hollow ring.
+// empty space erases the underlying edges and leaves a hollow ring.
 const paintCalls = [];
 const paintCtx = {
   save(){}, restore(){}, beginPath(){paintCalls.push('begin');},
@@ -234,15 +234,15 @@ renderer.settings.vertexLabels='attributes';
 paintCalls.length=0;
 renderer.paintNodes(paintCtx,points,150,500,500);
 assert.equal(paintCalls.filter(x=>Array.isArray(x)&&x[0]==='label').length,attrs.length);
-console.log('PASS — 186 necklaces; 55 independent chords; lossless identities; centered/non-centered arcs; polygon and four function bases; transforms; nine vertex styles; sizing; attribute labels.');
+console.log('PASS — 186 necklaces; 55 independent edges; lossless identities; centered/non-centered arcs; polygon and four function bases; transforms; nine vertex styles; sizing; attribute labels.');
 
 // Design themes alter only Canvas styling, never spell notation or coordinates.
 renderer.settings.design='plain';
-const baseChords=calculation.encode(spell).chords;
+const baseEdgeGroups=calculation.encode(spell).edgeGroups;
 const baseGeometry=renderer.getGeometry(800,600,SpellCalculation.encodeIdentity({variant:''})).points;
 for (const theme of ['plain','constellations','blueprint']) {
   renderer.settings.design=theme;
-  assert.deepEqual(calculation.encode(spell).chords,baseChords);
+  assert.deepEqual(calculation.encode(spell).edgeGroups,baseEdgeGroups);
   assert.deepEqual(renderer.getGeometry(800,600,SpellCalculation.encodeIdentity({variant:''})).points,baseGeometry);
 }
 console.log('PASS - Plain, Constellations, and Blueprint preserve geometry and binary coding.');
@@ -261,17 +261,17 @@ assert.equal(SpellEncoding.uniqueNecklaces(19).length,204);
 const extendedSpell={edition:'remaster',name:'Extensible',variant:'source-123'};
 for(const a of expanded) extendedSpell[a.id]='one';
 const fullSigil=largeCalculation.encode(extendedSpell);
-large.drawingChords=fullSigil.chords;
-assert.equal(fullSigil.chords.length,9);
-const edgeCount=fullSigil.chords.reduce((sum,group)=>sum+group.edges.length,0);
-assert.equal(new Set(fullSigil.chords.flatMap(group=>group.edges.map(pair=>
+large.drawingEdgeGroups=fullSigil.edgeGroups;
+assert.equal(fullSigil.edgeGroups.length,9);
+const edgeCount=fullSigil.edgeGroups.reduce((sum,group)=>sum+group.edges.length,0);
+assert.equal(new Set(fullSigil.edgeGroups.flatMap(group=>group.edges.map(pair=>
   pair.slice().sort((a,b)=>a-b).join(':')))).size,edgeCount,
-  'chord families must not share edges');
+  'edge families must not share edges');
 assert(edgeCount>9);
 for(const a of expanded){
   const changed=largeCalculation.encode({...extendedSpell,[a.id]:'two'});
-  assert.notDeepEqual(changed.chords.find(group=>group.id===a.id).edges,
-    fullSigil.chords.find(group=>group.id===a.id).edges);
+  assert.notDeepEqual(changed.edgeGroups.find(group=>group.id===a.id).edges,
+    fullSigil.edgeGroups.find(group=>group.id===a.id).edges);
   assert.equal(changed.identityBits,fullSigil.identityBits);
 }
 for(const base of ['polygon','semicircle','quarter','quadratic','cubic']){
@@ -283,18 +283,18 @@ for(const base of ['polygon','semicircle','quarter','quadratic','cubic']){
     assert(g.points.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
     assert(g.points.every(p=>p.x>23&&p.x<777&&p.y>23&&p.y<577),
       `${base}/${facet}: stays within drawing frame`);
-    assert.deepEqual(largeCalculation.encode(extendedSpell).chords,
-      fullSigil.chords,`${base}/${facet}: notational invariance`);
+    assert.deepEqual(largeCalculation.encode(extendedSpell).edgeGroups,
+      fullSigil.edgeGroups,`${base}/${facet}: notational invariance`);
   }
 }
 for(const design of ['plain','constellations','blueprint','obsidian',
   'herbarium','arcane','divine','occult','primal','tattoo']){
   large.settings.design=design;
-  assert.deepEqual(largeCalculation.encode(extendedSpell).chords,fullSigil.chords);
+  assert.deepEqual(largeCalculation.encode(extendedSpell).edgeGroups,fullSigil.edgeGroups);
 }
 console.log('PASS - generic 9-layer capacity test (legacy mode): n=19 necklaces, five curves x six facet settings, ten themes.');
 
-// Compact notation: 5 chord families / 11 vertices, with all secondary
+// Compact notation: 5 edge families / 11 vertices, with all secondary
 // attributes combined into one decodable orbit per active vertex.
 const primaryFive=Array.from({length:5},(_,i)=>({
   id:'primary'+i,label:'Primary '+i,color:'#7799bb',
@@ -310,9 +310,9 @@ compactRenderer.drawingVertexCount=compactCalculation.vertexCount;
 const compactSpell={edition:'remaster',name:'Compact example',variant:'catalog-99'};
 for(const attribute of [...primaryFive,...secondaryFour]) compactSpell[attribute.id]='one';
 const compactEncoding=compactCalculation.encode(compactSpell);
-compactRenderer.drawingChords=compactEncoding.chords;
+compactRenderer.drawingEdgeGroups=compactEncoding.edgeGroups;
 assert.equal(compactEncoding.vertexCount,11);
-assert.deepEqual(compactEncoding.chords.map(group=>group.k),[1,2,3,4,5]);
+assert.deepEqual(compactEncoding.edgeGroups.map(group=>group.k),[1,2,3,4,5]);
 assert.deepEqual(compactCalculation.orbitAttributes.map(attribute=>attribute.sectionUnits),[1,2,4,8]);
 const radiansPerUnit=2*Math.PI/15; // 24 degrees for four secondary attributes
 
@@ -453,9 +453,9 @@ assert.deepEqual(compactCalculation.encode(compactSpell),compactBefore,
   'layer-2 and layer-3 styling must not alter the underlying encoding');
 
 // Balanced rank reveal leaves the rank's full encoding intact, interleaves
-// complete Layer 1 chords and Layer 2 orbits, and never alters identity bits.
-const visibleCount=view => view.chords.reduce((sum, group) => sum + group.edges.length, 0) + view.orbits.length;
-const rankEncoding={...compactBefore, chords:compactBefore.chords.map((group,index)=>
+// complete Layer 1 edges and Layer 2 orbits, and never alters identity bits.
+const visibleCount=view => view.edgeGroups.reduce((sum, group) => sum + group.edges.length, 0) + view.orbits.length;
+const rankEncoding={...compactBefore, edgeGroups:compactBefore.edgeGroups.map((group,index)=>
   index===0 ? {...group,id:'rank'} : group)};
 const detailOrder=SpellCalculation.detailDrawOrder(rankEncoding);
 assert(detailOrder.length>15);
@@ -466,7 +466,7 @@ assert(detailOrder.slice(0,5).some(item=>item.kind==='edge'),
 const cantripView=SpellCalculation.applyRankComplexity(rankEncoding, {rank:'cantrip'});
 const rank5View=SpellCalculation.applyRankComplexity(rankEncoding, {rank:'5'});
 const rank10View=SpellCalculation.applyRankComplexity(rankEncoding, {rank:'10'});
-assert.equal(cantripView.chords[0].edges.length,rankEncoding.chords[0].edges.length,
+assert.equal(cantripView.edgeGroups[0].edges.length,rankEncoding.edgeGroups[0].edges.length,
   'the rank layer must remain fully visible at every tier');
 assert(cantripView.orbits.length>0,
   'even cantrips should show some Layer 2 orbits when any are encoded');
@@ -474,7 +474,7 @@ assert(visibleCount(cantripView) < visibleCount(rank5View) && visibleCount(rank5
   'visible mechanical complexity must rise with rank');
 assert.equal(visibleCount(rank10View), rank10View.totalRevealable,
   'top-rank spells must reveal the full mechanical drawing');
-assert.deepEqual(rankEncoding.chords[0].edges,cantripView.chords[0].edges);
+assert.deepEqual(rankEncoding.edgeGroups[0].edges,cantripView.edgeGroups[0].edges);
 const fullView=SpellCalculation.applyRankComplexity(rankEncoding,{rank:'cantrip'}, false);
 assert.equal(visibleCount(fullView),fullView.totalRevealable,
   'full notation must show all geometry regardless of rank');
@@ -486,7 +486,7 @@ assert.deepEqual(compactBefore,compactCalculation.encode(compactSpell),
 for(const attr of secondaryFour){
   const next=compactCalculation.encode({...compactSpell,[attr.id]:'two'});
   assert.notDeepEqual(next.orbits,compactBefore.orbits);
-  assert.deepEqual(next.chords,compactBefore.chords);
+  assert.deepEqual(next.edgeGroups,compactBefore.edgeGroups);
   assert.equal(next.identityBits,compactBefore.identityBits);
 }
 console.log('PASS - compact five-plus-four layout; 16 unique orbit combinations; one orbit per active vertex; configurable Layer 2/3 styling; unchanged spell-ID marks.');
@@ -504,7 +504,7 @@ for (const base of ['polygon','semicircle']) {
   }
 }
 
-// Identity ticks share the chord transform and are fitted with the base shape.
+// Identity ticks share the edge transform and are fitted with the base shape.
 // They keep their binary order, even while being squashed, mirrored, or rotated.
 const identityBits = compactEncoding.identityBits;
 const viewport = {width:760,height:620};

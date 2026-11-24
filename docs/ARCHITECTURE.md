@@ -7,7 +7,7 @@ logic is written in TypeScript. Build and test scripts remain JavaScript to
 avoid a separate toolchain for development utilities. The entry point is
 [`src/index.html`](../src/index.html); the generated
 [`standalone.html`](../standalone.html) embeds the application, catalogue, and
-rendered Sigil Encoding guide for direct offline use.
+rendered Explanation guide for direct offline use.
 
 | Component | Current responsibility |
 |---|---|
@@ -44,7 +44,7 @@ layers using the ordered attribute lists in [`constants.ts`](../src/constants.ts
 
 | Layer | Encoding |
 |---|---|
-| 1 — Vertices (chords) | [`encode`](../src/spell-calculation.ts) uses `selectedVertices` to map each chord attribute's bits to vertex pairs, grouped as a `ChordGroup`. |
+| 1 — Edges | [`encode`](../src/spell-calculation.ts) uses `selectedVertices` to map each edge attribute's bits to vertex pairs, grouped as an `EdgeGroup`. |
 | 2 — Orbits | `encode` selects the orbit attributes' active vertices; [`combineOrbits`](../src/spell-calculation.ts) sums their weights into one `Orbit` per active vertex. |
 | 3 — Spell Fingerprint (identity) | [`encodeIdentity`](../src/spell-calculation.ts) converts the source/variant ID to length-prefixed UTF-8 bits, not a hash of the spell contents. |
 
@@ -63,12 +63,12 @@ its rank-filtered view; [`paintNotation`](../src/spell-drawing.ts) draws them.
 
 The drawing contract contains only:
 
-- `complete`: `vertexCount`, `chords` (`ChordGroup[]`), `orbits` (`Orbit[]`)
+- `complete`: `vertexCount`, `edgeGroups` (`EdgeGroup[]`), `orbits` (`Orbit[]`)
   and `identityBits`.
-- `visible`: rank-filtered `chords` and `orbits`, plus the counts and fraction
+- `visible`: rank-filtered `edgeGroups` and `orbits`, plus the counts and fraction
   displayed by the editor.
 
-A `ChordGroup` retains its attribute ID, label, color, chord distance `k` and
+An `EdgeGroup` retains its attribute ID, label, color, edge step `k` and
 vertex-pair `edges`. An `Orbit` contains its vertex, combined weight `units`
 and angular `sweep`. Layer 2 weights 1, 2, 4 and 8 contribute 24, 48, 96 and
 192 degrees; all four active bits at one vertex produce a complete circle.
@@ -190,7 +190,7 @@ drawing.paintNotation(context, width, height, representation);
 ```
 
 The renderer fits using complete notation and paints the visible subset. It
-does not mutate the representation and throws if visible chord groups or
+does not mutate the representation and throws if visible edge groups or
 orbits are inconsistent with the complete geometry. Identity is supplied only
 once and is never filtered. The caller handles the error and owns canvas creation and
 downloads. The UI controller supplies the same notation and drawing options
@@ -211,7 +211,7 @@ engravings, frames, celestial curves and botanical margins. Theme gradients,
 grain, grids and ambient textures remain; corner and randomized ornaments
 retain their own switches. The same settings apply to previews and spell cards.
 Only Layers 1 and 2, on by default, restricts feather-and-ink treatment to
-vertex connections and orbit strokes. All Layer 3 marker shapes stay crisp.
+edges and orbit strokes. All Layer 3 marker shapes stay crisp.
 Its checked state is retained while Feather & ink strokes is disabled.
 Ten base themes supply distinct materials and marginal motifs; the 31 trait
 presets still inherit their base theme. Texture and randomized ornament are
@@ -236,7 +236,7 @@ covered by their record hash, not duplicated in the fixture. The test
 reads the app's internal state. A test-only adapter reconstructs removed
 diagnostic fields in the original fixture shape. It verifies the current
 full-circle orbit scale before restoring historical sweep metadata for catalogue
-hashing, preserving checks of the original bit mappings, chords, orbit units,
+hashing, preserving checks of the original bit mappings, edges, orbit units,
 identity bits and visibility counts. Keep that adapter
 out of the application and retain the same baseline when contracts change.
 

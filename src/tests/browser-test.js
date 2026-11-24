@@ -43,8 +43,8 @@ function baselineNotation(complete, visible, spell, calculation) {
   };
   const full = {
     n:complete.vertexCount,
-    layers:complete.chords.map((group, index) => ({
-      ...attributeEncoding(calculation.chordAttributes[index], 'edge'), ...group
+    layers:complete.edgeGroups.map((group, index) => ({
+      ...attributeEncoding(calculation.edgeAttributes[index], 'edge'), ...group
     })),
     decorations:calculation.orbitAttributes.map(attribute => ({
       ...attributeEncoding(attribute, 'vertex'), sectionUnits:attribute.sectionUnits
@@ -54,14 +54,14 @@ function baselineNotation(complete, visible, spell, calculation) {
       fields:['spell-id', calculation.constructor.decodeIdentity(complete.identityBits).variant],
       bits:complete.identityBits, byteLength:(complete.identityBits.length - 16) / 8
     },
-    edgeCount:complete.chords.reduce((sum, group) => sum + group.edges.length, 0),
+    edgeCount:complete.edgeGroups.reduce((sum, group) => sum + group.edges.length, 0),
     decorationCount:complete.orbits.length
   };
-  const {chords, orbits, ...counts} = visible;
+  const {edgeGroups, orbits, ...counts} = visible;
   return {
     complete:full,
     filtered:{
-      ...full, layers:chords.map((group, index) => ({...full.layers[index], ...group})),
+      ...full, layers:edgeGroups.map((group, index) => ({...full.layers[index], ...group})),
       vertexArcs:legacyOrbits(orbits), ...counts
     }
   };
@@ -157,12 +157,12 @@ async function drawingContractTest(page) {
     canvas.height = 320;
     const context = canvas.getContext('2d');
     drawing.paintNotation(context, 400, 320, {complete, visible});
-    const filteredGeometry = drawing.getGeometry(400, 320, complete.identityBits, complete.chords);
+    const filteredGeometry = drawing.getGeometry(400, 320, complete.identityBits, complete.edgeGroups);
     const reordered = {...visible, orbits:visible.orbits.map(({vertex,units,sweep}) =>
       ({sweep,units,vertex}))};
     drawing.paintNotation(context, 400, 320, {complete, visible:reordered});
     drawing.paintNotation(context, 400, 320, {complete, visible:complete});
-    const completeGeometry = drawing.getGeometry(400, 320, complete.identityBits, complete.chords);
+    const completeGeometry = drawing.getGeometry(400, 320, complete.identityBits, complete.edgeGroups);
     return {
       unchanged: original === JSON.stringify({complete, visible}),
       geometryUnchanged: JSON.stringify(filteredGeometry) === JSON.stringify(completeGeometry)
@@ -217,7 +217,7 @@ async function drawingContractTest(page) {
     const defaults = paint().filter(stroke => stroke.layer === 2);
     drawing.settings.identityMarkerOpacity = 1;
     const full = paint();
-    const settings = ['chordOpacity', 'orbitOpacity', 'identityMarkerOpacity'];
+    const settings = ['edgeOpacity', 'orbitOpacity', 'identityMarkerOpacity'];
     const samples = settings.flatMap((setting, layer) => [0, 0.5, 1].map(value => {
       drawing.settings[setting] = value;
       const sample = {layer, value, strokes:paint()};
@@ -241,18 +241,18 @@ async function drawingContractTest(page) {
   }
   await assert.rejects(() => page.evaluate(() => window.eval(`(() => {
     const complete = calculation.encode(currentSpell);
-    const visible = {...complete, chords:complete.chords.slice(1)};
+    const visible = {...complete, edgeGroups:complete.edgeGroups.slice(1)};
     new SigilDrawing.SpellDrawing().paintNotation(
       document.createElement('canvas').getContext('2d'), 400, 320, {complete, visible});
-  })()`)), /matching chord groups/);
+  })()`)), /matching edge groups/);
   await assert.rejects(() => page.evaluate(() => window.eval(`(() => {
     const complete = calculation.encode(currentSpell);
-    const chords = complete.chords.map((group, index) =>
+    const edgeGroups = complete.edgeGroups.map((group, index) =>
       index ? group : {...group, edges:[...group.edges, group.edges[0]]});
-    const visible = {...complete, chords};
+    const visible = {...complete, edgeGroups};
     new SigilDrawing.SpellDrawing().paintNotation(
       document.createElement('canvas').getContext('2d'), 400, 320, {complete, visible});
-  })()`)), /Visible chords/);
+  })()`)), /Visible edges/);
   await assert.rejects(() => page.evaluate(() => window.eval(`(() => {
     const complete = calculation.encode(currentSpell);
     const visible = {...complete, orbits:[complete.orbits[0], complete.orbits[0]]};
@@ -285,7 +285,7 @@ async function themeTest(page) {
       return {
         design, first, deterministic:first === repeated && decorated === repeatedDecorations,
         decorations:decorated !== first && decorated !== reseeded,
-        geometry:drawing.getGeometry(400, 320, representation.complete.identityBits, representation.complete.chords)
+        geometry:drawing.getGeometry(400, 320, representation.complete.identityBits, representation.complete.edgeGroups)
       };
     });
     const drawing = new SigilDrawing.SpellDrawing({design:'tattoo'});
@@ -363,16 +363,16 @@ async function ornamentAndInkScopeTest(page) {
     });
     const {complete, visible} = representation;
     const layers = {
-      vertices:{...visible, orbits:[]},
-      orbits:{...visible, chords:visible.chords.map(group => ({...group, edges:[]}))},
-      fingerprint:{...visible, chords:visible.chords.map(group => ({...group, edges:[]})), orbits:[]}
+      edges:{...visible, orbits:[]},
+      orbits:{...visible, edgeGroups:visible.edgeGroups.map(group => ({...group, edges:[]}))},
+      fingerprint:{...visible, edgeGroups:visible.edgeGroups.map(group => ({...group, edges:[]})), orbits:[]}
     };
     const comparisons = [];
     for (const [layer, layerVisible] of Object.entries(layers)) {
       for (const shape of layer === 'fingerprint' ? ['line', 'dot', 'square', 'mixed'] : ['line']) {
         const settings = {
           design:'plain', identityTickShape:shape,
-          chordOpacity:layer === 'vertices' ? 1 : 0,
+          edgeOpacity:layer === 'edges' ? 1 : 0,
           orbitOpacity:layer === 'orbits' ? 1 : 0,
           identityMarkerOpacity:layer === 'fingerprint' ? 1 : 0,
           handDrawnInk:true
@@ -400,7 +400,7 @@ async function ornamentAndInkScopeTest(page) {
   for (const comparison of result.comparisons) {
     assert.equal(comparison.matchesCrisp, comparison.layer === 'fingerprint',
       `${comparison.layer}/${comparison.shape}: restrict ink to Layers 1 and 2 by default`);
-    if (comparison.layer !== 'fingerprint') assert(comparison.matchesInk, 'Vertices and orbits retain full ink treatment');
+    if (comparison.layer !== 'fingerprint') assert(comparison.matchesInk, 'Edges and orbits retain full ink treatment');
   }
   assert(result.cardChanged, 'Spell cards must honor the background ornament toggle');
   assert(result.notationUnchanged, 'Appearance toggles must not mutate notation');
@@ -703,7 +703,7 @@ async function smokeTest(page) {
     document.getElementById('polygonSides').compareDocumentPosition(document.getElementById('baseShape')) &
       Node.DOCUMENT_POSITION_FOLLOWING)), true, 'Polygon contour must precede base curve');
   for (const [layer, id] of [
-    ['layer1Panel', 'chordOpacity'], ['moreAttributes', 'orbitOpacity'], ['layer3Panel', 'identityMarkerOpacity']
+    ['layer1Panel', 'edgeOpacity'], ['moreAttributes', 'orbitOpacity'], ['layer3Panel', 'identityMarkerOpacity']
   ]) {
     const control = page.locator(`#${layer} details #${id}`);
     assert.equal(await control.getAttribute('min'), '0');
@@ -752,11 +752,11 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#notationMeta, #notationModeBadge').count(), 0);
   await page.locator('label[for="rankComplexity"]').click();
   assert.equal(await page.locator('#rankComplexity').isChecked(), false);
-  assert.match(await page.locator('#rankViewHint').textContent(), /All details in Vertices and Orbits are visible/);
+  assert.match(await page.locator('#rankViewHint').textContent(), /All details in Edges and Orbits are visible/);
   assert.notEqual(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), filteredPreview);
   await page.locator('label[for="rankComplexity"]').click();
   assert.equal(await page.locator('#rankComplexity').isChecked(), true);
-  assert.match(await page.locator('#rankViewHint').textContent(), /Turn off to show all details in Vertices and Orbits/);
+  assert.match(await page.locator('#rankViewHint').textContent(), /Turn off to show all details in Edges and Orbits/);
   assert.equal(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), filteredPreview);
 
   const beforeOrbitStyle = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
@@ -927,11 +927,14 @@ async function smokeTest(page) {
 
 async function encodingDialogTest(page) {
   const preview = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
-  const opener = page.locator('#encodingOpen');
+  assert.equal(await page.locator('#layer1Panel > summary').textContent(), 'LAYER 1. EDGES');
+  assert.equal(await page.locator('label[for="dotStyle"]').textContent(), 'Vertex style');
+  const opener = page.getByRole('button', {name:'Explanation', exact:true});
   await opener.focus();
   await opener.press('Enter');
-  const dialog = page.locator('#encodingDialog');
+  const dialog = page.getByRole('dialog', {name:'Explanation', exact:true});
   assert.equal(await dialog.evaluate(element => element.matches(':modal')), true);
+  assert.equal(await dialog.getByRole('heading', {name:'Explanation', exact:true}).count(), 0);
   assert.equal(await page.locator('#encodingClose').evaluate(element => element === document.activeElement), true);
   const embedded = await page.locator('#encodingFrame').getAttribute('srcdoc');
   assert.notEqual(embedded, null);
@@ -940,6 +943,9 @@ async function encodingDialogTest(page) {
     'Embedding must preserve the rendered documentation byte-for-byte');
   const guide = page.frameLocator('#encodingFrame');
   await guide.locator('mjx-container[display="true"]').first().waitFor();
+  assert.equal(await guide.getByRole('heading', {name:'Explanation', exact:true}).count(), 1);
+  assert.equal(await guide.getByRole('heading', {name:/^Verification\b/}).count(), 0);
+  assert.equal(await guide.getByRole('heading', {name:/^Layer 1 - Edges\b/}).count(), 1);
   assert.equal(await guide.locator('mjx-container[display="true"]').count(), 7);
   assert.equal(await guide.locator('[data-mml-node="merror"], mjx-merror').count(), 0);
   assert.equal(await page.evaluate(() => typeof window.MathJax), 'undefined');
