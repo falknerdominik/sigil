@@ -1,6 +1,10 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const SpellCard=require('../generated/spell-card.cjs');
+assert.deepEqual(SpellCard.rgb('#Aa10Ff'), [170, 16, 255]);
+assert.deepEqual(SpellCard.rgb('#abc'), [36, 42, 49],
+  'Cards must retain their own fallback for invalid colors');
+assert.equal(SpellCard.rgba('not-a-color', 0.5), 'rgba(36,42,49,0.5)');
 const {SpellCatalog}=require('../generated/spell-catalog.cjs');
 const spellRows=JSON.parse(fs.readFileSync(__dirname+'/../../data/spell.json','utf8'));
 const catalogue=SpellCatalog.parse(spellRows).entries;

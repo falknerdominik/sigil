@@ -178,7 +178,7 @@ The complete internal mechanical encoding can be reconstructed when the same opt
 - `ATTRIBUTE-OPTIMIZATION.md`: the historical analysis named in the revision instructions. Its **1,403-record** scope and the **seven-required / nine-maximum** constraints are taken from that brief; the underlying analysis file was **not supplied** for independent inspection.
 - `HOW-IT-IS-CALCULATED(1).qmd`: the supplied baseline for the **current** eleven-vertex, five-chord/four-orbit calculation, fingerprint format, filtering behavior, and stated **1,400-record** catalogue size.
 
-The current implementation is in `src/spell-calculation.ts`, `src/spell-math.ts`,
+The current implementation is in `src/spell-calculation.ts`, `src/spell-encoding.ts`,
 `src/spell-drawing.ts`, and `src/constants.ts`. The calculation audit checks the
 worked example above against those calculation and option definitions, alongside
 independent checks of all sixteen orbit masks, necklace ordering, fingerprint

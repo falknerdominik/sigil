@@ -14,10 +14,15 @@ for direct offline use.
 | [`data/spell.json`](../data/spell.json) | Bundled spell records and source information. |
 | [`spell-catalog.ts`](../src/spell-catalog.ts) | Validates and normalizes catalogue records and assigns IDs. |
 | [`constants.ts`](../src/constants.ts) | Defines ordered attributes, shared limits and theme configuration. |
-| [`app.ts`](../src/app.ts) | Connects the HTML controls to editor state and the renderer. |
+| [`app.ts`](../src/app.ts) | Connects the HTML controls to editor state, the picker and the renderer. |
+| [`spell-picker.ts`](../src/spell-picker.ts) | `SpellPicker` owns catalogue search, combobox state, keyboard interaction and picker listeners. Selection populates the editor through a callback. |
 | [`spell-calculation.ts`](../src/spell-calculation.ts) | Browser-independent notation, identity and rank-visibility calculation. |
-| [`spell-math.ts`](../src/spell-math.ts) | Prime, rotation and binary-necklace helpers used by calculation. |
-| [`spell-drawing.ts`](../src/spell-drawing.ts) | Draws complete and visible notation with canvas geometry and themes. |
+| [`spell-encoding.ts`](../src/spell-encoding.ts) | `SpellEncoding` class for prime sizing, rotations and binary-necklace dictionaries. |
+| [`spell-drawing.ts`](../src/spell-drawing.ts) | Fits and draws complete/visible notation, delegating theme backgrounds and ink treatment. |
+| [`theme-painter.ts`](../src/theme-painter.ts) | Stateless theme backgrounds, ornaments, seeded decorations and background recoloring. |
+| [`ink-strokes.ts`](../src/ink-strokes.ts) | Functions for path sampling, nib pressure, dash splitting and feathered ink ribbons. |
+| [`drawing-style.ts`](../src/drawing-style.ts) | Shared canvas types, drawing settings and numeric style normalization. |
+| [`color.ts`](../src/color.ts) | Shared six-digit hex validation and RGB parsing; callers retain their own fallback policies. |
 | [`spell-card.ts`](../src/spell-card.ts) | Lays out themed cards using the drawing class. |
 | [`download.ts`](../src/download.ts) | Downloads a canvas as a PNG. |
 | [`styles.css`](../src/styles.css) | Styles the editor interface. |
@@ -44,7 +49,15 @@ layers using the ordered attribute lists in [`constants.ts`](../src/constants.ts
 | 3 — Spell Fingerprint (identity) | [`encodeIdentity`](../src/spell-calculation.ts) converts the source/variant ID to length-prefixed UTF-8 bits, not a hash of the spell contents. |
 
 [`prepareAttributes`](../src/spell-calculation.ts) builds the value-to-bit
-lookups using [`spell-math.ts`](../src/spell-math.ts).
+lookups using [`SpellEncoding`](../src/spell-encoding.ts). The class owns
+the shared necklace cache and is re-exported by the calculation bundle for
+browser and Node callers; no separate browser script is needed.
+Its `preferredDictionary` orders patterns for relatively sparse drawings, not
+for additional encoding capacity. The current eleven-vertex scheme favors four
+active bits; the larger four-bit scheme favors evenly spaced bits. This is a
+simple visual heuristic, not a demonstrated optimum for readability or crossings.
+Uniqueness comes from the necklace dictionary itself. The preference order is
+part of the option-to-bit mapping and must not change as cosmetic cleanup.
 [`represent`](../src/spell-calculation.ts) returns the complete notation and
 its rank-filtered view; [`paintNotation`](../src/spell-drawing.ts) draws them.
 
@@ -96,6 +109,18 @@ its ID and remains the source of truth: radio changes dispatch its existing
 change event, while theme changes and Reset synchronize the radios and category.
 Category buttons only filter the visible choices; they do not select a theme.
 All drawing, palette, catalogue and export logic is unchanged.
+
+The picker owns its search index and transient open/active state. It reads the
+selected catalogue entry from the controller and reports a selected ID through
+a callback; it does not populate spell fields or calculate notation. The
+controller's browser bundle includes this component and the shared color helper,
+so no additional script tags or runtime dependencies are needed.
+Empty search results clear the active-option reference rather than leaving an
+ARIA reference to a removed option.
+
+`SpellDrawing` keeps its existing painting entry points and static ink helpers
+as delegates to the extracted functions. Theme and ink modules take explicit
+settings rather than importing or inheriting from the drawing class.
 
 ## Build and verification
 

@@ -39,6 +39,7 @@ for (const [file, globalName] of [
 
 esbuild.buildSync({
   entryPoints:['src/app.ts'],
+  bundle:true,
   format:'esm',
   outfile:'src/generated/app.browser.js'
 });

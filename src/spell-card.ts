@@ -1,6 +1,7 @@
 import type { SpellDrawing } from './spell-drawing';
 import type { SpellRepresentation } from './spell-calculation';
 import { CARD_WIDTH } from './constants';
+import { isHexColor, parseHexColor } from './color';
 export interface CardSpell {
   name?: string;
   rank?: string;
@@ -119,10 +120,7 @@ export function attributeValues(spell: CardSpell) {
   ];
 }
 export function rgb(hex: string) {
-  const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex : '#242a31';
-  return [1, 3, 5].map((index) =>
-    Number.parseInt(value.slice(index, index + 2), 16),
-  );
+  return parseHexColor(isHexColor(hex) ? hex : '#242a31');
 }
 export function rgba(hex: string, opacity: number) {
   const [r, g, b] = rgb(hex);

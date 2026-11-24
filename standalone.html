@@ -954,8 +954,8 @@ html[data-ui-mode="light"] .theme-choice:has(input:checked) { color:#263638; bac
 <p class="field-help">Thick at the start, fine at the end. Wobble and feathering add natural ink edges.</p>
 <div class="hand-ink-parameters" id="handInkParameters">
 <div class="field slider-field">
-<div class="field-label"><label for="inkWobble">Stroke irregularity</label><span class="slider-value" id="inkWobbleValue">1.0 px</span></div>
-<input id="inkWobble" max="3" min="0" step="0.1" type="range" value="1"/>
+<div class="field-label"><label for="inkWobble">Stroke irregularity</label><span class="slider-value" id="inkWobbleValue">0.5 px</span></div>
+<input id="inkWobble" max="3" min="0" step="0.1" type="range" value="0.5"/>
 </div>
 <div class="field slider-field">
 <div class="field-label"><label for="inkPressure">Nib taper / stroke start</label><span class="slider-value" id="inkPressureValue">35%</span></div>
@@ -1069,87 +1069,105 @@ var SigilCalculation = (() => {
   // src/spell-calculation.ts
   var spell_calculation_exports = {};
   __export(spell_calculation_exports, {
-    SpellCalculation: () => SpellCalculation
+    SpellCalculation: () => SpellCalculation,
+    SpellEncoding: () => SpellEncoding
   });
 
-  // src/spell-math.ts
-  var necklaceCache = /* @__PURE__ */ new Map();
-  function isPrime(number) {
-    if (number < 2) return false;
-    for (let k = 2; k * k <= number; k++) {
-      if (number % k === 0) return false;
+  // src/spell-encoding.ts
+  var SpellEncoding = class _SpellEncoding {
+    static {
+      this.necklaceCache = /* @__PURE__ */ new Map();
     }
-    return true;
-  }
-  function nextPrime(number) {
-    let candidate = Math.max(3, Math.ceil(number));
-    while (!isPrime(candidate)) candidate++;
-    return candidate;
-  }
-  function rotate(bits, amount) {
-    const count = bits.length;
-    const k = (amount % count + count) % count;
-    return bits.slice(k) + bits.slice(0, k);
-  }
-  function canonicalRotation(bits) {
-    let smallest = bits;
-    for (let shift = 1; shift < bits.length; shift++) {
-      const rotated = rotate(bits, shift);
-      if (rotated < smallest) smallest = rotated;
-    }
-    return smallest;
-  }
-  function uniqueNecklaces(n) {
-    if (!Number.isInteger(n) || n < 3 || n > 37)
-      throw new RangeError("Supported polygon sizes are 3..37 nodes.");
-    const cached = necklaceCache.get(n);
-    if (cached) return cached.slice();
-    const seen = /* @__PURE__ */ new Set();
-    if (n <= 17) {
-      for (let number = 1; number < 2 ** n - 1; number++) {
-        const bits = number.toString(2).padStart(n, "0");
-        seen.add(canonicalRotation(bits));
+    static isPrime(number) {
+      if (number < 2) return false;
+      for (let k = 2; k * k <= number; k++) {
+        if (number % k === 0) return false;
       }
-    } else {
-      for (let a = 0; a < n - 3; a++) {
-        for (let b = a + 1; b < n - 2; b++) {
-          for (let c = b + 1; c < n - 1; c++) {
-            for (let d = c + 1; d < n; d++) {
-              const bits = Array(n).fill("0");
-              bits[a] = bits[b] = bits[c] = bits[d] = "1";
-              seen.add(canonicalRotation(bits.join("")));
+      return true;
+    }
+    static nextPrime(number) {
+      let candidate = Math.max(3, Math.ceil(number));
+      while (!_SpellEncoding.isPrime(candidate)) candidate++;
+      return candidate;
+    }
+    static rotate(bits, amount) {
+      const count = bits.length;
+      const k = (amount % count + count) % count;
+      return bits.slice(k) + bits.slice(0, k);
+    }
+    static canonicalRotation(bits) {
+      let smallest = bits;
+      for (let shift = 1; shift < bits.length; shift++) {
+        const rotated = _SpellEncoding.rotate(bits, shift);
+        if (rotated < smallest) smallest = rotated;
+      }
+      return smallest;
+    }
+    static uniqueNecklaces(n) {
+      if (!Number.isInteger(n) || n < 3 || n > 37)
+        throw new RangeError("Supported polygon sizes are 3..37 nodes.");
+      const cached = _SpellEncoding.necklaceCache.get(n);
+      if (cached) return cached.slice();
+      const seen = /* @__PURE__ */ new Set();
+      if (n <= 17) {
+        for (let number = 1; number < 2 ** n - 1; number++) {
+          const bits = number.toString(2).padStart(n, "0");
+          seen.add(_SpellEncoding.canonicalRotation(bits));
+        }
+      } else {
+        for (let a = 0; a < n - 3; a++) {
+          for (let b = a + 1; b < n - 2; b++) {
+            for (let c = b + 1; c < n - 1; c++) {
+              for (let d = c + 1; d < n; d++) {
+                const bits = Array(n).fill("0");
+                bits[a] = bits[b] = bits[c] = bits[d] = "1";
+                seen.add(_SpellEncoding.canonicalRotation(bits.join("")));
+              }
             }
           }
         }
       }
+      const result = [...seen].sort();
+      _SpellEncoding.necklaceCache.set(n, result);
+      return result.slice();
     }
-    const result = [...seen].sort();
-    necklaceCache.set(n, result);
-    return result.slice();
-  }
-  function preferredDictionary(n) {
-    if (n > 17) {
-      const spread = (bits) => {
-        const hits = [];
-        for (let i = 0; i < bits.length; i++) if (bits[i] === "1") hits.push(i);
-        let score = 0;
-        for (let j = 0; j < hits.length; j++) {
-          const gap = (hits[(j + 1) % hits.length] - hits[j] + bits.length) % bits.length;
-          score += (gap - bits.length / hits.length) ** 2;
-        }
-        return score;
-      };
-      return uniqueNecklaces(n).sort(
-        (a, b) => spread(a) - spread(b) || a.localeCompare(b)
-      );
+    /**
+     * Orders rotation-distinct patterns to keep early option values less crowded.
+     * Up to 17 vertices, prefer a Hamming weight (active-bit count) near 36% of n,
+     * with a minimum of 3: the shipped 11-vertex scheme therefore favors 4 bits.
+     * Above 17, uniqueNecklaces generates only four-bit patterns; prefer the
+     * smallest variance in circular gaps so those bits are more evenly spaced.
+     * Both branches break ties lexically by the binary word.
+     *
+     * This is a visual heuristic, not a proof of optimal readability or fewer
+     * crossings. uniqueNecklaces supplies uniqueness; any fixed ordering could
+     * encode values. Keep this ordering stable: an option's index selects its
+     * pattern, so changing the preference changes existing option-to-bit mappings.
+     */
+    static preferredDictionary(n) {
+      if (n > 17) {
+        const spread = (bits) => {
+          const hits = [];
+          for (let i = 0; i < bits.length; i++) if (bits[i] === "1") hits.push(i);
+          let score = 0;
+          for (let j = 0; j < hits.length; j++) {
+            const gap = (hits[(j + 1) % hits.length] - hits[j] + bits.length) % bits.length;
+            score += (gap - bits.length / hits.length) ** 2;
+          }
+          return score;
+        };
+        return _SpellEncoding.uniqueNecklaces(n).sort(
+          (a, b) => spread(a) - spread(b) || a.localeCompare(b)
+        );
+      }
+      const preferredWeight = Math.max(3, Math.round(n * 0.36));
+      return _SpellEncoding.uniqueNecklaces(n).sort((a, b) => {
+        const weightA = a.split("1").length - 1;
+        const weightB = b.split("1").length - 1;
+        return Math.abs(weightA - preferredWeight) - Math.abs(weightB - preferredWeight) || a.localeCompare(b);
+      });
     }
-    const preferredWeight = Math.max(3, Math.round(n * 0.36));
-    return uniqueNecklaces(n).sort((a, b) => {
-      const weightA = a.split("1").length - 1;
-      const weightB = b.split("1").length - 1;
-      return Math.abs(weightA - preferredWeight) - Math.abs(weightB - preferredWeight) || a.localeCompare(b);
-    });
-  }
+  };
 
   // src/constants.ts
   var IDENTITY_TAG = "spell-id";
@@ -1165,33 +1183,15 @@ var SigilCalculation = (() => {
       this.setChordAttributes(chordAttributes);
       this.setOrbitAttributes(orbitAttributes);
     }
-    static {
-      this.isPrime = isPrime;
-    }
-    static {
-      this.nextPrime = nextPrime;
-    }
-    static {
-      this.rotate = rotate;
-    }
-    static {
-      this.canonicalRotation = canonicalRotation;
-    }
-    static {
-      this.uniqueNecklaces = uniqueNecklaces;
-    }
-    static {
-      this.preferredDictionary = preferredDictionary;
-    }
     setChordAttributes(attributes) {
       if (!Array.isArray(attributes) || !attributes.length) {
         throw new TypeError("At least one attribute is required.");
       }
-      this.vertexCount = nextPrime(2 * attributes.length + 1);
+      this.vertexCount = SpellEncoding.nextPrime(2 * attributes.length + 1);
       const limit = Math.floor((this.vertexCount - 1) / 2);
       if (attributes.length > limit)
         throw new Error("Not enough distinct chord families.");
-      this.dictionary = preferredDictionary(this.vertexCount);
+      this.dictionary = SpellEncoding.preferredDictionary(this.vertexCount);
       this.chordAttributes = this.prepareAttributes(attributes).map(
         (attribute, index) => ({
           ...attribute,
@@ -1213,7 +1213,7 @@ var SigilCalculation = (() => {
           const orientation = ((offset + index) * 11 + valueIndex * 7 + 3) % this.vertexCount;
           lookup.set(
             String(option.value),
-            rotate(this.dictionary[valueIndex], orientation)
+            SpellEncoding.rotate(this.dictionary[valueIndex], orientation)
           );
         });
         lookup.set("none", "0".repeat(this.vertexCount));
@@ -1407,6 +1407,16 @@ var SigilDrawing = (() => {
     SpellDrawing: () => SpellDrawing
   });
 
+  // src/color.ts
+  function isHexColor(value) {
+    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+  }
+  function parseHexColor(hex) {
+    return [1, 3, 5].map(
+      (index) => Number.parseInt(hex.slice(index, index + 2), 16)
+    );
+  }
+
   // src/constants.ts
   var DRAWING_DEFAULTS = {
     design: "constellations",
@@ -1431,7 +1441,7 @@ var SigilDrawing = (() => {
     identityPointStrokeWidth: 1,
     identityMarkerOpacity: 0.45,
     handDrawnInk: false,
-    inkWobble: 1,
+    inkWobble: 0.5,
     inkPressure: 0.35,
     inkFeather: 0.3,
     rankComplexity: true,
@@ -1682,6 +1692,1287 @@ var SigilDrawing = (() => {
     )
   }))();
 
+  // src/theme-painter.ts
+  function baseTheme(settings) {
+    const theme = settings.design;
+    if (theme.startsWith("trait-")) {
+      const name = Object.keys(TRAIT_THEMES).find(
+        (key) => "trait-" + key.toLowerCase() === theme
+      );
+      return name ? TRAIT_THEMES[name].base : "plain";
+    }
+    return theme;
+  }
+  function themeColor(settings, key) {
+    const defaults = THEME_PALETTES[settings.design] || THEME_PALETTES.plain;
+    const proposed = settings.themeColors?.[key];
+    return isHexColor(proposed) ? proposed : defaults[key];
+  }
+  function recolorBackground(settings, ctx) {
+    const base = THEME_PALETTES[baseTheme(settings)] || THEME_PALETTES.plain;
+    const chosen = themeColor(settings, "background");
+    if (chosen.toLowerCase() === base.background.toLowerCase()) return;
+    const original = parseHexColor(base.background), target = parseHexColor(chosen);
+    const offsets = target.map((v, i) => v - original[i]);
+    const image = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+    const data = image.data;
+    for (let i = 0; i < data.length; i += 4) {
+      for (let c = 0; c < 3; c++)
+        data[i + c] = Math.max(0, Math.min(255, data[i + c] + offsets[c]));
+    }
+    ctx.putImageData(image, 0, 0);
+  }
+  function paintThemeBackdrop(settings, ctx, width, height, center, radius) {
+    const design = baseTheme(settings);
+    if (design === "constellations") paintSky(ctx, width, height, center);
+    else if (design === "blueprint") paintBlueprint(ctx, width, height);
+    else if (design === "obsidian")
+      paintObsidian(ctx, width, height, center, radius);
+    else if (design === "herbarium") paintHerbarium(ctx, width, height, center);
+    else if (design === "arcane") paintArcane(ctx, width, height, center, radius);
+    else if (design === "divine") paintDivine(ctx, width, height, center, radius);
+    else if (design === "occult") paintOccult(ctx, width, height, center, radius);
+    else if (design === "primal") paintPrimal(ctx, width, height, center);
+    else if (design === "tattoo") paintSkin(ctx, width, height);
+    else paintPaper(ctx, width, height, center, radius);
+    paintThemeAccents(settings, ctx, width, height, center, radius);
+    if (settings.decorations) paintDecorations(settings, ctx, width, height);
+  }
+  function paintGrain(ctx, w, h, color, seed) {
+    const random = seededRandom(seed);
+    const count = Math.min(6e3, Math.round(w * h / 180));
+    ctx.save();
+    ctx.fillStyle = color;
+    for (let i = 0; i < count; i++) {
+      const x = random() * w, y = random() * h, r = 0.25 + random() * 0.55;
+      ctx.beginPath();
+      ctx.ellipse(x, y, r, r * 0.55, random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function paintSkin(ctx, w, h) {
+    const ground = ctx.createLinearGradient(0, 0, w, h);
+    ground.addColorStop(0, "#e7c2a8");
+    ground.addColorStop(0.48, "#d8ad92");
+    ground.addColorStop(1, "#bf9078");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    paintGrain(ctx, w, h, "rgba(87,48,37,.10)", 1010);
+  }
+  function paintPaper(ctx, w, h, center, radius) {
+    const ground = ctx.createRadialGradient(
+      center.x,
+      center.y,
+      radius * 0.12,
+      center.x,
+      center.y,
+      Math.max(w, h) * 0.82
+    );
+    ground.addColorStop(0, "#fcf9ef");
+    ground.addColorStop(1, "#f0e9d8");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    paintGrain(ctx, w, h, "rgba(112,82,42,.13)", 101);
+    ctx.save();
+    ctx.strokeStyle = "rgba(138,100,54,.06)";
+    ctx.lineWidth = 0.6;
+    for (let y = 12; y < h; y += 9) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.bezierCurveTo(w * 0.3, y - 2, w * 0.7, y + 2, w, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintSky(ctx, w, h, center) {
+    const backdrop = ctx.createLinearGradient(0, 0, w, h);
+    backdrop.addColorStop(0, "#06111f");
+    backdrop.addColorStop(0.54, "#0e1c35");
+    backdrop.addColorStop(1, "#050b18");
+    ctx.fillStyle = backdrop;
+    ctx.fillRect(0, 0, w, h);
+    const haze = ctx.createRadialGradient(
+      center.x * 0.92,
+      center.y * 0.87,
+      18,
+      center.x * 0.92,
+      center.y * 0.87,
+      Math.max(w, h) * 0.67
+    );
+    haze.addColorStop(0, "rgba(62,102,169,.32)");
+    haze.addColorStop(1, "rgba(10,25,56,0)");
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, 0, w, h);
+    const band = ctx.createLinearGradient(0, h, w, 0);
+    band.addColorStop(0, "rgba(119,134,196,0)");
+    band.addColorStop(0.4, "rgba(119,134,196,0)");
+    band.addColorStop(0.5, "rgba(119,134,196,.09)");
+    band.addColorStop(0.6, "rgba(119,134,196,0)");
+    band.addColorStop(1, "rgba(119,134,196,0)");
+    ctx.fillStyle = band;
+    ctx.fillRect(0, 0, w, h);
+    const fraction = (value) => value - Math.floor(value);
+    const count = Math.min(540, Math.max(150, Math.round(w * h / 2400)));
+    ctx.save();
+    for (let i = 0; i < count; i++) {
+      const x = 20 + fraction(Math.sin((i + 1) * 127.117) * 43758.5453) * Math.max(1, w - 40);
+      const y = 20 + fraction(Math.sin((i + 1) * 331.331) * 19341.2197) * Math.max(1, h - 40);
+      const intensity = fraction(Math.sin((i + 1) * 47.39) * 97112.37);
+      const size = intensity > 0.96 ? 1.15 : intensity > 0.76 ? 0.75 : 0.43;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(225,237,255,${(0.12 + intensity * 0.46).toFixed(3)})`;
+      ctx.fill();
+    }
+    ctx.strokeStyle = "rgba(182,204,233,.16)";
+    ctx.lineWidth = 0.7;
+    ctx.setLineDash([2, 7]);
+    ctx.beginPath();
+    ctx.ellipse(center.x, center.y, w * 0.46, h * 0.42, -0.28, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+  function paintBlueprint(ctx, w, h) {
+    const bg = ctx.createLinearGradient(0, 0, w, h);
+    bg.addColorStop(0, "#071c29");
+    bg.addColorStop(0.6, "#0c2d3e");
+    bg.addColorStop(1, "#08212f");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    const step = 32;
+    ctx.lineWidth = 0.65;
+    ctx.strokeStyle = "rgba(138,202,223,.105)";
+    ctx.beginPath();
+    for (let x = 0; x < w; x += step) {
+      ctx.moveTo(x + 0.5, 0);
+      ctx.lineTo(x + 0.5, h);
+    }
+    for (let y = 0; y < h; y += step) {
+      ctx.moveTo(0, y + 0.5);
+      ctx.lineTo(w, y + 0.5);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(138,202,223,.17)";
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    for (let x = 0; x < w; x += step * 5) {
+      ctx.moveTo(x + 0.5, 0);
+      ctx.lineTo(x + 0.5, h);
+    }
+    for (let y = 0; y < h; y += step * 5) {
+      ctx.moveTo(0, y + 0.5);
+      ctx.lineTo(w, y + 0.5);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(164,224,235,.34)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(17.5, 17.5, w - 35, h - 35);
+    ctx.strokeStyle = "rgba(164,224,235,.38)";
+    for (let y = 32; y < h - 25; y += 16) {
+      ctx.beginPath();
+      ctx.moveTo(18, y);
+      ctx.lineTo(y % 32 === 0 ? 28 : 23, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintObsidian(ctx, w, h, center, radius) {
+    const ground = ctx.createRadialGradient(
+      center.x,
+      center.y,
+      radius * 0.12,
+      center.x,
+      center.y,
+      Math.max(w, h) * 0.81
+    );
+    ground.addColorStop(0, "#2b2928");
+    ground.addColorStop(0.53, "#1e2023");
+    ground.addColorStop(1, "#101519");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    const light = ctx.createRadialGradient(
+      w * 0.54,
+      h * 0.37,
+      1,
+      w * 0.54,
+      h * 0.37,
+      w * 0.6
+    );
+    light.addColorStop(0, "rgba(176,123,66,.10)");
+    light.addColorStop(1, "rgba(176,123,66,0)");
+    ctx.fillStyle = light;
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    paintGrain(ctx, w, h, "rgba(205,179,145,.08)", 404);
+    const random = seededRandom(404);
+    ctx.strokeStyle = "rgba(206,161,104,.22)";
+    ctx.lineWidth = 0.8;
+    for (const side of [0, 1]) {
+      ctx.beginPath();
+      for (let i = 0; i <= 12; i++) {
+        const x = (side ? 0.94 : 0.06) * w + (random() - 0.5) * w * 0.06;
+        const y = h * i / 12;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintHerbarium(ctx, w, h, center) {
+    const ground = ctx.createRadialGradient(
+      center.x,
+      center.y,
+      12,
+      center.x,
+      center.y,
+      Math.max(w, h) * 0.84
+    );
+    ground.addColorStop(0, "#f6f5e8");
+    ground.addColorStop(0.7, "#eaf0e2");
+    ground.addColorStop(1, "#dae4d2");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "rgba(92,111,78,.065)";
+    const spacing = Math.max(24, Math.min(38, Math.round(w / 28)));
+    for (let y = spacing * 0.5; y < h; y += spacing)
+      for (let x = spacing * 0.5; x < w; x += spacing) {
+        ctx.beginPath();
+        ctx.arc(x, y, 0.65, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    ctx.save();
+    ctx.strokeStyle = "rgba(91,117,77,.25)";
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(30, 0);
+    ctx.lineTo(30, h);
+    ctx.stroke();
+    for (let y = 24; y < h; y += 24) {
+      ctx.beginPath();
+      ctx.moveTo(24, y);
+      ctx.lineTo(36, y + 4);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = "rgba(91,117,77,.12)";
+    for (const side of [1, -1]) {
+      const x = side === 1 ? w * 0.12 : w * 0.88;
+      ctx.beginPath();
+      ctx.moveTo(x, h * 0.16);
+      ctx.quadraticCurveTo(x + side * w * 0.035, h * 0.5, x, h * 0.84);
+      ctx.stroke();
+      for (let i = 0; i < 7; i++) {
+        ctx.beginPath();
+        ctx.ellipse(
+          x + side * (i % 2 ? 10 : -10),
+          h * (0.22 + i * 0.085),
+          12,
+          3.5,
+          side * 0.65,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  function paintArcane(ctx, w, h, center, radius) {
+    const ground = ctx.createRadialGradient(
+      center.x,
+      center.y * 0.88,
+      10,
+      center.x,
+      center.y,
+      Math.max(w, h) * 0.81
+    );
+    ground.addColorStop(0, "#273865");
+    ground.addColorStop(0.57, "#171c43");
+    ground.addColorStop(1, "#090e29");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    const glimmer = ctx.createRadialGradient(
+      center.x * 0.77,
+      center.y * 0.78,
+      5,
+      center.x * 0.77,
+      center.y * 0.78,
+      radius * 1.9
+    );
+    glimmer.addColorStop(0, "rgba(110,88,217,.17)");
+    glimmer.addColorStop(1, "rgba(80,64,210,0)");
+    ctx.fillStyle = glimmer;
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(170,162,244,.075)";
+    ctx.lineWidth = 0.8;
+    for (const scale of [1.2, 1.36]) {
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, radius * scale, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 32; i++) {
+      const a = 2 * Math.PI * i / 32, inner = radius * 1.225, outer = radius * 1.25;
+      ctx.beginPath();
+      ctx.moveTo(center.x + inner * Math.cos(a), center.y + inner * Math.sin(a));
+      ctx.lineTo(center.x + outer * Math.cos(a), center.y + outer * Math.sin(a));
+      ctx.stroke();
+    }
+    ctx.strokeStyle = "rgba(168,157,243,.19)";
+    for (const scale of [1.32, 1.48]) {
+      ctx.beginPath();
+      for (let i = 0; i <= 6; i++) {
+        const angle = i * Math.PI / 3 - Math.PI / 2;
+        const x = center.x + radius * scale * Math.cos(angle);
+        const y = center.y + radius * scale * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintDivine(ctx, w, h, center, radius) {
+    const ground = ctx.createRadialGradient(
+      center.x,
+      center.y,
+      radius * 0.1,
+      center.x,
+      center.y,
+      Math.max(w, h) * 0.83
+    );
+    ground.addColorStop(0, "#fffdf4");
+    ground.addColorStop(0.58, "#f9f1dc");
+    ground.addColorStop(1, "#e8d6b0");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    const halo = ctx.createRadialGradient(
+      center.x,
+      center.y,
+      radius * 0.66,
+      center.x,
+      center.y,
+      radius * 1.54
+    );
+    halo.addColorStop(0, "rgba(244,197,106,0)");
+    halo.addColorStop(0.72, "rgba(238,192,107,.12)");
+    halo.addColorStop(1, "rgba(238,192,107,0)");
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    ctx.strokeStyle = "rgba(170,118,50,.12)";
+    ctx.lineWidth = 1;
+    for (const r of [radius * 1.22, radius * 1.25]) {
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = "rgba(183,139,56,.13)";
+    for (let i = 0; i < 48; i++) {
+      const angle = i * Math.PI / 24;
+      const inner = radius * 1.3, outer = radius * (i % 4 === 0 ? 1.65 : 1.48);
+      ctx.beginPath();
+      ctx.moveTo(
+        center.x + inner * Math.cos(angle),
+        center.y + inner * Math.sin(angle)
+      );
+      ctx.lineTo(
+        center.x + outer * Math.cos(angle),
+        center.y + outer * Math.sin(angle)
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintOccult(ctx, w, h, center, radius) {
+    const ground = ctx.createLinearGradient(0, 0, w, h);
+    ground.addColorStop(0, "#100d1e");
+    ground.addColorStop(0.48, "#2a172d");
+    ground.addColorStop(1, "#130f24");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    for (const [x, y, r, alpha] of [
+      [w * 0.25, h * 0.22, radius * 0.85, 0.12],
+      [w * 0.76, h * 0.57, radius * 0.94, 0.1],
+      [w * 0.55, h * 0.89, radius * 0.7, 0.08]
+    ]) {
+      const fog = ctx.createRadialGradient(x, y, 0, x, y, r);
+      fog.addColorStop(0, `rgba(204,121,183,${alpha})`);
+      fog.addColorStop(1, "rgba(204,121,183,0)");
+      ctx.fillStyle = fog;
+      ctx.fillRect(0, 0, w, h);
+    }
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(220,172,209,.35)";
+    for (let i = 0; i < 7; i++) {
+      const x = w * (0.35 + i * 0.05), y = h * 0.065, r = Math.min(w, h) * 9e-3;
+      ctx.beginPath();
+      ctx.arc(x, y, r, -Math.PI / 2, Math.PI / 2);
+      ctx.ellipse(
+        x,
+        y,
+        Math.max(0.1, r * Math.abs(i - 3) / 3),
+        r,
+        0,
+        Math.PI / 2,
+        -Math.PI / 2,
+        i < 3
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintPrimal(ctx, w, h, center) {
+    const ground = ctx.createRadialGradient(
+      center.x,
+      center.y * 0.86,
+      16,
+      center.x,
+      center.y,
+      Math.max(w, h) * 0.84
+    );
+    ground.addColorStop(0, "#254b3d");
+    ground.addColorStop(0.62, "#12372e");
+    ground.addColorStop(1, "#091c19");
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    const fraction = (x) => x - Math.floor(x);
+    const count = Math.min(260, Math.max(90, Math.round(w * h / 4600)));
+    for (let i = 0; i < count; i++) {
+      const x = 23 + fraction(Math.sin((i + 1) * 79.41) * 33193.27) * (w - 46);
+      const y = 23 + fraction(Math.sin((i + 1) * 151.17) * 18743.51) * (h - 46);
+      const size = 0.45 + fraction(Math.sin((i + 1) * 19.71) * 17211.31) * 0.6;
+      ctx.fillStyle = "rgba(182,229,167,.13)";
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = "rgba(158,208,156,.20)";
+    ctx.lineWidth = 0.8;
+    for (const side of [1, -1]) {
+      const x = side === 1 ? w * 0.06 : w * 0.94;
+      ctx.beginPath();
+      ctx.moveTo(x, h * 0.12);
+      ctx.bezierCurveTo(
+        x + side * w * 0.08,
+        h * 0.35,
+        x - side * w * 0.025,
+        h * 0.65,
+        x,
+        h * 0.9
+      );
+      ctx.stroke();
+      for (let i = 0; i < 14; i++) {
+        const y = h * (0.17 + i * 0.047), length = Math.sin(i / 14 * Math.PI) * w * 0.06;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(
+          x + side * length * 0.5,
+          y - length * 0.7,
+          x + side * length,
+          y - length * 0.4
+        );
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(
+          x - side * length * 0.4,
+          y - length * 0.5,
+          x - side * length * 0.6,
+          y - length * 0.3
+        );
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  function seededRandom(seed) {
+    let state = Number(seed) >>> 0 || 1;
+    return () => {
+      state = state + 1831565813 >>> 0;
+      let v = state;
+      v = Math.imul(v ^ v >>> 15, v | 1);
+      v ^= v + Math.imul(v ^ v >>> 7, v | 61);
+      return ((v ^ v >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function paintThemeAccents(settings, ctx, w, h, center, radius) {
+    const theme = baseTheme(settings);
+    const palettes = {
+      plain: ["rgba(116,91,57,.20)", "rgba(155,124,78,.07)"],
+      constellations: ["rgba(161,211,251,.33)", "rgba(102,162,233,.12)"],
+      blueprint: ["rgba(117,207,231,.34)", "rgba(71,168,195,.12)"],
+      obsidian: ["rgba(225,184,104,.35)", "rgba(184,124,56,.10)"],
+      herbarium: ["rgba(77,115,78,.26)", "rgba(106,144,86,.09)"],
+      arcane: ["rgba(188,171,255,.34)", "rgba(117,106,219,.11)"],
+      divine: ["rgba(186,142,69,.32)", "rgba(232,190,103,.10)"],
+      occult: ["rgba(226,157,208,.28)", "rgba(145,83,161,.12)"],
+      primal: ["rgba(156,216,165,.32)", "rgba(84,153,113,.12)"],
+      tattoo: ["rgba(37,36,38,.28)", "rgba(37,36,38,.06)"]
+    };
+    const palette = palettes[theme] || [
+      "rgba(120,100,70,.22)",
+      "rgba(130,110,80,.08)"
+    ];
+    const unit = Math.min(w / 900, h / 650, 1.5), pad = 42 * unit;
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const vignette = ctx.createRadialGradient(
+      center.x,
+      center.y,
+      radius * 0.56,
+      center.x,
+      center.y,
+      Math.max(w, h) * 0.76
+    );
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(
+      1,
+      ["plain", "herbarium", "divine", "tattoo"].includes(theme) ? "rgba(129,105,69,.050)" : "rgba(0,0,0,.20)"
+    );
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, w, h);
+    ctx.lineWidth = Math.max(0.6, unit * 0.9);
+    const corners = settings.cornerOrnaments ? [
+      [pad, pad],
+      [w - pad, pad],
+      [pad, h - pad],
+      [w - pad, h - pad]
+    ] : [];
+    for (const [cx, cy] of corners) {
+      const r = 9 * unit;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.strokeStyle = palette[0];
+      ctx.fillStyle = palette[0];
+      ctx.beginPath();
+      if (theme === "tattoo") {
+        for (const y of [-r, 0, r]) {
+          ctx.moveTo(1.2 * unit, y);
+          ctx.arc(0, y, 1.2 * unit, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      } else if (theme === "blueprint") {
+        ctx.moveTo(-r, r);
+        ctx.lineTo(-r, -r);
+        ctx.lineTo(r, -r);
+        ctx.moveTo(-r * 0.5, 0);
+        ctx.lineTo(r * 0.5, 0);
+        ctx.moveTo(0, -r * 0.5);
+        ctx.lineTo(0, r * 0.5);
+      } else if (theme === "obsidian" || theme === "arcane") {
+        const sides = theme === "obsidian" ? 4 : 6;
+        for (let i = 0; i <= sides; i++) {
+          const a = i * Math.PI * 2 / sides;
+          if (i === 0) ctx.moveTo(0, -r);
+          else ctx.lineTo(Math.sin(a) * r, -Math.cos(a) * r);
+        }
+      } else if (theme === "occult") {
+        ctx.ellipse(0, 0, r, r * 0.4, 0, 0, Math.PI * 2);
+        ctx.moveTo(r * 0.25, 0);
+        ctx.arc(0, 0, r * 0.25, 0, Math.PI * 2);
+      } else if (theme === "herbarium" || theme === "primal") {
+        ctx.moveTo(-r * 0.6, r);
+        ctx.lineTo(r * 0.6, -r);
+        for (let i = 0; i < (theme === "primal" ? 5 : 2); i++) {
+          const y = -r * 0.6 + i * r * 0.3;
+          ctx.moveTo(0, y);
+          ctx.quadraticCurveTo(-r, y - r * 0.5, -r * 0.7, y);
+          ctx.moveTo(0, y);
+          ctx.quadraticCurveTo(r, y - r * 0.4, r * 0.7, y - r * 0.3);
+        }
+      } else if (theme === "divine" || theme === "constellations") {
+        const rays = theme === "divine" ? 12 : 4;
+        for (let i = 0; i < rays; i++) {
+          const a = i * Math.PI * 2 / rays;
+          ctx.moveTo(Math.cos(a) * r * 0.4, Math.sin(a) * r * 0.4);
+          ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+      } else {
+        ctx.moveTo(-r, r * 0.4);
+        ctx.bezierCurveTo(-r, -r, r, r, r, -r * 0.4);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (theme === "constellations") {
+      const aura = ctx.createRadialGradient(
+        center.x * 0.84,
+        center.y * 0.74,
+        5,
+        center.x * 0.84,
+        center.y * 0.74,
+        radius * 1.43
+      );
+      aura.addColorStop(0, "rgba(67,137,216,.08)");
+      aura.addColorStop(0.65, "rgba(32,91,173,.045)");
+      aura.addColorStop(1, "rgba(32,91,173,0)");
+      ctx.fillStyle = aura;
+      ctx.fillRect(0, 0, w, h);
+    } else if (theme === "blueprint") {
+      ctx.strokeStyle = palette[0];
+      ctx.globalAlpha = 0.6;
+      for (let i = 0; i <= 12; i++) {
+        const x = 35 + (w - 70) * i / 12;
+        ctx.beginPath();
+        ctx.moveTo(x, 23);
+        ctx.lineTo(x, 23 + (i % 3 === 0 ? 9 : 4) * unit);
+        ctx.moveTo(x, h - 23);
+        ctx.lineTo(x, h - 23 - (i % 3 === 0 ? 9 : 4) * unit);
+        ctx.stroke();
+      }
+    } else if (theme === "divine" || theme === "arcane" || theme === "obsidian") {
+      ctx.strokeStyle = palette[1];
+      ctx.lineWidth = Math.max(0.6, unit);
+      for (const m of [1.08, 1.13]) {
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius * m, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else if (theme === "herbarium" || theme === "primal") {
+      ctx.strokeStyle = palette[1];
+      ctx.lineWidth = 1;
+      for (const x of [27, w - 27]) {
+        ctx.beginPath();
+        ctx.moveTo(x, h * 0.25);
+        ctx.bezierCurveTo(
+          x + (x < w / 2 ? 7 : -7),
+          h * 0.42,
+          x - (x < w / 2 ? 7 : -7),
+          h * 0.6,
+          x,
+          h * 0.78
+        );
+        ctx.stroke();
+      }
+    } else if (theme === "occult") {
+      ctx.strokeStyle = palette[1];
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, radius * 1.14, -0.72, 1.95);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, radius * 1.19, 2.35, 5.52);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function paintDecorations(settings, ctx, w, h) {
+    const random = seededRandom(settings.decorationSeed);
+    const design = baseTheme(settings);
+    const unit = Math.max(0.45, Math.min(2.1, Math.min(w / 920, h / 650)));
+    const pi2 = Math.PI * 2;
+    const places = [
+      [w * 0.105, h * 0.16],
+      [w * 0.875, h * 0.16],
+      [w * 0.105, h * 0.79],
+      [w * 0.88, h * 0.58],
+      [w * 0.45, h * 0.09]
+    ];
+    const strokeCircle = (x, y, r, stroke, alpha = 1) => {
+      ctx.strokeStyle = stroke;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, pi2);
+      ctx.stroke();
+    };
+    const pinStar = (x, y, r, color) => {
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x - r, y);
+      ctx.lineTo(x + r, y);
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x, y + r);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(0.55, r * 0.22), 0, pi2);
+      ctx.fill();
+    };
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 0.8 * unit;
+    if (design === "tattoo") {
+      ctx.strokeStyle = themeColor(settings, "lines");
+      ctx.fillStyle = themeColor(settings, "lines");
+      ctx.globalAlpha = 0.3;
+      for (const [x, y] of places) {
+        const r = (5 + random() * 5) * unit;
+        ctx.beginPath();
+        ctx.moveTo(x, y - r);
+        ctx.lineTo(x + r * 0.5, y);
+        ctx.lineTo(x, y + r);
+        ctx.lineTo(x - r * 0.5, y);
+        ctx.closePath();
+        ctx.stroke();
+        for (let i = 0; i < 12; i++) {
+          ctx.beginPath();
+          ctx.arc(
+            x + (random() - 0.5) * r * 4,
+            y + (random() - 0.5) * r * 4,
+            0.55 * unit,
+            0,
+            pi2
+          );
+          ctx.fill();
+        }
+      }
+    } else if (design === "plain") {
+      const color = "rgba(110,81,51,.32)";
+      for (let i = 0; i < 4; i++) {
+        const [x, y] = places[i];
+        const r = (10 + random() * 7) * unit;
+        strokeCircle(x, y, r, color, 0.75);
+        for (let arm = 0; arm < 6; arm++) {
+          const a = pi2 * arm / 6 + random() * 0.19;
+          const p = { x: x + Math.cos(a) * r, y: y + Math.sin(a) * r };
+          pinStar(p.x, p.y, (1.6 + random() * 2) * unit, color);
+        }
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = 0.68;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.62, 0, Math.PI * 1.3);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 8; i++) {
+        const left = i % 2 === 0;
+        const x = (left ? 0.055 : 0.95) * w;
+        const y = (0.21 + random() * 0.57) * h;
+        const direction = left ? 1 : -1;
+        ctx.strokeStyle = "rgba(112,84,61,.17)";
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.bezierCurveTo(
+          x + direction * 26 * unit,
+          y - 18 * unit,
+          x + direction * 36 * unit,
+          y + 10 * unit,
+          x + direction * 11 * unit,
+          y + 18 * unit
+        );
+        ctx.stroke();
+      }
+    } else if (design === "constellations") {
+      for (let i = 0; i < 4; i++) {
+        const [cx, cy] = places[i];
+        const count = 4 + Math.floor(random() * 3);
+        const stars = Array.from({ length: count }, () => ({
+          x: cx + (random() - 0.5) * Math.min(w * 0.11, 85 * unit),
+          y: cy + (random() - 0.5) * Math.min(h * 0.13, 80 * unit),
+          r: (1.4 + random() * 2) * unit
+        }));
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = "#b0cdeb";
+        ctx.lineWidth = 0.65 * unit;
+        ctx.beginPath();
+        stars.forEach(
+          (p, j) => j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)
+        );
+        ctx.stroke();
+        for (const p of stars) {
+          const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 12 * unit);
+          halo.addColorStop(0, "rgba(198,227,255,.30)");
+          halo.addColorStop(1, "rgba(198,227,255,0)");
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = halo;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 12 * unit, 0, pi2);
+          ctx.fill();
+          pinStar(p.x, p.y, p.r, "rgba(215,235,255,.76)");
+        }
+      }
+      for (let i = 0; i < 2; i++) {
+        const x = (0.25 + random() * 0.5) * w;
+        const y = (i === 0 ? 0.085 : 0.89) * h;
+        const len = (26 + random() * 25) * unit;
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = "rgba(193,223,255,.57)";
+        ctx.lineWidth = 0.85 * unit;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - len, y + len * 0.35);
+        ctx.stroke();
+        pinStar(x, y, 3.2 * unit, "rgba(214,231,255,.68)");
+      }
+    } else if (design === "blueprint") {
+      for (let i = 0; i < 4; i++) {
+        const [x, y] = places[i];
+        const r = (15 + random() * 12) * unit;
+        ctx.lineWidth = 0.8 * unit;
+        strokeCircle(x, y, r, "rgba(131,207,222,.40)", 0.9);
+        strokeCircle(x, y, r * 0.66, "rgba(131,207,222,.28)", 0.8);
+        const start = random() * pi2;
+        ctx.strokeStyle = "rgba(169,227,236,.52)";
+        ctx.globalAlpha = 0.86;
+        ctx.lineWidth = 1.25 * unit;
+        ctx.beginPath();
+        ctx.arc(x, y, r, start, start + Math.PI * (0.4 + random() * 0.65));
+        ctx.stroke();
+        pinStar(x, y, 3.4 * unit, "rgba(133,210,224,.42)");
+      }
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = 0.6 * unit;
+      ctx.strokeStyle = "rgba(135,209,222,.36)";
+      for (let i = 0; i < 5; i++) {
+        const x = (0.24 + random() * 0.53) * w;
+        const y = (i % 2 ? 0.105 : 0.9) * h;
+        const r = (7 + random() * 8) * unit;
+        ctx.beginPath();
+        ctx.arc(x, y, r, Math.PI * 0.15, Math.PI * 1.65);
+        ctx.stroke();
+      }
+    } else if (design === "obsidian") {
+      for (let i = 0; i < 4; i++) {
+        const [x, y] = places[i];
+        const r = (11 + random() * 7) * unit;
+        strokeCircle(x, y, r, "rgba(218,170,101,.40)", 0.83);
+        strokeCircle(x, y, r * 0.32, "rgba(218,170,101,.36)", 0.8);
+        const petals = 8 + 2 * Math.floor(random() * 3);
+        for (let j = 0; j < petals; j++) {
+          const a = pi2 * j / petals;
+          const px = x + Math.cos(a) * r * 0.72;
+          const py = y + Math.sin(a) * r * 0.72;
+          ctx.globalAlpha = 0.53;
+          ctx.fillStyle = "rgba(221,170,98,.48)";
+          ctx.beginPath();
+          ctx.ellipse(px, py, 3.5 * unit, 1.2 * unit, a, 0, pi2);
+          ctx.fill();
+        }
+        pinStar(x, y, 2.8 * unit, "rgba(233,183,117,.56)");
+      }
+      for (let i = 0; i < 5; i++) {
+        const y = (0.22 + random() * 0.58) * h;
+        const x = i % 2 ? w * 0.956 : w * 0.044;
+        ctx.globalAlpha = 0.56;
+        ctx.strokeStyle = "rgba(213,166,110,.30)";
+        ctx.lineWidth = 0.8 * unit;
+        ctx.beginPath();
+        ctx.arc(
+          x,
+          y,
+          (6 + random() * 6) * unit,
+          random() * pi2,
+          random() * pi2 + Math.PI * 1.15
+        );
+        ctx.stroke();
+      }
+    } else if (design === "arcane") {
+      for (let i = 0; i < 4; i++) {
+        const [x, y] = places[i];
+        const r = (14 + random() * 9) * unit;
+        ctx.globalAlpha = 0.82;
+        ctx.lineWidth = 0.9 * unit;
+        strokeCircle(x, y, r, "rgba(179,159,255,.40)");
+        strokeCircle(x, y, r * 0.72, "rgba(158,191,255,.33)");
+        for (let k = 0; k < 7; k++) {
+          const a = k * pi2 / 7 + random() * 0.16, inn = r * 0.85, out = r * 1.12;
+          ctx.strokeStyle = "rgba(190,176,255,.55)";
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(a) * inn, y + Math.sin(a) * inn);
+          ctx.lineTo(x + Math.cos(a) * out, y + Math.sin(a) * out);
+          ctx.stroke();
+        }
+        pinStar(x, y, (3 + random() * 2) * unit, "rgba(202,193,255,.77)");
+      }
+      for (let i = 0; i < 6; i++) {
+        const x = (0.24 + random() * 0.54) * w, y = (i % 2 ? 0.08 : 0.91) * h;
+        ctx.globalAlpha = 0.45;
+        pinStar(x, y, (2 + random() * 3) * unit, "rgba(189,176,246,.57)");
+      }
+    } else if (design === "divine") {
+      for (let i = 0; i < 4; i++) {
+        const [x, y] = places[i], r = (10 + random() * 10) * unit;
+        ctx.lineWidth = 0.9 * unit;
+        strokeCircle(x, y, r * 0.72, "rgba(172,113,41,.39)");
+        strokeCircle(x, y, r * 0.34, "rgba(172,113,41,.47)");
+        for (let arm = 0; arm < 12; arm++) {
+          const a = pi2 * arm / 12, inner = r * 0.85, outer = r * (1.18 + random() * 0.27);
+          ctx.strokeStyle = "rgba(185,132,51,.55)";
+          ctx.globalAlpha = 0.74;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(a) * inner, y + Math.sin(a) * inner);
+          ctx.lineTo(x + Math.cos(a) * outer, y + Math.sin(a) * outer);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "rgba(207,166,89,.38)";
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.19, 0, pi2);
+        ctx.fill();
+      }
+      for (let i = 0; i < 5; i++) {
+        const x = (0.25 + random() * 0.51) * w, y = (i % 2 ? 0.1 : 0.87) * h;
+        ctx.globalAlpha = 0.58;
+        pinStar(x, y, (2.2 + random() * 2) * unit, "rgba(184,135,66,.44)");
+      }
+    } else if (design === "occult") {
+      for (let i = 0; i < 4; i++) {
+        const [x, y] = places[i], r = (12 + random() * 11) * unit;
+        const turn = random() * pi2;
+        ctx.globalAlpha = 0.65;
+        ctx.strokeStyle = "rgba(219,154,197,.50)";
+        ctx.lineWidth = 1 * unit;
+        ctx.beginPath();
+        ctx.arc(x, y, r, turn, turn + Math.PI * (0.85 + random() * 0.45));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.6, turn + 1, turn + Math.PI * 1.7);
+        ctx.stroke();
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.ellipse(x, y, r * 0.44, r * 0.2, -0.3, 0, pi2);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(222,164,208,.59)";
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.14, 0, pi2);
+        ctx.fill();
+      }
+      for (let i = 0; i < 7; i++) {
+        const left = i % 2 === 0, x = left ? w * 0.061 : w * 0.94;
+        const y = (0.2 + random() * 0.61) * h, d = left ? 1 : -1;
+        ctx.globalAlpha = 0.45;
+        ctx.lineWidth = 0.7 * unit;
+        ctx.strokeStyle = "rgba(224,143,206,.42)";
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.bezierCurveTo(
+          x + 15 * d * unit,
+          y - 8 * unit,
+          x + 30 * d * unit,
+          y + 9 * unit,
+          x + 16 * d * unit,
+          y + 18 * unit
+        );
+        ctx.stroke();
+      }
+    } else if (design === "primal") {
+      for (let side = 0; side < 2; side++) {
+        const x = side === 0 ? w * 0.069 : w * 0.931, dir = side === 0 ? 1 : -1;
+        const y0 = h * (0.17 + random() * 0.05), y1 = h * (0.73 + random() * 0.05);
+        ctx.globalAlpha = 0.63;
+        ctx.lineWidth = 1.2 * unit;
+        ctx.strokeStyle = "rgba(160,217,165,.57)";
+        ctx.beginPath();
+        ctx.moveTo(x, y0);
+        ctx.bezierCurveTo(
+          x + 23 * dir * unit,
+          y0 + h * 0.14,
+          x - 18 * dir * unit,
+          y1 - h * 0.14,
+          x,
+          y1
+        );
+        ctx.stroke();
+        for (let j = 0; j < 9; j++) {
+          const t = (j + 0.6) / 10;
+          const yy = y0 + (y1 - y0) * t, xx = x + Math.sin(t * pi2) * 8 * unit * dir;
+          const sign = (j % 2 ? 1 : -1) * dir;
+          const len = (7 + random() * 8) * unit;
+          ctx.fillStyle = "rgba(150,212,136,.22)";
+          ctx.strokeStyle = "rgba(153,213,153,.48)";
+          ctx.lineWidth = 0.7 * unit;
+          ctx.beginPath();
+          ctx.ellipse(
+            xx + sign * len * 0.55,
+            yy,
+            len * 0.64,
+            len * 0.23,
+            sign * 0.55,
+            0,
+            pi2
+          );
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+      for (let i = 0; i < 13; i++) {
+        const x = (i % 2 ? w * 0.1 : w * 0.9) + (random() - 0.5) * 36 * unit;
+        const y = (0.12 + random() * 0.72) * h;
+        ctx.fillStyle = "rgba(216,240,166,.41)";
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(x, y, (0.7 + random() * 1.8) * unit, 0, pi2);
+        ctx.fill();
+      }
+    } else if (design === "herbarium") {
+      for (let side = 0; side < 2; side++) {
+        const x = side === 0 ? w * 0.065 : w * 0.935;
+        const sign = side === 0 ? 1 : -1;
+        const y0 = h * 0.18 + random() * h * 0.035;
+        const y1 = h * 0.7 + random() * h * 0.06;
+        const bend = (14 + random() * 12) * unit * sign;
+        ctx.globalAlpha = 0.68;
+        ctx.strokeStyle = "rgba(72,112,77,.48)";
+        ctx.lineWidth = 1.05 * unit;
+        ctx.beginPath();
+        ctx.moveTo(x, y0);
+        ctx.bezierCurveTo(
+          x + bend,
+          y0 + h * 0.2,
+          x - bend * 0.5,
+          y1 - h * 0.18,
+          x,
+          y1
+        );
+        ctx.stroke();
+        for (let j = 0; j < 7; j++) {
+          const t = (j + 0.5) / 8;
+          const yy = y0 + (y1 - y0) * t;
+          const xx = x + Math.sin(t * Math.PI * 2) * bend * 0.38;
+          const dir = (j % 2 ? -1 : 1) * sign;
+          const len = (8 + random() * 8) * unit;
+          ctx.fillStyle = "rgba(88,127,83,.25)";
+          ctx.strokeStyle = "rgba(69,110,72,.44)";
+          ctx.globalAlpha = 0.72;
+          ctx.beginPath();
+          ctx.ellipse(
+            xx + dir * len * 0.55,
+            yy - 3 * unit,
+            len * 0.7,
+            2.8 * unit,
+            dir * (0.38 + random() * 0.35),
+            0,
+            pi2
+          );
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+      for (let i = 0; i < 3; i++) {
+        const [cx, cy] = places[[0, 1, 2][i]];
+        const r = (6 + random() * 3) * unit;
+        ctx.fillStyle = "rgba(212,188,112,.25)";
+        ctx.strokeStyle = "rgba(88,128,93,.40)";
+        ctx.lineWidth = 0.7 * unit;
+        ctx.globalAlpha = 0.75;
+        for (let j = 0; j < 5; j++) {
+          const a = pi2 * j / 5;
+          ctx.beginPath();
+          ctx.ellipse(
+            cx + Math.cos(a) * r,
+            cy + Math.sin(a) * r,
+            r * 0.68,
+            r * 0.42,
+            a,
+            0,
+            pi2
+          );
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.44, 0, pi2);
+        ctx.fillStyle = "rgba(159,128,70,.50)";
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // src/drawing-style.ts
+  function styleNumber(value, defaultValue, min, max) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : defaultValue;
+  }
+
+  // src/ink-strokes.ts
+  function flattenInkPath(trace, step = 8) {
+    const paths = [];
+    let points = [];
+    const addLine = (x, y) => {
+      const last = points.at(-1);
+      if (!last) {
+        points.push({ x, y });
+        return;
+      }
+      const length = Math.hypot(x - last.x, y - last.y);
+      const steps = Math.max(1, Math.ceil(length / step));
+      for (let i = 1; i <= steps; i++)
+        points.push({
+          x: last.x + (x - last.x) * i / steps,
+          y: last.y + (y - last.y) * i / steps
+        });
+    };
+    const record = {
+      moveTo(x, y) {
+        if (points.length) paths.push(points);
+        points = [{ x, y }];
+      },
+      lineTo(x, y) {
+        addLine(x, y);
+      },
+      arc(cx, cy, r, start, end, anticlockwise = false) {
+        const tau = Math.PI * 2;
+        const positive = (value) => (value % tau + tau) % tau;
+        const full = Math.abs(end - start) >= tau - 1e-7;
+        const sweep = full ? tau : positive(anticlockwise ? start - end : end - start);
+        const p0 = { x: cx + r * Math.cos(start), y: cy + r * Math.sin(start) };
+        addLine(p0.x, p0.y);
+        const steps = Math.max(2, Math.ceil(sweep * r / step));
+        for (let i = 1; i <= steps; i++) {
+          const a = start + (anticlockwise ? -1 : 1) * sweep * i / steps;
+          addLine(cx + r * Math.cos(a), cy + r * Math.sin(a));
+        }
+      }
+    };
+    trace(record);
+    if (points.length) paths.push(points);
+    return paths;
+  }
+  function inkNibWidth(progress, baseWidth, pressure) {
+    const p = styleNumber(pressure, 0.35, 0, 2.5);
+    const t = Math.max(0, Math.min(1, progress));
+    const easing = t * t * (3 - 2 * t);
+    const start = 1 + 1.45 * p;
+    const finish = 1 - 0.7 * Math.min(p, 1);
+    return Math.max(0.15, baseWidth * (start + (finish - start) * easing));
+  }
+  function splitInkDashes(points, pattern = [], offset = 0) {
+    const total = points.slice(1).reduce(
+      (length, point, i) => length + Math.hypot(point.x - points[i].x, point.y - points[i].y),
+      0
+    );
+    if (!total || points.length < 2) return [];
+    let travelled = 0;
+    const measured = points.map((p, i) => {
+      if (i)
+        travelled += Math.hypot(p.x - points[i - 1].x, p.y - points[i - 1].y);
+      return { x: p.x, y: p.y, t: travelled / total };
+    });
+    if (!pattern?.length) return [measured];
+    const raw = [...pattern].map((v) => Math.max(0, Number(v) || 0));
+    const dashes = raw.length % 2 ? [...raw, ...raw] : raw;
+    const period = dashes.reduce((sum, v) => sum + v, 0);
+    if (period < 1e-8) return [measured];
+    let phase = (offset % period + period) % period;
+    let dashIndex = 0;
+    while (dashIndex < dashes.length - 1 && phase >= dashes[dashIndex]) {
+      phase -= dashes[dashIndex++];
+    }
+    let remaining = dashes[dashIndex] - phase;
+    let active = [];
+    const pieces = [];
+    const flush = () => {
+      if (active.length > 1) pieces.push(active);
+      active = [];
+    };
+    const advance = () => {
+      if (dashIndex % 2 === 0) flush();
+      do {
+        dashIndex = (dashIndex + 1) % dashes.length;
+      } while (dashes[dashIndex] <= 1e-8);
+      remaining = dashes[dashIndex];
+    };
+    if (remaining <= 1e-8) advance();
+    let distance = 0;
+    for (let i = 1; i < measured.length; i++) {
+      const a = measured[i - 1], b = measured[i];
+      const length = Math.hypot(b.x - a.x, b.y - a.y);
+      if (!length) continue;
+      let travelledOnSegment = 0;
+      while (travelledOnSegment < length - 1e-8) {
+        const step = Math.min(length - travelledOnSegment, remaining);
+        const pointAt = (d) => ({
+          x: a.x + (b.x - a.x) * d / length,
+          y: a.y + (b.y - a.y) * d / length,
+          t: (distance + d) / total
+        });
+        if (dashIndex % 2 === 0 && step > 1e-8) {
+          if (!active.length) active.push(pointAt(travelledOnSegment));
+          active.push(pointAt(travelledOnSegment + step));
+        }
+        travelledOnSegment += step;
+        remaining -= step;
+        if (remaining <= 1e-8) advance();
+      }
+      distance += length;
+    }
+    flush();
+    return pieces;
+  }
+  function fillInkRibbon(ctx, points, baseWidth, pressure, widthFactor = 1) {
+    if (points.length < 2) return;
+    const sides = points.map((point, i) => {
+      const previous = points[Math.max(0, i - 1)];
+      const next = points[Math.min(points.length - 1, i + 1)];
+      const dx = next.x - previous.x, dy = next.y - previous.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const nx = -dy / distance, ny = dx / distance;
+      const r = inkNibWidth(point.t, baseWidth, pressure) * widthFactor / 2;
+      return { x: point.x, y: point.y, nx, ny, r };
+    });
+    const first = sides[0], last = sides[sides.length - 1];
+    ctx.beginPath();
+    ctx.moveTo(first.x + first.nx * first.r, first.y + first.ny * first.r);
+    for (let i = 1; i < sides.length; i++) {
+      const s = sides[i];
+      ctx.lineTo(s.x + s.nx * s.r, s.y + s.ny * s.r);
+    }
+    const endAngle = Math.atan2(last.ny, last.nx);
+    ctx.arc(last.x, last.y, last.r, endAngle, endAngle - Math.PI, true);
+    for (let i = sides.length - 2; i >= 0; i--) {
+      const s = sides[i];
+      ctx.lineTo(s.x - s.nx * s.r, s.y - s.ny * s.r);
+    }
+    const startAngle = Math.atan2(-first.ny, -first.nx);
+    ctx.arc(first.x, first.y, first.r, startAngle, startAngle - Math.PI, true);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function strokeInk(ctx, trace, settings, seed = 0) {
+    if (!settings.handDrawnInk) {
+      ctx.beginPath();
+      trace(ctx);
+      ctx.stroke();
+      return;
+    }
+    const wobble = styleNumber(settings.inkWobble, 0.5, 0, 3);
+    const pressure = styleNumber(settings.inkPressure, 0.35, 0, 2.5);
+    const feather = styleNumber(settings.inkFeather, 0.3, 0, 1);
+    const flattened = flattenInkPath(trace);
+    ctx.save();
+    const originalWidth = ctx.lineWidth;
+    const originalOpacity = ctx.globalAlpha;
+    const pattern = typeof ctx.getLineDash === "function" ? ctx.getLineDash() : [];
+    ctx.fillStyle = ctx.strokeStyle;
+    for (let pathIndex = 0; pathIndex < flattened.length; pathIndex++) {
+      const input = flattened[pathIndex];
+      if (input.length < 2) continue;
+      const s = seed * 0.617 + pathIndex * 17.31;
+      const points = input.map((p, i) => {
+        const before = input[Math.max(0, i - 1)], after = input[Math.min(input.length - 1, i + 1)];
+        const dx = after.x - before.x, dy = after.y - before.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const taper = Math.min(1, i / 2, (input.length - 1 - i) / 2);
+        const drift = Math.sin(i * 0.72 + s) * 0.63 + Math.cos(i * 0.26 + s * 1.8) * 0.37;
+        return {
+          x: p.x - dy / d * wobble * taper * drift,
+          y: p.y + dx / d * wobble * taper * drift
+        };
+      });
+      const pieces = splitInkDashes(points, pattern, ctx.lineDashOffset || 0);
+      if (feather > 0) {
+        ctx.save();
+        ctx.globalAlpha = originalOpacity * (0.12 + 0.12 * feather);
+        ctx.shadowColor = String(ctx.strokeStyle);
+        ctx.shadowBlur = 1 + feather * 3.8;
+        for (const piece of pieces) {
+          fillInkRibbon(ctx, piece, originalWidth, pressure, 1 + feather * 1.6);
+        }
+        ctx.restore();
+      }
+      for (const piece of pieces) {
+        fillInkRibbon(ctx, piece, originalWidth, pressure);
+      }
+    }
+    ctx.restore();
+  }
+
   // src/spell-drawing.ts
   var SpellDrawing = class _SpellDrawing {
     constructor(options = {}) {
@@ -1690,44 +2981,50 @@ var SigilDrawing = (() => {
       this.drawingChords = [];
     }
     static {
-      this.traitThemes = TRAIT_THEMES;
+      this.rgb = parseHexColor;
+    }
+    static {
+      this.styleNumber = styleNumber;
+    }
+    static {
+      this.flattenInkPath = flattenInkPath;
+    }
+    static {
+      this.inkNibWidth = inkNibWidth;
+    }
+    static {
+      this.splitInkDashes = splitInkDashes;
+    }
+    static {
+      this.fillInkRibbon = fillInkRibbon;
     }
     baseTheme() {
-      const theme = this.settings.design;
-      if (theme.startsWith("trait-")) {
-        const name = Object.keys(_SpellDrawing.traitThemes).find(
-          (key) => "trait-" + key.toLowerCase() === theme
-        );
-        return name ? _SpellDrawing.traitThemes[name].base : "plain";
-      }
-      return theme;
+      return baseTheme(this.settings);
+    }
+    themeColor(key) {
+      return themeColor(this.settings, key);
+    }
+    recolorBackground(ctx) {
+      recolorBackground(this.settings, ctx);
+    }
+    paintThemeBackdrop(ctx, width, height, center, radius) {
+      paintThemeBackdrop(
+        this.settings,
+        ctx,
+        width,
+        height,
+        center,
+        radius
+      );
+    }
+    strokeInk(ctx, trace, seed = 0) {
+      strokeInk(ctx, trace, this.settings, seed);
+    }
+    static {
+      this.traitThemes = TRAIT_THEMES;
     }
     static {
       this.themePalettes = THEME_PALETTES;
-    }
-    themeColor(key) {
-      const defaults = _SpellDrawing.themePalettes[this.settings.design] || _SpellDrawing.themePalettes.plain;
-      const proposed = this.settings.themeColors?.[key];
-      return typeof proposed === "string" && /^#[0-9a-f]{6}$/i.test(proposed) ? proposed : defaults[key];
-    }
-    static rgb(hex) {
-      return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-    }
-    /** Recolor the theme's painted background without removing its texture,
-     *  stars, ornaments, vignette or fine detail. No pixels change at defaults. */
-    recolorBackground(ctx) {
-      const base = _SpellDrawing.themePalettes[this.baseTheme()] || _SpellDrawing.themePalettes.plain;
-      const chosen = this.themeColor("background");
-      if (chosen.toLowerCase() === base.background.toLowerCase()) return;
-      const original = _SpellDrawing.rgb(base.background), target = _SpellDrawing.rgb(chosen);
-      const offsets = target.map((v, i) => v - original[i]);
-      const image = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-      const data = image.data;
-      for (let i = 0; i < data.length; i += 4) {
-        for (let c = 0; c < 3; c++)
-          data[i + c] = Math.max(0, Math.min(255, data[i + c] + offsets[c]));
-      }
-      ctx.putImageData(image, 0, 0);
     }
     paintNotation(ctx, width, height, representation, options = {}) {
       const { complete: encoded, visible } = representation;
@@ -1836,28 +3133,6 @@ var SigilDrawing = (() => {
       this.paintOrbits(ctx, center, points, radius, visible.orbits);
       this.paintNodes(ctx, points, radius, width, height);
       this.paintIdentity(ctx, identityTicks);
-    }
-    /** Draw the selected theme's background without encoded strokes.
-     * Used by both the editor and the full-bleed spell-card export. */
-    paintThemeBackdrop(ctx, width, height, center, radius) {
-      const design = this.baseTheme();
-      if (design === "constellations") this.paintSky(ctx, width, height, center);
-      else if (design === "blueprint") this.paintBlueprint(ctx, width, height);
-      else if (design === "obsidian")
-        this.paintObsidian(ctx, width, height, center, radius);
-      else if (design === "herbarium")
-        this.paintHerbarium(ctx, width, height, center);
-      else if (design === "arcane")
-        this.paintArcane(ctx, width, height, center, radius);
-      else if (design === "divine")
-        this.paintDivine(ctx, width, height, center, radius);
-      else if (design === "occult")
-        this.paintOccult(ctx, width, height, center, radius);
-      else if (design === "primal") this.paintPrimal(ctx, width, height, center);
-      else if (design === "tattoo") this.paintSkin(ctx, width, height);
-      else this.paintPaper(ctx, width, height, center, radius);
-      this.paintThemeAccents(ctx, width, height, center, radius);
-      if (this.settings.decorations) this.paintDecorations(ctx, width, height);
     }
     /**
      * Base curves from section 2.3.3 of the guide. Values are local coordinates;
@@ -2125,236 +3400,6 @@ var SigilDrawing = (() => {
         }
       };
     }
-    /**
-     * Convert ordinary Canvas line and true-circle arc instructions to a
-     * polyline suitable for a deterministic ink-nib pass. This is a purely
-     * visual approximation: the underlying exact mathematical paths and all
-     * binary data remain unchanged and still drive layout fitting.
-     */
-    static flattenInkPath(trace, step = 8) {
-      const paths = [];
-      let points = [];
-      const addLine = (x, y) => {
-        const last = points.at(-1);
-        if (!last) {
-          points.push({ x, y });
-          return;
-        }
-        const length = Math.hypot(x - last.x, y - last.y);
-        const steps = Math.max(1, Math.ceil(length / step));
-        for (let i = 1; i <= steps; i++)
-          points.push({
-            x: last.x + (x - last.x) * i / steps,
-            y: last.y + (y - last.y) * i / steps
-          });
-      };
-      const record = {
-        moveTo(x, y) {
-          if (points.length) paths.push(points);
-          points = [{ x, y }];
-        },
-        lineTo(x, y) {
-          addLine(x, y);
-        },
-        arc(cx, cy, r, start, end, anticlockwise = false) {
-          const tau = Math.PI * 2;
-          const positive = (value) => (value % tau + tau) % tau;
-          const full = Math.abs(end - start) >= tau - 1e-7;
-          const sweep = full ? tau : positive(anticlockwise ? start - end : end - start);
-          const p0 = { x: cx + r * Math.cos(start), y: cy + r * Math.sin(start) };
-          addLine(p0.x, p0.y);
-          const steps = Math.max(2, Math.ceil(sweep * r / step));
-          for (let i = 1; i <= steps; i++) {
-            const a = start + (anticlockwise ? -1 : 1) * sweep * i / steps;
-            addLine(cx + r * Math.cos(a), cy + r * Math.sin(a));
-          }
-        }
-      };
-      trace(record);
-      if (points.length) paths.push(points);
-      return paths;
-    }
-    /**
-     * A directional calligraphy-nib profile: thick ink deposits at pen-down,
-     * gradually declining to a fine pen-lift. Pressure 0 retains uniform width.
-     * Progress is measured along the actual stroke length (not point index),
-     * so long chords, short ID lines and circular arcs behave consistently.
-     */
-    static inkNibWidth(progress, baseWidth, pressure) {
-      const p = _SpellDrawing.styleNumber(pressure, 0.35, 0, 2.5);
-      const t = Math.max(0, Math.min(1, progress));
-      const easing = t * t * (3 - 2 * t);
-      const start = 1 + 1.45 * p;
-      const finish = 1 - 0.7 * Math.min(p, 1);
-      return Math.max(0.15, baseWidth * (start + (finish - start) * easing));
-    }
-    /**
-     * Preserve the Canvas dash pattern while gradually changing nib width.
-     * A dash is a separate filled ribbon, but its width still comes from its
-     * position within the FULL stroke, not a new 0-100% taper per dash.
-     */
-    static splitInkDashes(points, pattern = [], offset = 0) {
-      const total = points.slice(1).reduce(
-        (length, point, i) => length + Math.hypot(point.x - points[i].x, point.y - points[i].y),
-        0
-      );
-      if (!total || points.length < 2) return [];
-      let travelled = 0;
-      const measured = points.map((p, i) => {
-        if (i)
-          travelled += Math.hypot(p.x - points[i - 1].x, p.y - points[i - 1].y);
-        return { x: p.x, y: p.y, t: travelled / total };
-      });
-      if (!pattern?.length) return [measured];
-      const raw = [...pattern].map((v) => Math.max(0, Number(v) || 0));
-      const dashes = raw.length % 2 ? [...raw, ...raw] : raw;
-      const period = dashes.reduce((sum, v) => sum + v, 0);
-      if (period < 1e-8) return [measured];
-      let phase = (offset % period + period) % period;
-      let dashIndex = 0;
-      while (dashIndex < dashes.length - 1 && phase >= dashes[dashIndex]) {
-        phase -= dashes[dashIndex++];
-      }
-      let remaining = dashes[dashIndex] - phase;
-      let active = [];
-      const pieces = [];
-      const flush = () => {
-        if (active.length > 1) pieces.push(active);
-        active = [];
-      };
-      const advance = () => {
-        if (dashIndex % 2 === 0) flush();
-        do {
-          dashIndex = (dashIndex + 1) % dashes.length;
-        } while (dashes[dashIndex] <= 1e-8);
-        remaining = dashes[dashIndex];
-      };
-      if (remaining <= 1e-8) advance();
-      let distance = 0;
-      for (let i = 1; i < measured.length; i++) {
-        const a = measured[i - 1], b = measured[i];
-        const length = Math.hypot(b.x - a.x, b.y - a.y);
-        if (!length) continue;
-        let travelledOnSegment = 0;
-        while (travelledOnSegment < length - 1e-8) {
-          const step = Math.min(length - travelledOnSegment, remaining);
-          const pointAt = (d) => ({
-            x: a.x + (b.x - a.x) * d / length,
-            y: a.y + (b.y - a.y) * d / length,
-            t: (distance + d) / total
-          });
-          if (dashIndex % 2 === 0 && step > 1e-8) {
-            if (!active.length) active.push(pointAt(travelledOnSegment));
-            active.push(pointAt(travelledOnSegment + step));
-          }
-          travelledOnSegment += step;
-          remaining -= step;
-          if (remaining <= 1e-8) advance();
-        }
-        distance += length;
-      }
-      flush();
-      return pieces;
-    }
-    /** Draw a continuously tapered, round-ended ink shape in a single fill. */
-    static fillInkRibbon(ctx, points, baseWidth, pressure, widthFactor = 1) {
-      if (points.length < 2) return;
-      const sides = points.map((point, i) => {
-        const previous = points[Math.max(0, i - 1)];
-        const next = points[Math.min(points.length - 1, i + 1)];
-        const dx = next.x - previous.x, dy = next.y - previous.y;
-        const distance = Math.hypot(dx, dy) || 1;
-        const nx = -dy / distance, ny = dx / distance;
-        const r = _SpellDrawing.inkNibWidth(point.t, baseWidth, pressure) * widthFactor / 2;
-        return { x: point.x, y: point.y, nx, ny, r };
-      });
-      const first = sides[0], last = sides[sides.length - 1];
-      ctx.beginPath();
-      ctx.moveTo(first.x + first.nx * first.r, first.y + first.ny * first.r);
-      for (let i = 1; i < sides.length; i++) {
-        const s = sides[i];
-        ctx.lineTo(s.x + s.nx * s.r, s.y + s.ny * s.r);
-      }
-      const endAngle = Math.atan2(last.ny, last.nx);
-      ctx.arc(last.x, last.y, last.r, endAngle, endAngle - Math.PI, true);
-      for (let i = sides.length - 2; i >= 0; i--) {
-        const s = sides[i];
-        ctx.lineTo(s.x - s.nx * s.r, s.y - s.ny * s.r);
-      }
-      const startAngle = Math.atan2(-first.ny, -first.nx);
-      ctx.arc(first.x, first.y, first.r, startAngle, startAngle - Math.PI, true);
-      ctx.closePath();
-      ctx.fill();
-    }
-    /** Directionally tapered feather-and-ink rendering for every encoded stroke. */
-    strokeInk(ctx, trace, seed = 0) {
-      if (!this.settings.handDrawnInk) {
-        ctx.beginPath();
-        trace(ctx);
-        ctx.stroke();
-        return;
-      }
-      const wobble = _SpellDrawing.styleNumber(this.settings.inkWobble, 1, 0, 3);
-      const pressure = _SpellDrawing.styleNumber(
-        this.settings.inkPressure,
-        0.35,
-        0,
-        2.5
-      );
-      const feather = _SpellDrawing.styleNumber(
-        this.settings.inkFeather,
-        0.3,
-        0,
-        1
-      );
-      const flattened = _SpellDrawing.flattenInkPath(trace);
-      ctx.save();
-      const originalWidth = ctx.lineWidth;
-      const originalOpacity = ctx.globalAlpha;
-      const pattern = typeof ctx.getLineDash === "function" ? ctx.getLineDash() : [];
-      ctx.fillStyle = ctx.strokeStyle;
-      for (let pathIndex = 0; pathIndex < flattened.length; pathIndex++) {
-        const input = flattened[pathIndex];
-        if (input.length < 2) continue;
-        const s = seed * 0.617 + pathIndex * 17.31;
-        const points = input.map((p, i) => {
-          const before = input[Math.max(0, i - 1)], after = input[Math.min(input.length - 1, i + 1)];
-          const dx = after.x - before.x, dy = after.y - before.y;
-          const d = Math.hypot(dx, dy) || 1;
-          const taper = Math.min(1, i / 2, (input.length - 1 - i) / 2);
-          const drift = Math.sin(i * 0.72 + s) * 0.63 + Math.cos(i * 0.26 + s * 1.8) * 0.37;
-          return {
-            x: p.x - dy / d * wobble * taper * drift,
-            y: p.y + dx / d * wobble * taper * drift
-          };
-        });
-        const pieces = _SpellDrawing.splitInkDashes(
-          points,
-          pattern,
-          ctx.lineDashOffset || 0
-        );
-        if (feather > 0) {
-          ctx.save();
-          ctx.globalAlpha = originalOpacity * (0.12 + 0.12 * feather);
-          ctx.shadowColor = String(ctx.strokeStyle);
-          ctx.shadowBlur = 1 + feather * 3.8;
-          for (const piece of pieces) {
-            _SpellDrawing.fillInkRibbon(
-              ctx,
-              piece,
-              originalWidth,
-              pressure,
-              1 + feather * 1.6
-            );
-          }
-          ctx.restore();
-        }
-        for (const piece of pieces) {
-          _SpellDrawing.fillInkRibbon(ctx, piece, originalWidth, pressure);
-        }
-      }
-      ctx.restore();
-    }
     /** Canvas dash lengths shared by Layer 2 orbits and Layer 3 ID ticks. */
     static linePattern(style, width) {
       if (style === "dashed")
@@ -2457,11 +3502,6 @@ var SigilDrawing = (() => {
     static identityMarkerShape(style, index) {
       if (style === "mixed") return ["line", "dot", "square"][index % 3];
       return ["line", "dot", "square"].includes(style) ? style : "line";
-    }
-    /** Limit editable Canvas dimensions to the same ranges as the form. */
-    static styleNumber(value, defaultValue, min, max) {
-      const number = Number(value);
-      return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : defaultValue;
     }
     /**
      * Paint one visible marker for every Layer 3 1-bit. A zero bit remains blank.
@@ -2576,1068 +3616,6 @@ var SigilDrawing = (() => {
           }
         }
         ctx.restore();
-      }
-      ctx.restore();
-    }
-    paintGrain(ctx, w, h, color, seed) {
-      const random = _SpellDrawing.seededRandom(seed);
-      const count = Math.min(6e3, Math.round(w * h / 180));
-      ctx.save();
-      ctx.fillStyle = color;
-      for (let i = 0; i < count; i++) {
-        const x = random() * w, y = random() * h, r = 0.25 + random() * 0.55;
-        ctx.beginPath();
-        ctx.ellipse(x, y, r, r * 0.55, random() * Math.PI, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-    paintSkin(ctx, w, h) {
-      const ground = ctx.createLinearGradient(0, 0, w, h);
-      ground.addColorStop(0, "#e7c2a8");
-      ground.addColorStop(0.48, "#d8ad92");
-      ground.addColorStop(1, "#bf9078");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      this.paintGrain(ctx, w, h, "rgba(87,48,37,.10)", 1010);
-    }
-    paintPaper(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(
-        center.x,
-        center.y,
-        radius * 0.12,
-        center.x,
-        center.y,
-        Math.max(w, h) * 0.82
-      );
-      ground.addColorStop(0, "#fcf9ef");
-      ground.addColorStop(1, "#f0e9d8");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      this.paintGrain(ctx, w, h, "rgba(112,82,42,.13)", 101);
-      ctx.save();
-      ctx.strokeStyle = "rgba(138,100,54,.06)";
-      ctx.lineWidth = 0.6;
-      for (let y = 12; y < h; y += 9) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.bezierCurveTo(w * 0.3, y - 2, w * 0.7, y + 2, w, y);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-    /** Stable star field: no random flicker when a control changes. */
-    paintSky(ctx, w, h, center) {
-      const backdrop = ctx.createLinearGradient(0, 0, w, h);
-      backdrop.addColorStop(0, "#06111f");
-      backdrop.addColorStop(0.54, "#0e1c35");
-      backdrop.addColorStop(1, "#050b18");
-      ctx.fillStyle = backdrop;
-      ctx.fillRect(0, 0, w, h);
-      const haze = ctx.createRadialGradient(
-        center.x * 0.92,
-        center.y * 0.87,
-        18,
-        center.x * 0.92,
-        center.y * 0.87,
-        Math.max(w, h) * 0.67
-      );
-      haze.addColorStop(0, "rgba(62,102,169,.32)");
-      haze.addColorStop(1, "rgba(10,25,56,0)");
-      ctx.fillStyle = haze;
-      ctx.fillRect(0, 0, w, h);
-      const band = ctx.createLinearGradient(0, h, w, 0);
-      band.addColorStop(0, "rgba(119,134,196,0)");
-      band.addColorStop(0.4, "rgba(119,134,196,0)");
-      band.addColorStop(0.5, "rgba(119,134,196,.09)");
-      band.addColorStop(0.6, "rgba(119,134,196,0)");
-      band.addColorStop(1, "rgba(119,134,196,0)");
-      ctx.fillStyle = band;
-      ctx.fillRect(0, 0, w, h);
-      const fraction = (value) => value - Math.floor(value);
-      const count = Math.min(540, Math.max(150, Math.round(w * h / 2400)));
-      ctx.save();
-      for (let i = 0; i < count; i++) {
-        const x = 20 + fraction(Math.sin((i + 1) * 127.117) * 43758.5453) * Math.max(1, w - 40);
-        const y = 20 + fraction(Math.sin((i + 1) * 331.331) * 19341.2197) * Math.max(1, h - 40);
-        const intensity = fraction(Math.sin((i + 1) * 47.39) * 97112.37);
-        const size = intensity > 0.96 ? 1.15 : intensity > 0.76 ? 0.75 : 0.43;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(225,237,255,${(0.12 + intensity * 0.46).toFixed(3)})`;
-        ctx.fill();
-      }
-      ctx.strokeStyle = "rgba(182,204,233,.16)";
-      ctx.lineWidth = 0.7;
-      ctx.setLineDash([2, 7]);
-      ctx.beginPath();
-      ctx.ellipse(center.x, center.y, w * 0.46, h * 0.42, -0.28, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
-    }
-    /** Crisp astronomer's blueprint grid; only the rendering changes. */
-    paintBlueprint(ctx, w, h) {
-      const bg = ctx.createLinearGradient(0, 0, w, h);
-      bg.addColorStop(0, "#071c29");
-      bg.addColorStop(0.6, "#0c2d3e");
-      bg.addColorStop(1, "#08212f");
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, w, h);
-      ctx.save();
-      const step = 32;
-      ctx.lineWidth = 0.65;
-      ctx.strokeStyle = "rgba(138,202,223,.105)";
-      ctx.beginPath();
-      for (let x = 0; x < w; x += step) {
-        ctx.moveTo(x + 0.5, 0);
-        ctx.lineTo(x + 0.5, h);
-      }
-      for (let y = 0; y < h; y += step) {
-        ctx.moveTo(0, y + 0.5);
-        ctx.lineTo(w, y + 0.5);
-      }
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(138,202,223,.17)";
-      ctx.lineWidth = 0.9;
-      ctx.beginPath();
-      for (let x = 0; x < w; x += step * 5) {
-        ctx.moveTo(x + 0.5, 0);
-        ctx.lineTo(x + 0.5, h);
-      }
-      for (let y = 0; y < h; y += step * 5) {
-        ctx.moveTo(0, y + 0.5);
-        ctx.lineTo(w, y + 0.5);
-      }
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(164,224,235,.34)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(17.5, 17.5, w - 35, h - 35);
-      ctx.strokeStyle = "rgba(164,224,235,.38)";
-      for (let y = 32; y < h - 25; y += 16) {
-        ctx.beginPath();
-        ctx.moveTo(18, y);
-        ctx.lineTo(y % 32 === 0 ? 28 : 23, y);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-    /** A warm black stone tablet with delicate, restrained copper engraving. */
-    paintObsidian(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(
-        center.x,
-        center.y,
-        radius * 0.12,
-        center.x,
-        center.y,
-        Math.max(w, h) * 0.81
-      );
-      ground.addColorStop(0, "#2b2928");
-      ground.addColorStop(0.53, "#1e2023");
-      ground.addColorStop(1, "#101519");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      const light = ctx.createRadialGradient(
-        w * 0.54,
-        h * 0.37,
-        1,
-        w * 0.54,
-        h * 0.37,
-        w * 0.6
-      );
-      light.addColorStop(0, "rgba(176,123,66,.10)");
-      light.addColorStop(1, "rgba(176,123,66,0)");
-      ctx.fillStyle = light;
-      ctx.fillRect(0, 0, w, h);
-      ctx.save();
-      this.paintGrain(ctx, w, h, "rgba(205,179,145,.08)", 404);
-      const random = _SpellDrawing.seededRandom(404);
-      ctx.strokeStyle = "rgba(206,161,104,.22)";
-      ctx.lineWidth = 0.8;
-      for (const side of [0, 1]) {
-        ctx.beginPath();
-        for (let i = 0; i <= 12; i++) {
-          const x = (side ? 0.94 : 0.06) * w + (random() - 0.5) * w * 0.06;
-          const y = h * i / 12;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-    /** Botanical journal paper with quiet green ink and an archival frame. */
-    paintHerbarium(ctx, w, h, center) {
-      const ground = ctx.createRadialGradient(
-        center.x,
-        center.y,
-        12,
-        center.x,
-        center.y,
-        Math.max(w, h) * 0.84
-      );
-      ground.addColorStop(0, "#f6f5e8");
-      ground.addColorStop(0.7, "#eaf0e2");
-      ground.addColorStop(1, "#dae4d2");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "rgba(92,111,78,.065)";
-      const spacing = Math.max(24, Math.min(38, Math.round(w / 28)));
-      for (let y = spacing * 0.5; y < h; y += spacing)
-        for (let x = spacing * 0.5; x < w; x += spacing) {
-          ctx.beginPath();
-          ctx.arc(x, y, 0.65, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      ctx.save();
-      ctx.strokeStyle = "rgba(91,117,77,.25)";
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(30, 0);
-      ctx.lineTo(30, h);
-      ctx.stroke();
-      for (let y = 24; y < h; y += 24) {
-        ctx.beginPath();
-        ctx.moveTo(24, y);
-        ctx.lineTo(36, y + 4);
-        ctx.stroke();
-      }
-      ctx.strokeStyle = "rgba(91,117,77,.12)";
-      for (const side of [1, -1]) {
-        const x = side === 1 ? w * 0.12 : w * 0.88;
-        ctx.beginPath();
-        ctx.moveTo(x, h * 0.16);
-        ctx.quadraticCurveTo(x + side * w * 0.035, h * 0.5, x, h * 0.84);
-        ctx.stroke();
-        for (let i = 0; i < 7; i++) {
-          ctx.beginPath();
-          ctx.ellipse(
-            x + side * (i % 2 ? 10 : -10),
-            h * (0.22 + i * 0.085),
-            12,
-            3.5,
-            side * 0.65,
-            0,
-            Math.PI * 2
-          );
-          ctx.stroke();
-        }
-      }
-      ctx.restore();
-    }
-    /** Arcane: a night-blue aether field with faint magic-circle engravings. */
-    paintArcane(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(
-        center.x,
-        center.y * 0.88,
-        10,
-        center.x,
-        center.y,
-        Math.max(w, h) * 0.81
-      );
-      ground.addColorStop(0, "#273865");
-      ground.addColorStop(0.57, "#171c43");
-      ground.addColorStop(1, "#090e29");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      ctx.save();
-      const glimmer = ctx.createRadialGradient(
-        center.x * 0.77,
-        center.y * 0.78,
-        5,
-        center.x * 0.77,
-        center.y * 0.78,
-        radius * 1.9
-      );
-      glimmer.addColorStop(0, "rgba(110,88,217,.17)");
-      glimmer.addColorStop(1, "rgba(80,64,210,0)");
-      ctx.fillStyle = glimmer;
-      ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = "rgba(170,162,244,.075)";
-      ctx.lineWidth = 0.8;
-      for (const scale of [1.2, 1.36]) {
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, radius * scale, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      for (let i = 0; i < 32; i++) {
-        const a = 2 * Math.PI * i / 32, inner = radius * 1.225, outer = radius * 1.25;
-        ctx.beginPath();
-        ctx.moveTo(
-          center.x + inner * Math.cos(a),
-          center.y + inner * Math.sin(a)
-        );
-        ctx.lineTo(
-          center.x + outer * Math.cos(a),
-          center.y + outer * Math.sin(a)
-        );
-        ctx.stroke();
-      }
-      ctx.strokeStyle = "rgba(168,157,243,.19)";
-      for (const scale of [1.32, 1.48]) {
-        ctx.beginPath();
-        for (let i = 0; i <= 6; i++) {
-          const angle = i * Math.PI / 3 - Math.PI / 2;
-          const x = center.x + radius * scale * Math.cos(angle);
-          const y = center.y + radius * scale * Math.sin(angle);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-    /** Divine: sunlit ivory, a distant gold halo and a restrained sacred border. */
-    paintDivine(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(
-        center.x,
-        center.y,
-        radius * 0.1,
-        center.x,
-        center.y,
-        Math.max(w, h) * 0.83
-      );
-      ground.addColorStop(0, "#fffdf4");
-      ground.addColorStop(0.58, "#f9f1dc");
-      ground.addColorStop(1, "#e8d6b0");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      const halo = ctx.createRadialGradient(
-        center.x,
-        center.y,
-        radius * 0.66,
-        center.x,
-        center.y,
-        radius * 1.54
-      );
-      halo.addColorStop(0, "rgba(244,197,106,0)");
-      halo.addColorStop(0.72, "rgba(238,192,107,.12)");
-      halo.addColorStop(1, "rgba(238,192,107,0)");
-      ctx.fillStyle = halo;
-      ctx.fillRect(0, 0, w, h);
-      ctx.save();
-      ctx.strokeStyle = "rgba(170,118,50,.12)";
-      ctx.lineWidth = 1;
-      for (const r of [radius * 1.22, radius * 1.25]) {
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      ctx.strokeStyle = "rgba(183,139,56,.13)";
-      for (let i = 0; i < 48; i++) {
-        const angle = i * Math.PI / 24;
-        const inner = radius * 1.3, outer = radius * (i % 4 === 0 ? 1.65 : 1.48);
-        ctx.beginPath();
-        ctx.moveTo(
-          center.x + inner * Math.cos(angle),
-          center.y + inner * Math.sin(angle)
-        );
-        ctx.lineTo(
-          center.x + outer * Math.cos(angle),
-          center.y + outer * Math.sin(angle)
-        );
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-    /** Occult: inky aubergine with diffuse ether fog and smoky copper edging. */
-    paintOccult(ctx, w, h, center, radius) {
-      const ground = ctx.createLinearGradient(0, 0, w, h);
-      ground.addColorStop(0, "#100d1e");
-      ground.addColorStop(0.48, "#2a172d");
-      ground.addColorStop(1, "#130f24");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      ctx.save();
-      for (const [x, y, r, alpha] of [
-        [w * 0.25, h * 0.22, radius * 0.85, 0.12],
-        [w * 0.76, h * 0.57, radius * 0.94, 0.1],
-        [w * 0.55, h * 0.89, radius * 0.7, 0.08]
-      ]) {
-        const fog = ctx.createRadialGradient(x, y, 0, x, y, r);
-        fog.addColorStop(0, `rgba(204,121,183,${alpha})`);
-        fog.addColorStop(1, "rgba(204,121,183,0)");
-        ctx.fillStyle = fog;
-        ctx.fillRect(0, 0, w, h);
-      }
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(220,172,209,.35)";
-      for (let i = 0; i < 7; i++) {
-        const x = w * (0.35 + i * 0.05), y = h * 0.065, r = Math.min(w, h) * 9e-3;
-        ctx.beginPath();
-        ctx.arc(x, y, r, -Math.PI / 2, Math.PI / 2);
-        ctx.ellipse(
-          x,
-          y,
-          Math.max(0.1, r * Math.abs(i - 3) / 3),
-          r,
-          0,
-          Math.PI / 2,
-          -Math.PI / 2,
-          i < 3
-        );
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-    /** Primal: shaded woodland green with gentle luminous lichen and leaf flecks. */
-    paintPrimal(ctx, w, h, center) {
-      const ground = ctx.createRadialGradient(
-        center.x,
-        center.y * 0.86,
-        16,
-        center.x,
-        center.y,
-        Math.max(w, h) * 0.84
-      );
-      ground.addColorStop(0, "#254b3d");
-      ground.addColorStop(0.62, "#12372e");
-      ground.addColorStop(1, "#091c19");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 0, w, h);
-      ctx.save();
-      const fraction = (x) => x - Math.floor(x);
-      const count = Math.min(260, Math.max(90, Math.round(w * h / 4600)));
-      for (let i = 0; i < count; i++) {
-        const x = 23 + fraction(Math.sin((i + 1) * 79.41) * 33193.27) * (w - 46);
-        const y = 23 + fraction(Math.sin((i + 1) * 151.17) * 18743.51) * (h - 46);
-        const size = 0.45 + fraction(Math.sin((i + 1) * 19.71) * 17211.31) * 0.6;
-        ctx.fillStyle = "rgba(182,229,167,.13)";
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.strokeStyle = "rgba(158,208,156,.20)";
-      ctx.lineWidth = 0.8;
-      for (const side of [1, -1]) {
-        const x = side === 1 ? w * 0.06 : w * 0.94;
-        ctx.beginPath();
-        ctx.moveTo(x, h * 0.12);
-        ctx.bezierCurveTo(
-          x + side * w * 0.08,
-          h * 0.35,
-          x - side * w * 0.025,
-          h * 0.65,
-          x,
-          h * 0.9
-        );
-        ctx.stroke();
-        for (let i = 0; i < 14; i++) {
-          const y = h * (0.17 + i * 0.047), length = Math.sin(i / 14 * Math.PI) * w * 0.06;
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.quadraticCurveTo(
-            x + side * length * 0.5,
-            y - length * 0.7,
-            x + side * length,
-            y - length * 0.4
-          );
-          ctx.moveTo(x, y);
-          ctx.quadraticCurveTo(
-            x - side * length * 0.4,
-            y - length * 0.5,
-            x - side * length * 0.6,
-            y - length * 0.3
-          );
-          ctx.stroke();
-        }
-      }
-      ctx.restore();
-    }
-    /** Small, deterministic decorative drawings. Does NOT touch the spell model. */
-    static seededRandom(seed) {
-      let state = Number(seed) >>> 0 || 1;
-      return () => {
-        state = state + 1831565813 >>> 0;
-        let v = state;
-        v = Math.imul(v ^ v >>> 15, v | 1);
-        v ^= v + Math.imul(v ^ v >>> 7, v | 61);
-        return ((v ^ v >>> 14) >>> 0) / 4294967296;
-      };
-    }
-    /**
-     * Fixed, subtle marginal ornaments give every design its own finishing pass.
-     * They are outside the encoding layer and do not alter the UBS connections.
-     * Random decorations are a separate opt-in layer with their own seed.
-     */
-    paintThemeAccents(ctx, w, h, center, radius) {
-      const theme = this.baseTheme();
-      const palettes = {
-        plain: ["rgba(116,91,57,.20)", "rgba(155,124,78,.07)"],
-        constellations: ["rgba(161,211,251,.33)", "rgba(102,162,233,.12)"],
-        blueprint: ["rgba(117,207,231,.34)", "rgba(71,168,195,.12)"],
-        obsidian: ["rgba(225,184,104,.35)", "rgba(184,124,56,.10)"],
-        herbarium: ["rgba(77,115,78,.26)", "rgba(106,144,86,.09)"],
-        arcane: ["rgba(188,171,255,.34)", "rgba(117,106,219,.11)"],
-        divine: ["rgba(186,142,69,.32)", "rgba(232,190,103,.10)"],
-        occult: ["rgba(226,157,208,.28)", "rgba(145,83,161,.12)"],
-        primal: ["rgba(156,216,165,.32)", "rgba(84,153,113,.12)"],
-        tattoo: ["rgba(37,36,38,.28)", "rgba(37,36,38,.06)"]
-      };
-      const palette = palettes[theme] || [
-        "rgba(120,100,70,.22)",
-        "rgba(130,110,80,.08)"
-      ];
-      const unit = Math.min(w / 900, h / 650, 1.5), pad = 42 * unit;
-      ctx.save();
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      const vignette = ctx.createRadialGradient(
-        center.x,
-        center.y,
-        radius * 0.56,
-        center.x,
-        center.y,
-        Math.max(w, h) * 0.76
-      );
-      vignette.addColorStop(0, "rgba(0,0,0,0)");
-      vignette.addColorStop(
-        1,
-        ["plain", "herbarium", "divine", "tattoo"].includes(theme) ? "rgba(129,105,69,.050)" : "rgba(0,0,0,.20)"
-      );
-      ctx.fillStyle = vignette;
-      ctx.fillRect(0, 0, w, h);
-      ctx.lineWidth = Math.max(0.6, unit * 0.9);
-      const corners = this.settings.cornerOrnaments ? [
-        [pad, pad],
-        [w - pad, pad],
-        [pad, h - pad],
-        [w - pad, h - pad]
-      ] : [];
-      for (const [cx, cy] of corners) {
-        const r = 9 * unit;
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.strokeStyle = palette[0];
-        ctx.fillStyle = palette[0];
-        ctx.beginPath();
-        if (theme === "tattoo") {
-          for (const y of [-r, 0, r]) {
-            ctx.moveTo(1.2 * unit, y);
-            ctx.arc(0, y, 1.2 * unit, 0, Math.PI * 2);
-          }
-          ctx.fill();
-        } else if (theme === "blueprint") {
-          ctx.moveTo(-r, r);
-          ctx.lineTo(-r, -r);
-          ctx.lineTo(r, -r);
-          ctx.moveTo(-r * 0.5, 0);
-          ctx.lineTo(r * 0.5, 0);
-          ctx.moveTo(0, -r * 0.5);
-          ctx.lineTo(0, r * 0.5);
-        } else if (theme === "obsidian" || theme === "arcane") {
-          const sides = theme === "obsidian" ? 4 : 6;
-          for (let i = 0; i <= sides; i++) {
-            const a = i * Math.PI * 2 / sides;
-            if (i === 0) ctx.moveTo(0, -r);
-            else ctx.lineTo(Math.sin(a) * r, -Math.cos(a) * r);
-          }
-        } else if (theme === "occult") {
-          ctx.ellipse(0, 0, r, r * 0.4, 0, 0, Math.PI * 2);
-          ctx.moveTo(r * 0.25, 0);
-          ctx.arc(0, 0, r * 0.25, 0, Math.PI * 2);
-        } else if (theme === "herbarium" || theme === "primal") {
-          ctx.moveTo(-r * 0.6, r);
-          ctx.lineTo(r * 0.6, -r);
-          for (let i = 0; i < (theme === "primal" ? 5 : 2); i++) {
-            const y = -r * 0.6 + i * r * 0.3;
-            ctx.moveTo(0, y);
-            ctx.quadraticCurveTo(-r, y - r * 0.5, -r * 0.7, y);
-            ctx.moveTo(0, y);
-            ctx.quadraticCurveTo(r, y - r * 0.4, r * 0.7, y - r * 0.3);
-          }
-        } else if (theme === "divine" || theme === "constellations") {
-          const rays = theme === "divine" ? 12 : 4;
-          for (let i = 0; i < rays; i++) {
-            const a = i * Math.PI * 2 / rays;
-            ctx.moveTo(Math.cos(a) * r * 0.4, Math.sin(a) * r * 0.4);
-            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-          }
-        } else {
-          ctx.moveTo(-r, r * 0.4);
-          ctx.bezierCurveTo(-r, -r, r, r, r, -r * 0.4);
-        }
-        ctx.stroke();
-        ctx.restore();
-      }
-      if (theme === "constellations") {
-        const aura = ctx.createRadialGradient(
-          center.x * 0.84,
-          center.y * 0.74,
-          5,
-          center.x * 0.84,
-          center.y * 0.74,
-          radius * 1.43
-        );
-        aura.addColorStop(0, "rgba(67,137,216,.08)");
-        aura.addColorStop(0.65, "rgba(32,91,173,.045)");
-        aura.addColorStop(1, "rgba(32,91,173,0)");
-        ctx.fillStyle = aura;
-        ctx.fillRect(0, 0, w, h);
-      } else if (theme === "blueprint") {
-        ctx.strokeStyle = palette[0];
-        ctx.globalAlpha = 0.6;
-        for (let i = 0; i <= 12; i++) {
-          const x = 35 + (w - 70) * i / 12;
-          ctx.beginPath();
-          ctx.moveTo(x, 23);
-          ctx.lineTo(x, 23 + (i % 3 === 0 ? 9 : 4) * unit);
-          ctx.moveTo(x, h - 23);
-          ctx.lineTo(x, h - 23 - (i % 3 === 0 ? 9 : 4) * unit);
-          ctx.stroke();
-        }
-      } else if (theme === "divine" || theme === "arcane" || theme === "obsidian") {
-        ctx.strokeStyle = palette[1];
-        ctx.lineWidth = Math.max(0.6, unit);
-        for (const m of [1.08, 1.13]) {
-          ctx.beginPath();
-          ctx.arc(center.x, center.y, radius * m, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      } else if (theme === "herbarium" || theme === "primal") {
-        ctx.strokeStyle = palette[1];
-        ctx.lineWidth = 1;
-        for (const x of [27, w - 27]) {
-          ctx.beginPath();
-          ctx.moveTo(x, h * 0.25);
-          ctx.bezierCurveTo(
-            x + (x < w / 2 ? 7 : -7),
-            h * 0.42,
-            x - (x < w / 2 ? 7 : -7),
-            h * 0.6,
-            x,
-            h * 0.78
-          );
-          ctx.stroke();
-        }
-      } else if (theme === "occult") {
-        ctx.strokeStyle = palette[1];
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, radius * 1.14, -0.72, 1.95);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, radius * 1.19, 2.35, 5.52);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-    paintDecorations(ctx, w, h) {
-      const random = _SpellDrawing.seededRandom(this.settings.decorationSeed);
-      const design = this.baseTheme();
-      const unit = Math.max(0.45, Math.min(2.1, Math.min(w / 920, h / 650)));
-      const pi2 = Math.PI * 2;
-      const places = [
-        [w * 0.105, h * 0.16],
-        [w * 0.875, h * 0.16],
-        [w * 0.105, h * 0.79],
-        [w * 0.88, h * 0.58],
-        [w * 0.45, h * 0.09]
-      ];
-      const strokeCircle = (x, y, r, stroke, alpha = 1) => {
-        ctx.strokeStyle = stroke;
-        ctx.globalAlpha = alpha;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, pi2);
-        ctx.stroke();
-      };
-      const pinStar = (x, y, r, color) => {
-        ctx.strokeStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(x - r, y);
-        ctx.lineTo(x + r, y);
-        ctx.moveTo(x, y - r);
-        ctx.lineTo(x, y + r);
-        ctx.stroke();
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, Math.max(0.55, r * 0.22), 0, pi2);
-        ctx.fill();
-      };
-      ctx.save();
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.lineWidth = 0.8 * unit;
-      if (design === "tattoo") {
-        ctx.strokeStyle = this.themeColor("lines");
-        ctx.fillStyle = this.themeColor("lines");
-        ctx.globalAlpha = 0.3;
-        for (const [x, y] of places) {
-          const r = (5 + random() * 5) * unit;
-          ctx.beginPath();
-          ctx.moveTo(x, y - r);
-          ctx.lineTo(x + r * 0.5, y);
-          ctx.lineTo(x, y + r);
-          ctx.lineTo(x - r * 0.5, y);
-          ctx.closePath();
-          ctx.stroke();
-          for (let i = 0; i < 12; i++) {
-            ctx.beginPath();
-            ctx.arc(
-              x + (random() - 0.5) * r * 4,
-              y + (random() - 0.5) * r * 4,
-              0.55 * unit,
-              0,
-              pi2
-            );
-            ctx.fill();
-          }
-        }
-      } else if (design === "plain") {
-        const color = "rgba(110,81,51,.32)";
-        for (let i = 0; i < 4; i++) {
-          const [x, y] = places[i];
-          const r = (10 + random() * 7) * unit;
-          strokeCircle(x, y, r, color, 0.75);
-          for (let arm = 0; arm < 6; arm++) {
-            const a = pi2 * arm / 6 + random() * 0.19;
-            const p = { x: x + Math.cos(a) * r, y: y + Math.sin(a) * r };
-            pinStar(p.x, p.y, (1.6 + random() * 2) * unit, color);
-          }
-          ctx.strokeStyle = color;
-          ctx.globalAlpha = 0.68;
-          ctx.beginPath();
-          ctx.arc(x, y, r * 0.62, 0, Math.PI * 1.3);
-          ctx.stroke();
-        }
-        for (let i = 0; i < 8; i++) {
-          const left = i % 2 === 0;
-          const x = (left ? 0.055 : 0.95) * w;
-          const y = (0.21 + random() * 0.57) * h;
-          const direction = left ? 1 : -1;
-          ctx.strokeStyle = "rgba(112,84,61,.17)";
-          ctx.globalAlpha = 1;
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.bezierCurveTo(
-            x + direction * 26 * unit,
-            y - 18 * unit,
-            x + direction * 36 * unit,
-            y + 10 * unit,
-            x + direction * 11 * unit,
-            y + 18 * unit
-          );
-          ctx.stroke();
-        }
-      } else if (design === "constellations") {
-        for (let i = 0; i < 4; i++) {
-          const [cx, cy] = places[i];
-          const count = 4 + Math.floor(random() * 3);
-          const stars = Array.from({ length: count }, () => ({
-            x: cx + (random() - 0.5) * Math.min(w * 0.11, 85 * unit),
-            y: cy + (random() - 0.5) * Math.min(h * 0.13, 80 * unit),
-            r: (1.4 + random() * 2) * unit
-          }));
-          ctx.globalAlpha = 0.4;
-          ctx.strokeStyle = "#b0cdeb";
-          ctx.lineWidth = 0.65 * unit;
-          ctx.beginPath();
-          stars.forEach(
-            (p, j) => j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)
-          );
-          ctx.stroke();
-          for (const p of stars) {
-            const halo = ctx.createRadialGradient(
-              p.x,
-              p.y,
-              0,
-              p.x,
-              p.y,
-              12 * unit
-            );
-            halo.addColorStop(0, "rgba(198,227,255,.30)");
-            halo.addColorStop(1, "rgba(198,227,255,0)");
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = halo;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 12 * unit, 0, pi2);
-            ctx.fill();
-            pinStar(p.x, p.y, p.r, "rgba(215,235,255,.76)");
-          }
-        }
-        for (let i = 0; i < 2; i++) {
-          const x = (0.25 + random() * 0.5) * w;
-          const y = (i === 0 ? 0.085 : 0.89) * h;
-          const len = (26 + random() * 25) * unit;
-          ctx.globalAlpha = 0.35;
-          ctx.strokeStyle = "rgba(193,223,255,.57)";
-          ctx.lineWidth = 0.85 * unit;
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(x - len, y + len * 0.35);
-          ctx.stroke();
-          pinStar(x, y, 3.2 * unit, "rgba(214,231,255,.68)");
-        }
-      } else if (design === "blueprint") {
-        for (let i = 0; i < 4; i++) {
-          const [x, y] = places[i];
-          const r = (15 + random() * 12) * unit;
-          ctx.lineWidth = 0.8 * unit;
-          strokeCircle(x, y, r, "rgba(131,207,222,.40)", 0.9);
-          strokeCircle(x, y, r * 0.66, "rgba(131,207,222,.28)", 0.8);
-          const start = random() * pi2;
-          ctx.strokeStyle = "rgba(169,227,236,.52)";
-          ctx.globalAlpha = 0.86;
-          ctx.lineWidth = 1.25 * unit;
-          ctx.beginPath();
-          ctx.arc(x, y, r, start, start + Math.PI * (0.4 + random() * 0.65));
-          ctx.stroke();
-          pinStar(x, y, 3.4 * unit, "rgba(133,210,224,.42)");
-        }
-        ctx.globalAlpha = 0.6;
-        ctx.lineWidth = 0.6 * unit;
-        ctx.strokeStyle = "rgba(135,209,222,.36)";
-        for (let i = 0; i < 5; i++) {
-          const x = (0.24 + random() * 0.53) * w;
-          const y = (i % 2 ? 0.105 : 0.9) * h;
-          const r = (7 + random() * 8) * unit;
-          ctx.beginPath();
-          ctx.arc(x, y, r, Math.PI * 0.15, Math.PI * 1.65);
-          ctx.stroke();
-        }
-      } else if (design === "obsidian") {
-        for (let i = 0; i < 4; i++) {
-          const [x, y] = places[i];
-          const r = (11 + random() * 7) * unit;
-          strokeCircle(x, y, r, "rgba(218,170,101,.40)", 0.83);
-          strokeCircle(x, y, r * 0.32, "rgba(218,170,101,.36)", 0.8);
-          const petals = 8 + 2 * Math.floor(random() * 3);
-          for (let j = 0; j < petals; j++) {
-            const a = pi2 * j / petals;
-            const px = x + Math.cos(a) * r * 0.72;
-            const py = y + Math.sin(a) * r * 0.72;
-            ctx.globalAlpha = 0.53;
-            ctx.fillStyle = "rgba(221,170,98,.48)";
-            ctx.beginPath();
-            ctx.ellipse(px, py, 3.5 * unit, 1.2 * unit, a, 0, pi2);
-            ctx.fill();
-          }
-          pinStar(x, y, 2.8 * unit, "rgba(233,183,117,.56)");
-        }
-        for (let i = 0; i < 5; i++) {
-          const y = (0.22 + random() * 0.58) * h;
-          const x = i % 2 ? w * 0.956 : w * 0.044;
-          ctx.globalAlpha = 0.56;
-          ctx.strokeStyle = "rgba(213,166,110,.30)";
-          ctx.lineWidth = 0.8 * unit;
-          ctx.beginPath();
-          ctx.arc(
-            x,
-            y,
-            (6 + random() * 6) * unit,
-            random() * pi2,
-            random() * pi2 + Math.PI * 1.15
-          );
-          ctx.stroke();
-        }
-      } else if (design === "arcane") {
-        for (let i = 0; i < 4; i++) {
-          const [x, y] = places[i];
-          const r = (14 + random() * 9) * unit;
-          ctx.globalAlpha = 0.82;
-          ctx.lineWidth = 0.9 * unit;
-          strokeCircle(x, y, r, "rgba(179,159,255,.40)");
-          strokeCircle(x, y, r * 0.72, "rgba(158,191,255,.33)");
-          for (let k = 0; k < 7; k++) {
-            const a = k * pi2 / 7 + random() * 0.16, inn = r * 0.85, out = r * 1.12;
-            ctx.strokeStyle = "rgba(190,176,255,.55)";
-            ctx.beginPath();
-            ctx.moveTo(x + Math.cos(a) * inn, y + Math.sin(a) * inn);
-            ctx.lineTo(x + Math.cos(a) * out, y + Math.sin(a) * out);
-            ctx.stroke();
-          }
-          pinStar(x, y, (3 + random() * 2) * unit, "rgba(202,193,255,.77)");
-        }
-        for (let i = 0; i < 6; i++) {
-          const x = (0.24 + random() * 0.54) * w, y = (i % 2 ? 0.08 : 0.91) * h;
-          ctx.globalAlpha = 0.45;
-          pinStar(x, y, (2 + random() * 3) * unit, "rgba(189,176,246,.57)");
-        }
-      } else if (design === "divine") {
-        for (let i = 0; i < 4; i++) {
-          const [x, y] = places[i], r = (10 + random() * 10) * unit;
-          ctx.lineWidth = 0.9 * unit;
-          strokeCircle(x, y, r * 0.72, "rgba(172,113,41,.39)");
-          strokeCircle(x, y, r * 0.34, "rgba(172,113,41,.47)");
-          for (let arm = 0; arm < 12; arm++) {
-            const a = pi2 * arm / 12, inner = r * 0.85, outer = r * (1.18 + random() * 0.27);
-            ctx.strokeStyle = "rgba(185,132,51,.55)";
-            ctx.globalAlpha = 0.74;
-            ctx.beginPath();
-            ctx.moveTo(x + Math.cos(a) * inner, y + Math.sin(a) * inner);
-            ctx.lineTo(x + Math.cos(a) * outer, y + Math.sin(a) * outer);
-            ctx.stroke();
-          }
-          ctx.fillStyle = "rgba(207,166,89,.38)";
-          ctx.beginPath();
-          ctx.arc(x, y, r * 0.19, 0, pi2);
-          ctx.fill();
-        }
-        for (let i = 0; i < 5; i++) {
-          const x = (0.25 + random() * 0.51) * w, y = (i % 2 ? 0.1 : 0.87) * h;
-          ctx.globalAlpha = 0.58;
-          pinStar(x, y, (2.2 + random() * 2) * unit, "rgba(184,135,66,.44)");
-        }
-      } else if (design === "occult") {
-        for (let i = 0; i < 4; i++) {
-          const [x, y] = places[i], r = (12 + random() * 11) * unit;
-          const turn = random() * pi2;
-          ctx.globalAlpha = 0.65;
-          ctx.strokeStyle = "rgba(219,154,197,.50)";
-          ctx.lineWidth = 1 * unit;
-          ctx.beginPath();
-          ctx.arc(x, y, r, turn, turn + Math.PI * (0.85 + random() * 0.45));
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(x, y, r * 0.6, turn + 1, turn + Math.PI * 1.7);
-          ctx.stroke();
-          ctx.globalAlpha = 0.55;
-          ctx.beginPath();
-          ctx.ellipse(x, y, r * 0.44, r * 0.2, -0.3, 0, pi2);
-          ctx.stroke();
-          ctx.fillStyle = "rgba(222,164,208,.59)";
-          ctx.beginPath();
-          ctx.arc(x, y, r * 0.14, 0, pi2);
-          ctx.fill();
-        }
-        for (let i = 0; i < 7; i++) {
-          const left = i % 2 === 0, x = left ? w * 0.061 : w * 0.94;
-          const y = (0.2 + random() * 0.61) * h, d = left ? 1 : -1;
-          ctx.globalAlpha = 0.45;
-          ctx.lineWidth = 0.7 * unit;
-          ctx.strokeStyle = "rgba(224,143,206,.42)";
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.bezierCurveTo(
-            x + 15 * d * unit,
-            y - 8 * unit,
-            x + 30 * d * unit,
-            y + 9 * unit,
-            x + 16 * d * unit,
-            y + 18 * unit
-          );
-          ctx.stroke();
-        }
-      } else if (design === "primal") {
-        for (let side = 0; side < 2; side++) {
-          const x = side === 0 ? w * 0.069 : w * 0.931, dir = side === 0 ? 1 : -1;
-          const y0 = h * (0.17 + random() * 0.05), y1 = h * (0.73 + random() * 0.05);
-          ctx.globalAlpha = 0.63;
-          ctx.lineWidth = 1.2 * unit;
-          ctx.strokeStyle = "rgba(160,217,165,.57)";
-          ctx.beginPath();
-          ctx.moveTo(x, y0);
-          ctx.bezierCurveTo(
-            x + 23 * dir * unit,
-            y0 + h * 0.14,
-            x - 18 * dir * unit,
-            y1 - h * 0.14,
-            x,
-            y1
-          );
-          ctx.stroke();
-          for (let j = 0; j < 9; j++) {
-            const t = (j + 0.6) / 10;
-            const yy = y0 + (y1 - y0) * t, xx = x + Math.sin(t * pi2) * 8 * unit * dir;
-            const sign = (j % 2 ? 1 : -1) * dir;
-            const len = (7 + random() * 8) * unit;
-            ctx.fillStyle = "rgba(150,212,136,.22)";
-            ctx.strokeStyle = "rgba(153,213,153,.48)";
-            ctx.lineWidth = 0.7 * unit;
-            ctx.beginPath();
-            ctx.ellipse(
-              xx + sign * len * 0.55,
-              yy,
-              len * 0.64,
-              len * 0.23,
-              sign * 0.55,
-              0,
-              pi2
-            );
-            ctx.fill();
-            ctx.stroke();
-          }
-        }
-        for (let i = 0; i < 13; i++) {
-          const x = (i % 2 ? w * 0.1 : w * 0.9) + (random() - 0.5) * 36 * unit;
-          const y = (0.12 + random() * 0.72) * h;
-          ctx.fillStyle = "rgba(216,240,166,.41)";
-          ctx.globalAlpha = 0.7;
-          ctx.beginPath();
-          ctx.arc(x, y, (0.7 + random() * 1.8) * unit, 0, pi2);
-          ctx.fill();
-        }
-      } else if (design === "herbarium") {
-        for (let side = 0; side < 2; side++) {
-          const x = side === 0 ? w * 0.065 : w * 0.935;
-          const sign = side === 0 ? 1 : -1;
-          const y0 = h * 0.18 + random() * h * 0.035;
-          const y1 = h * 0.7 + random() * h * 0.06;
-          const bend = (14 + random() * 12) * unit * sign;
-          ctx.globalAlpha = 0.68;
-          ctx.strokeStyle = "rgba(72,112,77,.48)";
-          ctx.lineWidth = 1.05 * unit;
-          ctx.beginPath();
-          ctx.moveTo(x, y0);
-          ctx.bezierCurveTo(
-            x + bend,
-            y0 + h * 0.2,
-            x - bend * 0.5,
-            y1 - h * 0.18,
-            x,
-            y1
-          );
-          ctx.stroke();
-          for (let j = 0; j < 7; j++) {
-            const t = (j + 0.5) / 8;
-            const yy = y0 + (y1 - y0) * t;
-            const xx = x + Math.sin(t * Math.PI * 2) * bend * 0.38;
-            const dir = (j % 2 ? -1 : 1) * sign;
-            const len = (8 + random() * 8) * unit;
-            ctx.fillStyle = "rgba(88,127,83,.25)";
-            ctx.strokeStyle = "rgba(69,110,72,.44)";
-            ctx.globalAlpha = 0.72;
-            ctx.beginPath();
-            ctx.ellipse(
-              xx + dir * len * 0.55,
-              yy - 3 * unit,
-              len * 0.7,
-              2.8 * unit,
-              dir * (0.38 + random() * 0.35),
-              0,
-              pi2
-            );
-            ctx.fill();
-            ctx.stroke();
-          }
-        }
-        for (let i = 0; i < 3; i++) {
-          const [cx, cy] = places[[0, 1, 2][i]];
-          const r = (6 + random() * 3) * unit;
-          ctx.fillStyle = "rgba(212,188,112,.25)";
-          ctx.strokeStyle = "rgba(88,128,93,.40)";
-          ctx.lineWidth = 0.7 * unit;
-          ctx.globalAlpha = 0.75;
-          for (let j = 0; j < 5; j++) {
-            const a = pi2 * j / 5;
-            ctx.beginPath();
-            ctx.ellipse(
-              cx + Math.cos(a) * r,
-              cy + Math.sin(a) * r,
-              r * 0.68,
-              r * 0.42,
-              a,
-              0,
-              pi2
-            );
-            ctx.fill();
-            ctx.stroke();
-          }
-          ctx.beginPath();
-          ctx.arc(cx, cy, r * 0.44, 0, pi2);
-          ctx.fillStyle = "rgba(159,128,70,.50)";
-          ctx.fill();
-        }
       }
       ctx.restore();
     }
@@ -4711,6 +4689,16 @@ var SpellCard = (() => {
   // src/constants.ts
   var CARD_WIDTH = 1240;
 
+  // src/color.ts
+  function isHexColor(value) {
+    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+  }
+  function parseHexColor(hex) {
+    return [1, 3, 5].map(
+      (index) => Number.parseInt(hex.slice(index, index + 2), 16)
+    );
+  }
+
   // src/spell-card.ts
   var readonlyWidth = CARD_WIDTH;
   function cleanDescription(value) {
@@ -4790,10 +4778,7 @@ var SpellCard = (() => {
     ];
   }
   function rgb(hex) {
-    const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#242a31";
-    return [1, 3, 5].map(
-      (index) => Number.parseInt(value.slice(index, index + 2), 16)
-    );
+    return parseHexColor(isHexColor(hex) ? hex : "#242a31");
   }
   function rgba(hex, opacity) {
     const [r, g, b] = rgb(hex);
@@ -5435,7 +5420,7 @@ var SigilConstants = (() => {
     identityPointStrokeWidth: 1,
     identityMarkerOpacity: 0.45,
     handDrawnInk: false,
-    inkWobble: 1,
+    inkWobble: 0.5,
     inkPressure: 0.35,
     inkFeather: 0.3,
     rankComplexity: true,
@@ -5841,7 +5826,188 @@ var SigilDownload = (() => {
 
 </script>
 <script>
-const {
+// src/spell-picker.ts
+var SpellPicker = class {
+  constructor(elements, fieldIds, getSelection, onSelect) {
+    this.elements = elements;
+    this.fieldIds = fieldIds;
+    this.getSelection = getSelection;
+    this.onSelect = onSelect;
+    this.rows = [];
+    this.open = false;
+    this.options = [];
+    this.active = -1;
+    const { root, input: input2, toggle, list } = elements;
+    input2.addEventListener("focus", () => {
+      input2.select();
+      this.show("", true);
+    });
+    input2.addEventListener("input", () => this.show(input2.value));
+    input2.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if (!this.open) this.show("", true);
+        else
+          this.moveActive(this.active + (event.key === "ArrowDown" ? 1 : -1));
+      } else if (event.key === "Enter" && this.open) {
+        event.preventDefault();
+        if (this.active >= 0) this.choose(this.options[this.active].id);
+      } else if (event.key === "Escape" && this.open) {
+        event.preventDefault();
+        this.close();
+      } else if (event.key === "Tab") {
+        this.close();
+      }
+    });
+    toggle.addEventListener("click", () => {
+      if (this.open) this.close();
+      else {
+        input2.focus();
+        this.show("", true);
+      }
+    });
+    list.addEventListener("mousedown", (event) => event.preventDefault());
+    list.addEventListener("click", (event) => {
+      const item = event.target instanceof Element ? event.target.closest("[data-spell-id]") : null;
+      if (item instanceof HTMLElement && item.dataset.spellId)
+        this.choose(item.dataset.spellId);
+    });
+    root.addEventListener("focusout", (event) => {
+      if (!(event.relatedTarget instanceof Node) || !root.contains(event.relatedTarget))
+        this.close();
+    });
+    root.ownerDocument.addEventListener("pointerdown", (event) => {
+      if (this.open && (!(event.target instanceof Node) || !root.contains(event.target)))
+        this.close();
+    });
+  }
+  get searchRows() {
+    return this.rows;
+  }
+  refresh(entries) {
+    this.rows = entries.map((entry) => ({
+      entry,
+      search: [
+        entry.name,
+        entry.rank,
+        entry.rank === "cantrip" ? "cantrip" : `rank ${entry.rank}`,
+        entry.source,
+        entry.edition === "both" ? "both remaster legacy" : entry.edition,
+        entry.category,
+        entry.tradition,
+        entry.damage,
+        entry.range,
+        ...entry.traits || [],
+        ...entry.traditions || [],
+        ...this.fieldIds.map((id) => entry[id])
+      ].filter(Boolean).join(" ").toLocaleLowerCase()
+    }));
+    if (this.open) this.show("");
+    else this.refreshSelection();
+  }
+  refreshSelection() {
+    this.elements.input.value = this.getSelection()?.name || "\u2726 Custom spell";
+  }
+  close() {
+    this.open = false;
+    this.options = [];
+    this.active = -1;
+    const { input: input2, toggle, list, status } = this.elements;
+    list.hidden = true;
+    input2.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-expanded", "false");
+    list.replaceChildren();
+    input2.removeAttribute("aria-activedescendant");
+    this.refreshSelection();
+    status.textContent = "";
+  }
+  moveActive(index) {
+    if (!this.options.length) return;
+    this.active = (index + this.options.length) % this.options.length;
+    const items = this.elements.list.querySelectorAll('[role="option"]');
+    items.forEach(
+      (item, i) => item.classList.toggle("is-active", i === this.active)
+    );
+    const active = items[this.active];
+    this.elements.input.setAttribute("aria-activedescendant", active.id);
+    active.scrollIntoView({ block: "nearest" });
+  }
+  show(query = "", focusSelected = false) {
+    this.open = true;
+    const terms = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+    const matching = this.rows.filter(
+      (row) => terms.every((term) => row.search.includes(term))
+    );
+    const canChooseCustom = !terms.length || terms.every((term) => "custom spell".includes(term));
+    this.options = [
+      ...canChooseCustom ? [{ id: "custom", label: "\u2726 Custom spell", meta: "New spell" }] : [],
+      ...matching.map(({ entry }) => {
+        const rank = entry.rank === "cantrip" ? "cantrip" : `rank ${entry.rank}`;
+        const edition = entry.edition === "both" ? "Both editions" : entry.edition === "legacy" ? "Legacy" : "Remaster";
+        return {
+          id: entry.id,
+          label: entry.name,
+          meta: `${edition} | ${rank}${entry.source ? " | " + entry.source : ""}`
+        };
+      })
+    ];
+    const { input: input2, toggle, list, status } = this.elements;
+    const selected = this.getSelection();
+    const fragment = list.ownerDocument.createDocumentFragment();
+    this.options.forEach((option, index) => {
+      const item = list.ownerDocument.createElement("button");
+      item.type = "button";
+      item.className = "spell-picker-option";
+      item.id = `spell-picker-option-${index}`;
+      item.setAttribute("role", "option");
+      item.setAttribute(
+        "aria-selected",
+        String(selected ? selected.id === option.id : option.id === "custom")
+      );
+      item.dataset.spellId = option.id;
+      const name = list.ownerDocument.createElement("span");
+      name.textContent = option.label;
+      const meta = list.ownerDocument.createElement("span");
+      meta.className = "spell-option-meta";
+      meta.textContent = option.meta;
+      item.append(name, meta);
+      fragment.appendChild(item);
+    });
+    if (!this.options.length) {
+      const empty = list.ownerDocument.createElement("div");
+      empty.className = "spell-picker-empty";
+      empty.textContent = "No matching spells. Try a shorter search.";
+      fragment.appendChild(empty);
+    }
+    list.replaceChildren(fragment);
+    list.hidden = false;
+    input2.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-expanded", "true");
+    status.textContent = `${matching.length.toLocaleString()} match${matching.length === 1 ? "" : "es"}`;
+    let active = 0;
+    if (focusSelected && selected) {
+      const selectedIndex = this.options.findIndex(
+        (option) => option.id === selected.id
+      );
+      if (selectedIndex >= 0) active = selectedIndex;
+    }
+    this.active = -1;
+    input2.removeAttribute("aria-activedescendant");
+    if (this.options.length) this.moveActive(active);
+  }
+  choose(id) {
+    this.close();
+    this.onSelect(id);
+  }
+};
+
+// src/color.ts
+function isHexColor(value) {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+}
+
+// src/app.ts
+var {
   SPELL_ATTRIBUTES,
   CHORD_ATTRIBUTE_IDS,
   ORBIT_ATTRIBUTE_IDS,
@@ -5852,12 +6018,12 @@ const {
   DRAWING_CONTROLS,
   EDITOR_THEMES
 } = SigilConstants;
-const { DESIGN_DESCRIPTIONS, DECORATION_DESCRIPTIONS, DESIGN_DEFAULTS } = EDITOR_THEMES;
-const { SpellCalculation } = SigilCalculation;
-const { SpellDrawing } = SigilDrawing;
-const { SpellCatalog } = SigilCatalog;
-const attributesFor = (attributes, ids) => ids.map((id) => attributes.find((attribute) => attribute.id === id)).filter((attribute) => attribute !== void 0);
-const fieldIDs = SPELL_ATTRIBUTES.map((attribute) => attribute.id);
+var { DESIGN_DESCRIPTIONS, DECORATION_DESCRIPTIONS, DESIGN_DEFAULTS } = EDITOR_THEMES;
+var { SpellCalculation, SpellEncoding } = SigilCalculation;
+var { SpellDrawing } = SigilDrawing;
+var { SpellCatalog } = SigilCatalog;
+var attributesFor = (attributes, ids) => ids.map((id) => attributes.find((attribute) => attribute.id === id)).filter((attribute) => attribute !== void 0);
+var fieldIDs = SPELL_ATTRIBUTES.map((attribute) => attribute.id);
 function $(id) {
   const element = document.getElementById(id);
   if (!element) throw new Error(`Missing UI element: ${id}`);
@@ -5869,21 +6035,21 @@ function elementOf(id, type) {
     throw new TypeError(`Unexpected UI element type: ${id}`);
   return element;
 }
-const input = (id) => elementOf(id, HTMLInputElement);
-const select = (id) => elementOf(id, HTMLSelectElement);
-const button = (id) => elementOf(id, HTMLButtonElement);
-const textarea = (id) => elementOf(id, HTMLTextAreaElement);
-const canvasElement = (id) => elementOf(id, HTMLCanvasElement);
-const editorPanel = $("editorPanel");
-const editorNavigation = $("editorNavigation");
-const editorLinks = Array.from(
+var input = (id) => elementOf(id, HTMLInputElement);
+var select = (id) => elementOf(id, HTMLSelectElement);
+var button = (id) => elementOf(id, HTMLButtonElement);
+var textarea = (id) => elementOf(id, HTMLTextAreaElement);
+var canvasElement = (id) => elementOf(id, HTMLCanvasElement);
+var editorPanel = $("editorPanel");
+var editorNavigation = $("editorNavigation");
+var editorLinks = Array.from(
   editorNavigation.querySelectorAll("[data-scroll-target]")
 );
-const editorSections = editorLinks.map(
+var editorSections = editorLinks.map(
   (link) => $(link.dataset.scrollTarget || "")
 );
 $("notationSection").before($("designSection"));
-const mobileEditor = window.matchMedia("(max-width:850px)");
+var mobileEditor = window.matchMedia("(max-width:850px)");
 function setEditorSection(section) {
   for (const [index, link] of editorLinks.entries()) {
     const active = editorSections[index] === section;
@@ -5902,7 +6068,7 @@ function updateEditorSection() {
     active = editorSections[editorSections.length - 1];
   setEditorSection(active);
 }
-let editorScrollFrame = 0;
+var editorScrollFrame = 0;
 function scheduleEditorSection() {
   cancelAnimationFrame(editorScrollFrame);
   editorScrollFrame = requestAnimationFrame(updateEditorSection);
@@ -5969,7 +6135,7 @@ function setInterfaceMode(mode, persist = true) {
     }
   }
 }
-let initialUiMode = "dark";
+var initialUiMode = "dark";
 try {
   initialUiMode = localStorage.getItem(UI_MODE_STORAGE) === "light" ? "light" : "dark";
 } catch (error) {
@@ -5982,25 +6148,40 @@ button("uiModeToggle").addEventListener(
     document.documentElement.dataset.uiMode === "light" ? "dark" : "light"
   )
 );
-const canvas = canvasElement("spellCanvas");
-const calculation = new SpellCalculation(
+var canvas = canvasElement("spellCanvas");
+var calculation = new SpellCalculation(
   attributesFor(SPELL_ATTRIBUTES, CHORD_ATTRIBUTE_IDS),
   attributesFor(SPELL_ATTRIBUTES, ORBIT_ATTRIBUTE_IDS)
 );
-const drawing = new SpellDrawing();
-let currentSpell = {
+var drawing = new SpellDrawing();
+var currentSpell = {
   edition: "pf2e",
   name: "Untitled spell",
   variant: ""
 };
-let activeAttributes = SPELL_ATTRIBUTES;
-let catalogue = SpellCatalog.parse(window.DEFAULT_SPELL_CATALOG);
-let selectedEntry = null;
-let spellRows = [];
-let pickerOpen = false;
-let pickerOptions = [];
-let pickerActive = -1;
-const FACTORY_COLORS = SpellDrawing.themePalettes;
+var activeAttributes = SPELL_ATTRIBUTES;
+var catalogue = SpellCatalog.parse(window.DEFAULT_SPELL_CATALOG);
+var selectedEntry = null;
+var spellPicker = new SpellPicker(
+  {
+    root: $("spellPicker"),
+    input: input("spellPickerInput"),
+    toggle: button("spellPickerToggle"),
+    list: $("spellPickerList"),
+    status: $("spellPickerStatus")
+  },
+  fieldIDs,
+  () => selectedEntry,
+  (id) => {
+    if (id === "custom") startCustomSpell();
+    else chooseSpell(id);
+  }
+);
+function refreshSpellChoices() {
+  $("catalogCount").textContent = `${catalogue.entries.length.toLocaleString()} spells`;
+  spellPicker.refresh(catalogue.entries);
+}
+var FACTORY_COLORS = SpellDrawing.themePalettes;
 function loadColors() {
   let saved = {};
   try {
@@ -6014,14 +6195,13 @@ function loadColors() {
     const stored = saved && typeof saved === "object" && theme in saved ? Reflect.get(saved, theme) : void 0;
     for (const key of COLOR_KEYS) {
       const value = stored && typeof stored === "object" ? Reflect.get(stored, key) : void 0;
-      if (typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value))
-        palette[key] = value;
+      if (isHexColor(value)) palette[key] = value;
     }
     preferences[theme] = palette;
   }
   return preferences;
 }
-const colorPreferences = loadColors();
+var colorPreferences = loadColors();
 function refreshColorControls() {
   for (const key of COLOR_KEYS)
     input(COLOR_IDS[key]).value = colorPreferences[currentDesign][key];
@@ -6034,16 +6214,16 @@ function saveColors() {
     console.warn("Unable to save theme colors:", error);
   }
 }
-const initialDesign = select("designTheme").value;
-const freshDesignPreferences = () => Object.fromEntries(
+var initialDesign = select("designTheme").value;
+var freshDesignPreferences = () => Object.fromEntries(
   Object.entries(DESIGN_DEFAULTS).map(([key, values]) => [
     key,
     { ...values }
   ])
 );
-let currentDesign = initialDesign;
-let designPreferences = freshDesignPreferences();
-const themeGroups = {
+var currentDesign = initialDesign;
+var designPreferences = freshDesignPreferences();
+var themeGroups = {
   surfaces: $("surfacesThemes"),
   traditions: $("traditionsThemes"),
   traits: $("traitsThemes")
@@ -6060,7 +6240,7 @@ function showThemeGroup(group) {
     );
   }
 }
-const themeRadios = Array.from(select("designTheme").options).map((option) => {
+var themeRadios = Array.from(select("designTheme").options).map((option) => {
   const group = themeGroupFor(option);
   const label = document.createElement("label");
   label.className = "theme-choice";
@@ -6101,7 +6281,7 @@ $("themeChoices").addEventListener("change", (event) => {
     source.dispatchEvent(new Event("change", { bubbles: true }));
   }
 });
-const initialDrawingValues = Object.fromEntries(
+var initialDrawingValues = Object.fromEntries(
   DRAWING_CONTROLS.map((id) => {
     const control = drawingControl(id);
     return [
@@ -6157,8 +6337,8 @@ function attributesForDataset(entries) {
     (v) => v && !existing.has(v)
   );
   observed.sort((a, b) => a.localeCompare(b, void 0, { numeric: true }));
-  const capacity = SpellCalculation.uniqueNecklaces(
-    SpellCalculation.nextPrime(2 * CHORD_ATTRIBUTE_IDS.length + 1)
+  const capacity = SpellEncoding.uniqueNecklaces(
+    SpellEncoding.nextPrime(2 * CHORD_ATTRIBUTE_IDS.length + 1)
   ).length;
   if (range.options.length + observed.length > capacity) {
     throw new Error(
@@ -6245,125 +6425,6 @@ function render() {
     button("exportSpellCard").disabled = true;
   }
 }
-function entryLabel(entry) {
-  const rank = entry.rank === "cantrip" ? "cantrip" : `rank ${entry.rank}`;
-  return `${entry.name} | ${rank}${entry.source ? " | " + entry.source : ""}`;
-}
-function pickerSelectionLabel() {
-  return selectedEntry?.name || "\u2726 Custom spell";
-}
-function closeSpellPicker() {
-  pickerOpen = false;
-  pickerOptions = [];
-  pickerActive = -1;
-  $("spellPickerList").hidden = true;
-  input("spellPickerInput").setAttribute("aria-expanded", "false");
-  button("spellPickerToggle").setAttribute("aria-expanded", "false");
-  $("spellPickerList").replaceChildren();
-  input("spellPickerInput").removeAttribute("aria-activedescendant");
-  input("spellPickerInput").value = pickerSelectionLabel();
-  $("spellPickerStatus").textContent = "";
-}
-function movePickerActive(index) {
-  if (!pickerOptions.length) return;
-  pickerActive = (index + pickerOptions.length) % pickerOptions.length;
-  const items = $("spellPickerList").querySelectorAll('[role="option"]');
-  items.forEach(
-    (item, i) => item.classList.toggle("is-active", i === pickerActive)
-  );
-  const active = items[pickerActive];
-  input("spellPickerInput").setAttribute("aria-activedescendant", active.id);
-  active.scrollIntoView({ block: "nearest" });
-}
-function openSpellPicker(query = "", focusSelected = false) {
-  pickerOpen = true;
-  const terms = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-  const matching = spellRows.filter(
-    (row) => terms.every((term) => row.search.includes(term))
-  );
-  const canChooseCustom = !terms.length || terms.every((term) => "custom spell".includes(term));
-  const visible = matching;
-  pickerOptions = [
-    ...canChooseCustom ? [{ id: "custom", label: "\u2726 Custom spell", meta: "New spell" }] : [],
-    ...visible.map((row) => ({
-      id: row.entry.id,
-      label: row.entry.name,
-      meta: `${row.entry.edition === "both" ? "Both editions" : row.entry.edition === "legacy" ? "Legacy" : "Remaster"} | ${entryLabel(row.entry).split(" | ").slice(1).join(" | ")}`
-    }))
-  ];
-  const menu = $("spellPickerList");
-  const fragment = document.createDocumentFragment();
-  pickerOptions.forEach((option, index) => {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = "spell-picker-option";
-    item.id = `spell-picker-option-${index}`;
-    item.setAttribute("role", "option");
-    item.setAttribute(
-      "aria-selected",
-      String(
-        selectedEntry ? selectedEntry.id === option.id : option.id === "custom"
-      )
-    );
-    item.dataset.spellId = option.id;
-    const name = document.createElement("span");
-    name.textContent = option.label;
-    const meta = document.createElement("span");
-    meta.className = "spell-option-meta";
-    meta.textContent = option.meta;
-    item.append(name, meta);
-    fragment.appendChild(item);
-  });
-  if (!pickerOptions.length) {
-    const empty = document.createElement("div");
-    empty.className = "spell-picker-empty";
-    empty.textContent = "No matching spells. Try a shorter search.";
-    fragment.appendChild(empty);
-  }
-  menu.replaceChildren(fragment);
-  menu.hidden = false;
-  input("spellPickerInput").setAttribute("aria-expanded", "true");
-  button("spellPickerToggle").setAttribute("aria-expanded", "true");
-  $("spellPickerStatus").textContent = `${matching.length.toLocaleString()} match${matching.length === 1 ? "" : "es"}`;
-  let active = 0;
-  if (focusSelected && selectedEntry) {
-    const selectedId = selectedEntry.id;
-    const selectedIndex = pickerOptions.findIndex(
-      (option) => option.id === selectedId
-    );
-    if (selectedIndex >= 0) active = selectedIndex;
-  }
-  pickerActive = -1;
-  if (pickerOptions.length) movePickerActive(active);
-}
-function pickSpellOption(id) {
-  closeSpellPicker();
-  if (id === "custom") startCustomSpell();
-  else chooseSpell(id);
-}
-function refreshSpellChoices() {
-  const available = catalogue.entries;
-  spellRows = available.map((entry) => ({
-    entry,
-    search: [
-      entry.name,
-      entry.rank,
-      entry.rank === "cantrip" ? "cantrip" : `rank ${entry.rank}`,
-      entry.source,
-      entry.edition === "both" ? "both remaster legacy" : entry.edition,
-      entry.category,
-      entry.tradition,
-      entry.damage,
-      entry.range,
-      ...entry.traits || [],
-      ...entry.traditions || [],
-      ...fieldIDs.map((id) => entry[id])
-    ].filter(Boolean).join(" ").toLocaleLowerCase()
-  }));
-  $("catalogCount").textContent = `${available.length.toLocaleString()} spells`;
-  if (pickerOpen) openSpellPicker("");
-  else input("spellPickerInput").value = pickerSelectionLabel();
-}
 function chooseSpell(id) {
   const entry = catalogue.entries.find((e) => e.id === id);
   if (!entry) return false;
@@ -6393,7 +6454,7 @@ function startCustomSpell() {
 }
 function markCustom() {
   selectedEntry = null;
-  input("spellPickerInput").value = pickerSelectionLabel();
+  spellPicker.refreshSelection();
   render();
 }
 function loadAllSpells(keepSelection = false) {
@@ -6525,49 +6586,6 @@ function updateCanvasOptions() {
   } catch {
   }
 }
-const pickerInput = input("spellPickerInput");
-pickerInput.addEventListener("focus", () => {
-  pickerInput.select();
-  openSpellPicker("", true);
-});
-pickerInput.addEventListener("input", () => openSpellPicker(pickerInput.value));
-pickerInput.addEventListener("keydown", (event) => {
-  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-    event.preventDefault();
-    if (!pickerOpen) openSpellPicker("", true);
-    else movePickerActive(pickerActive + (event.key === "ArrowDown" ? 1 : -1));
-  } else if (event.key === "Enter" && pickerOpen) {
-    event.preventDefault();
-    if (pickerActive >= 0) pickSpellOption(pickerOptions[pickerActive].id);
-  } else if (event.key === "Escape" && pickerOpen) {
-    event.preventDefault();
-    closeSpellPicker();
-  } else if (event.key === "Tab") closeSpellPicker();
-});
-button("spellPickerToggle").addEventListener("click", () => {
-  if (pickerOpen) closeSpellPicker();
-  else {
-    pickerInput.focus();
-    openSpellPicker("", true);
-  }
-});
-$("spellPickerList").addEventListener(
-  "mousedown",
-  (event) => event.preventDefault()
-);
-$("spellPickerList").addEventListener("click", (event) => {
-  const item = event.target instanceof Element ? event.target.closest("[data-spell-id]") : null;
-  if (item instanceof HTMLElement && item.dataset.spellId)
-    pickSpellOption(item.dataset.spellId);
-});
-$("spellPicker").addEventListener("focusout", (event) => {
-  if (!(event.relatedTarget instanceof Node) || !$("spellPicker").contains(event.relatedTarget))
-    closeSpellPicker();
-});
-document.addEventListener("pointerdown", (event) => {
-  if (pickerOpen && (!(event.target instanceof Node) || !$("spellPicker").contains(event.target)))
-    closeSpellPicker();
-});
 [input("spellName"), input("spellVariant"), ...fieldIDs.map(select)].forEach(
   (input2) => {
     const event = input2.tagName === "INPUT" ? "input" : "change";
@@ -6622,7 +6640,7 @@ button("resetSpell").addEventListener("click", () => {
   updateCanvasOptions();
   loadAllSpells();
 });
-const creditsDialog = dialog("creditsDialog");
+var creditsDialog = dialog("creditsDialog");
 button("creditsOpen").addEventListener("click", () => {
   if (typeof creditsDialog.showModal === "function") creditsDialog.showModal();
   else creditsDialog.setAttribute("open", "");

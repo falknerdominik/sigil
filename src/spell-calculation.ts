@@ -1,12 +1,7 @@
-import {
-  isPrime,
-  nextPrime,
-  rotate,
-  canonicalRotation,
-  uniqueNecklaces,
-  preferredDictionary,
-} from './spell-math';
+import { SpellEncoding } from './spell-encoding';
 import { IDENTITY_TAG, MAX_IDENTITY_BYTES } from './constants';
+
+export { SpellEncoding };
 
 export type SpellValues = Record<string, unknown> & {
   variant?: unknown;
@@ -84,22 +79,16 @@ export class SpellCalculation {
     this.setChordAttributes(chordAttributes);
     this.setOrbitAttributes(orbitAttributes);
   }
-  static isPrime = isPrime;
-  static nextPrime = nextPrime;
-  static rotate = rotate;
-  static canonicalRotation = canonicalRotation;
-  static uniqueNecklaces = uniqueNecklaces;
-  static preferredDictionary = preferredDictionary;
   setChordAttributes(attributes: AttributeDefinition[]): void {
     if (!Array.isArray(attributes) || !attributes.length) {
       throw new TypeError('At least one attribute is required.');
     }
     // Prime n >= 2m + 1 gives m chord families and rotation-unique words.
-    this.vertexCount = nextPrime(2 * attributes.length + 1);
+    this.vertexCount = SpellEncoding.nextPrime(2 * attributes.length + 1);
     const limit = Math.floor((this.vertexCount - 1) / 2);
     if (attributes.length > limit)
       throw new Error('Not enough distinct chord families.');
-    this.dictionary = preferredDictionary(this.vertexCount);
+    this.dictionary = SpellEncoding.preferredDictionary(this.vertexCount);
     this.chordAttributes = this.prepareAttributes(attributes).map(
       (attribute, index) => ({
         ...attribute,
@@ -127,7 +116,7 @@ export class SpellCalculation {
           ((offset + index) * 11 + valueIndex * 7 + 3) % this.vertexCount;
         lookup.set(
           String(option.value),
-          rotate(this.dictionary[valueIndex], orientation),
+          SpellEncoding.rotate(this.dictionary[valueIndex], orientation),
         );
       });
       lookup.set('none', '0'.repeat(this.vertexCount));

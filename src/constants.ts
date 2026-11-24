@@ -1,4 +1,4 @@
-import type { DrawingSettings, ThemePalette } from './spell-drawing';
+import type { DrawingSettings, ThemePalette } from './drawing-style';
 export type AttributeId =
   | 'rank'
   | 'tradition'
@@ -353,7 +353,7 @@ export const DRAWING_DEFAULTS: DrawingSettings = {
   identityPointStrokeWidth: 1,
   identityMarkerOpacity: 0.45,
   handDrawnInk: false,
-  inkWobble: 1,
+  inkWobble: 0.5,
   inkPressure: 0.35,
   inkFeather: 0.3,
   rankComplexity: true,

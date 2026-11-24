@@ -4,7 +4,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const { SpellCalculation } = require('../generated/spell-calculation.cjs');
+const {
+  SpellCalculation,
+  SpellEncoding,
+} = require('../generated/spell-calculation.cjs');
 const { SpellDrawing } = require('../generated/spell-drawing.cjs');
 const root = path.resolve(__dirname, '..', '..');
 const calculation = fs.readFileSync(
@@ -65,11 +68,11 @@ assert.deepEqual(
   renderer.orbitAttributes.map((a) => a.sectionUnits),
   [1, 2, 4, 8],
 );
-const necklaces = SpellCalculation.uniqueNecklaces(11);
+const necklaces = SpellEncoding.uniqueNecklaces(11);
 assert.equal(necklaces.length, (2 ** 11 - 2) / 11);
 for (const word of necklaces)
-  assert.equal(SpellCalculation.canonicalRotation(word), word);
-const dictionary = SpellCalculation.preferredDictionary(11);
+  assert.equal(SpellEncoding.canonicalRotation(word), word);
+const dictionary = SpellEncoding.preferredDictionary(11);
 assert.equal(dictionary.length, 186);
 const weight = (b) => [...b].filter((bit) => bit === '1').length;
 for (let i = 1; i < dictionary.length; i++) {
@@ -88,7 +91,7 @@ for (const attribute of [
     // and cancels mod 11. Check the simplified formula independently.
     assert.equal(
       attribute.lookup.get(option.value),
-      SpellCalculation.rotate(dictionary[q], (7 * q + 3) % 11),
+      SpellEncoding.rotate(dictionary[q], (7 * q + 3) % 11),
     );
   });
   if (attribute.options.some((opt) => opt.value === 'none')) {

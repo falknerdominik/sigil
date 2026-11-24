@@ -1,16 +1,34 @@
 const assert = require('node:assert/strict');
-const {SpellCalculation} = require('../generated/spell-calculation.cjs');
+const {SpellCalculation, SpellEncoding} = require('../generated/spell-calculation.cjs');
 const {SpellDrawing} = require('../generated/spell-drawing.cjs');
+assert.deepEqual(SpellDrawing.rgb('#Aa10Ff'), [170, 16, 255]);
+const colorDrawing = new SpellDrawing({
+  design:'plain',
+  themeColors:{...SpellDrawing.themePalettes.plain, lines:'#abc'}
+});
+assert.equal(colorDrawing.themeColor('lines'), SpellDrawing.themePalettes.plain.lines,
+  'Invalid custom ink must retain the selected theme default');
+colorDrawing.settings.themeColors.lines = '#Aa10Ff';
+assert.equal(colorDrawing.themeColor('lines'), '#Aa10Ff');
 const n = 11;
-const necklaces = SpellCalculation.uniqueNecklaces(n);
+const necklaces = SpellEncoding.uniqueNecklaces(n);
+assert.equal(SpellEncoding.nextPrime(10), 11);
+assert.equal(SpellEncoding.nextPrime(11), 11);
+assert.equal(SpellEncoding.isPrime(9), false);
+assert.equal(SpellEncoding.rotate('00101', -1), '10010');
+assert.equal(SpellEncoding.rotate('00101', 6), '01010');
+const cachedNecklaces = SpellEncoding.uniqueNecklaces(n);
+cachedNecklaces.reverse();
+assert.deepEqual(SpellEncoding.uniqueNecklaces(n), necklaces,
+  'Callers must not be able to mutate the shared necklace cache');
 assert.equal(necklaces.length, 186, 'prime-11 has exactly 186 nonconstant binary necklaces');
 assert.equal(new Set(necklaces).size, 186);
 for (const word of necklaces) {
   assert.equal(word.length, n);
   assert(!/^0+$|^1+$/.test(word));
   for (let shift=0;shift<n;shift++) {
-    assert.equal(SpellCalculation.canonicalRotation(SpellCalculation.rotate(word, shift)),word);
-    if (shift) assert.notEqual(SpellCalculation.rotate(word,shift),word);
+    assert.equal(SpellEncoding.canonicalRotation(SpellEncoding.rotate(word, shift)),word);
+    if (shift) assert.notEqual(SpellEncoding.rotate(word,shift),word);
   }
 }
 const chords = new Set();
@@ -239,7 +257,7 @@ const largeCalculation=new SpellCalculation(expanded);
 const large=new SpellDrawing({style:'curved',arcSide:'alternate'});
 large.drawingVertexCount=largeCalculation.vertexCount;
 assert.equal(largeCalculation.vertexCount,19);
-assert.equal(SpellCalculation.uniqueNecklaces(19).length,204);
+assert.equal(SpellEncoding.uniqueNecklaces(19).length,204);
 const extendedSpell={edition:'remaster',name:'Extensible',variant:'source-123'};
 for(const a of expanded) extendedSpell[a.id]='one';
 const fullSigil=largeCalculation.encode(extendedSpell);

@@ -1,5 +1,7 @@
 /* Sigil UI controller. */
 'use strict';
+import { SpellPicker } from './spell-picker';
+import { isHexColor } from './color';
 type SpellRepresentation = import('./spell-calculation').SpellRepresentation;
 type VisibleNotation = import('./spell-calculation').VisibleNotation;
 type SpellEntry = import('./spell-catalog').SpellEntry;
@@ -12,11 +14,6 @@ type EditorSpell = Record<string, string> & {
 };
 type Choice = import('./constants').Choice;
 type UiAttribute = import('./constants').UiAttribute;
-type PickerOption = {
-  id: string;
-  label: string;
-  meta: string;
-};
 declare const SigilCalculation: typeof import('./spell-calculation');
 declare const SigilDrawing: typeof import('./spell-drawing');
 declare const SigilCatalog: typeof import('./spell-catalog');
@@ -42,7 +39,7 @@ const {
 } = SigilConstants;
 const { DESIGN_DESCRIPTIONS, DECORATION_DESCRIPTIONS, DESIGN_DEFAULTS } =
   EDITOR_THEMES;
-const { SpellCalculation } = SigilCalculation;
+const { SpellCalculation, SpellEncoding } = SigilCalculation;
 const { SpellDrawing } = SigilDrawing;
 const { SpellCatalog } = SigilCatalog;
 const attributesFor = (attributes: UiAttribute[], ids: UiAttribute['id'][]) =>
@@ -209,13 +206,26 @@ let currentSpell: EditorSpell = {
 let activeAttributes = SPELL_ATTRIBUTES;
 let catalogue = SpellCatalog.parse(window.DEFAULT_SPELL_CATALOG);
 let selectedEntry: SpellEntry | null = null;
-let spellRows: {
-  entry: SpellEntry;
-  search: string;
-}[] = [];
-let pickerOpen = false;
-let pickerOptions: PickerOption[] = [];
-let pickerActive = -1;
+const spellPicker = new SpellPicker(
+  {
+    root: $('spellPicker'),
+    input: input('spellPickerInput'),
+    toggle: button('spellPickerToggle'),
+    list: $('spellPickerList'),
+    status: $('spellPickerStatus'),
+  },
+  fieldIDs,
+  () => selectedEntry,
+  (id) => {
+    if (id === 'custom') startCustomSpell();
+    else chooseSpell(id);
+  },
+);
+function refreshSpellChoices() {
+  $('catalogCount').textContent =
+    `${catalogue.entries.length.toLocaleString()} spells`;
+  spellPicker.refresh(catalogue.entries);
+}
 // Search and browsing include every bundled record, across both editions.
 // Themes change rendering only: the 5 main edge layers, 4 vertex-decoration layers, and the Layer 3 spell-ID ticks stay independent.
 const FACTORY_COLORS = SpellDrawing.themePalettes;
@@ -238,8 +248,7 @@ function loadColors() {
         stored && typeof stored === 'object'
           ? Reflect.get(stored, key)
           : undefined;
-      if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value))
-        palette[key] = value;
+      if (isHexColor(value)) palette[key] = value;
     }
     preferences[theme] = palette;
   }
@@ -395,8 +404,8 @@ function attributesForDataset(entries: SpellEntry[]): UiAttribute[] {
     (v) => v && !existing.has(v),
   );
   observed.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  const capacity = SpellCalculation.uniqueNecklaces(
-    SpellCalculation.nextPrime(2 * CHORD_ATTRIBUTE_IDS.length + 1),
+  const capacity = SpellEncoding.uniqueNecklaces(
+    SpellEncoding.nextPrime(2 * CHORD_ATTRIBUTE_IDS.length + 1),
   ).length;
   // Refuse a catalogue we cannot faithfully represent instead of silently
   // falling back to "other" for arbitrary explicit range values.
@@ -503,137 +512,6 @@ function render() {
     button('exportSpellCard').disabled = true;
   }
 }
-function entryLabel(entry: SpellEntry) {
-  const rank = entry.rank === 'cantrip' ? 'cantrip' : `rank ${entry.rank}`;
-  return `${entry.name} | ${rank}${entry.source ? ' | ' + entry.source : ''}`;
-}
-/**
- * The spell library is one accessible combobox. Search is case-insensitive
- * across names, ranks, traditions, traits, and other catalogue fields.
- * Every matching record is present and scrollable; the catalogue is not truncated.
- */
-function pickerSelectionLabel() {
-  return selectedEntry?.name || '✦ Custom spell';
-}
-function closeSpellPicker() {
-  pickerOpen = false;
-  pickerOptions = [];
-  pickerActive = -1;
-  $('spellPickerList').hidden = true;
-  input('spellPickerInput').setAttribute('aria-expanded', 'false');
-  button('spellPickerToggle').setAttribute('aria-expanded', 'false');
-  $('spellPickerList').replaceChildren();
-  input('spellPickerInput').removeAttribute('aria-activedescendant');
-  input('spellPickerInput').value = pickerSelectionLabel();
-  $('spellPickerStatus').textContent = '';
-}
-function movePickerActive(index: number) {
-  if (!pickerOptions.length) return;
-  pickerActive = (index + pickerOptions.length) % pickerOptions.length;
-  const items = $('spellPickerList').querySelectorAll('[role="option"]');
-  items.forEach((item, i) =>
-    item.classList.toggle('is-active', i === pickerActive),
-  );
-  const active = items[pickerActive];
-  input('spellPickerInput').setAttribute('aria-activedescendant', active.id);
-  active.scrollIntoView({ block: 'nearest' });
-}
-function openSpellPicker(query = '', focusSelected = false) {
-  pickerOpen = true;
-  const terms = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-  const matching = spellRows.filter((row) =>
-    terms.every((term) => row.search.includes(term)),
-  );
-  const canChooseCustom =
-    !terms.length || terms.every((term) => 'custom spell'.includes(term));
-  const visible = matching;
-  pickerOptions = [
-    ...(canChooseCustom
-      ? [{ id: 'custom', label: '✦ Custom spell', meta: 'New spell' }]
-      : []),
-    ...visible.map((row) => ({
-      id: row.entry.id,
-      label: row.entry.name,
-      meta: `${row.entry.edition === 'both' ? 'Both editions' : row.entry.edition === 'legacy' ? 'Legacy' : 'Remaster'} | ${entryLabel(row.entry).split(' | ').slice(1).join(' | ')}`,
-    })),
-  ];
-  const menu = $('spellPickerList');
-  const fragment = document.createDocumentFragment();
-  pickerOptions.forEach((option, index) => {
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'spell-picker-option';
-    item.id = `spell-picker-option-${index}`;
-    item.setAttribute('role', 'option');
-    item.setAttribute(
-      'aria-selected',
-      String(
-        selectedEntry ? selectedEntry.id === option.id : option.id === 'custom',
-      ),
-    );
-    item.dataset.spellId = option.id;
-    const name = document.createElement('span');
-    name.textContent = option.label;
-    const meta = document.createElement('span');
-    meta.className = 'spell-option-meta';
-    meta.textContent = option.meta;
-    item.append(name, meta);
-    fragment.appendChild(item);
-  });
-  if (!pickerOptions.length) {
-    const empty = document.createElement('div');
-    empty.className = 'spell-picker-empty';
-    empty.textContent = 'No matching spells. Try a shorter search.';
-    fragment.appendChild(empty);
-  }
-  menu.replaceChildren(fragment);
-  menu.hidden = false;
-  input('spellPickerInput').setAttribute('aria-expanded', 'true');
-  button('spellPickerToggle').setAttribute('aria-expanded', 'true');
-  $('spellPickerStatus').textContent =
-    `${matching.length.toLocaleString()} match${matching.length === 1 ? '' : 'es'}`;
-  let active = 0;
-  if (focusSelected && selectedEntry) {
-    const selectedId = selectedEntry.id;
-    const selectedIndex = pickerOptions.findIndex(
-      (option) => option.id === selectedId,
-    );
-    if (selectedIndex >= 0) active = selectedIndex;
-  }
-  pickerActive = -1;
-  if (pickerOptions.length) movePickerActive(active);
-}
-function pickSpellOption(id: string) {
-  closeSpellPicker(); // Avoid rebuilding the menu during selection.
-  if (id === 'custom') startCustomSpell();
-  else chooseSpell(id);
-}
-function refreshSpellChoices() {
-  const available = catalogue.entries;
-  spellRows = available.map((entry) => ({
-    entry,
-    search: [
-      entry.name,
-      entry.rank,
-      entry.rank === 'cantrip' ? 'cantrip' : `rank ${entry.rank}`,
-      entry.source,
-      entry.edition === 'both' ? 'both remaster legacy' : entry.edition,
-      entry.category,
-      entry.tradition,
-      entry.damage,
-      entry.range,
-      ...(entry.traits || []),
-      ...(entry.traditions || []),
-      ...fieldIDs.map((id) => entry[id]),
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLocaleLowerCase(),
-  }));
-  $('catalogCount').textContent = `${available.length.toLocaleString()} spells`;
-  if (pickerOpen) openSpellPicker('');
-  else input('spellPickerInput').value = pickerSelectionLabel();
-}
 function chooseSpell(id: string) {
   const entry = catalogue.entries.find((e) => e.id === id);
   if (!entry) return false;
@@ -664,7 +542,7 @@ function startCustomSpell() {
 }
 function markCustom() {
   selectedEntry = null;
-  input('spellPickerInput').value = pickerSelectionLabel();
+  spellPicker.refreshSelection();
   render();
 }
 /** Always load a single, stable attribute dictionary for the full catalogue. */
@@ -822,58 +700,6 @@ function updateCanvasOptions() {
     /* Invalid edit is reported in render(). */
   }
 }
-const pickerInput = input('spellPickerInput');
-pickerInput.addEventListener('focus', () => {
-  pickerInput.select();
-  openSpellPicker('', true);
-});
-pickerInput.addEventListener('input', () => openSpellPicker(pickerInput.value));
-pickerInput.addEventListener('keydown', (event) => {
-  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-    event.preventDefault();
-    if (!pickerOpen) openSpellPicker('', true);
-    else movePickerActive(pickerActive + (event.key === 'ArrowDown' ? 1 : -1));
-  } else if (event.key === 'Enter' && pickerOpen) {
-    event.preventDefault();
-    if (pickerActive >= 0) pickSpellOption(pickerOptions[pickerActive].id);
-  } else if (event.key === 'Escape' && pickerOpen) {
-    event.preventDefault();
-    closeSpellPicker();
-  } else if (event.key === 'Tab') closeSpellPicker();
-});
-button('spellPickerToggle').addEventListener('click', () => {
-  if (pickerOpen) closeSpellPicker();
-  else {
-    pickerInput.focus();
-    openSpellPicker('', true);
-  }
-});
-$('spellPickerList').addEventListener('mousedown', (event) =>
-  event.preventDefault(),
-);
-$('spellPickerList').addEventListener('click', (event) => {
-  const item =
-    event.target instanceof Element
-      ? event.target.closest('[data-spell-id]')
-      : null;
-  if (item instanceof HTMLElement && item.dataset.spellId)
-    pickSpellOption(item.dataset.spellId);
-});
-$('spellPicker').addEventListener('focusout', (event) => {
-  if (
-    !(event.relatedTarget instanceof Node) ||
-    !$('spellPicker').contains(event.relatedTarget)
-  )
-    closeSpellPicker();
-});
-document.addEventListener('pointerdown', (event) => {
-  if (
-    pickerOpen &&
-    (!(event.target instanceof Node) ||
-      !$('spellPicker').contains(event.target))
-  )
-    closeSpellPicker();
-});
 [input('spellName'), input('spellVariant'), ...fieldIDs.map(select)].forEach(
   (input) => {
     const event = input.tagName === 'INPUT' ? 'input' : 'change';

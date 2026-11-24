@@ -74,7 +74,7 @@ function digest(value) {
 async function catalogueBaseline(page) {
   const baseline = await page.evaluate(source => window.eval(`(() => {
     const baselineNotation = ${source};
-    const records = spellRows.map(({entry, search}) => {
+    const records = spellPicker.searchRows.map(({entry, search}) => {
       selectedEntry = entry;
       $('spellName').value = entry.name;
       $('spellVariant').value = entry.variant;
@@ -119,7 +119,7 @@ async function renderBaseline(page) {
       {name:'plain-full', design:'plain', rankComplexity:false},
       {name:'constellations-filtered', design:'constellations', rankComplexity:true},
       {name:'blueprint-transformed', design:'blueprint', base:'quadratic', rotation:35, mirror:true, stretch:0.8},
-      {name:'fire-ink', design:'trait-fire', handDrawnInk:true, inkPressure:0.8, decorations:true, decorationSeed:123},
+      {name:'fire-ink', design:'trait-fire', handDrawnInk:true, inkWobble:1, inkPressure:0.8, decorations:true, decorationSeed:123},
       {name:'tattoo-blackwork', design:'tattoo', dotStyle:'circle', vertexSize:0.5, vertexStroke:0.75}
     ];
     const result = {};
@@ -427,6 +427,9 @@ async function navigationTest(browser) {
 
     await page.locator('#inkworkSection > summary').click();
     assert.equal(await page.locator('#inkWobble').isDisabled(), true);
+    assert.equal(await page.locator('#inkWobble').inputValue(), '0.5');
+    assert.equal(await page.locator('#inkWobbleValue').textContent(), '0.5 px');
+    assert.equal(await page.evaluate(() => window.eval('drawing.settings.inkWobble')), 0.5);
     await page.locator('label[for="handDrawnInk"]').click();
     assert.equal(await page.locator('#inkWobble').isEnabled(), true);
     await page.locator('#inkWobble').fill('1.4');
@@ -801,6 +804,8 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#spellName').inputValue(), 'Scrying');
   assert.equal(await page.locator('#spellVariant').inputValue(), 'aon-1662');
   assert.equal(await page.locator('#mirror').isChecked(), false);
+  assert.equal(await page.locator('#inkWobble').inputValue(), '0.5');
+  assert.equal(await page.evaluate(() => window.eval('drawing.settings.inkWobble')), 0.5);
   assert.equal(await page.locator('#identityTickWidth').inputValue(), '1');
   assert.equal(await page.locator('#identityMarkerOpacity').inputValue(), '0.45');
   assert.equal(await cornerOrnaments.isChecked(), true);
@@ -917,6 +922,43 @@ async function unavailableStorageTest(browser) {
   }
 }
 
+async function pickerInteractionTest(page) {
+  const input = page.locator('#spellPickerInput');
+  const list = page.locator('#spellPickerList');
+  const name = await page.locator('#spellName').inputValue();
+  const preview = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
+  await input.focus();
+  assert.equal(await list.locator('[role="option"]').count(), 1401,
+    'Browsing must include every spell plus the custom option');
+  await input.fill('sigil-no-matching-spell-987654321');
+  assert.equal(await list.locator('[role="option"]').count(), 0);
+  assert.equal(await input.getAttribute('aria-activedescendant'), null,
+    'An empty result must not reference an option removed from the DOM');
+  await input.press('ArrowDown');
+  await input.press('Enter');
+  assert.equal(await page.locator('#spellName').inputValue(), name);
+  await input.press('Escape');
+  assert.equal(await list.isHidden(), true);
+  assert.equal(await input.inputValue(), name);
+  await input.fill('fire');
+  const options = list.locator('[role="option"]');
+  assert(await options.count() > 1, 'Keyboard wrapping needs multiple results');
+  const first = await options.first().getAttribute('id');
+  const last = await options.last().getAttribute('id');
+  await input.press('ArrowUp');
+  assert.equal(await input.getAttribute('aria-activedescendant'), last);
+  await input.press('ArrowDown');
+  assert.equal(await input.getAttribute('aria-activedescendant'), first);
+  await input.press('Tab');
+  assert.equal(await list.isHidden(), true);
+  assert.equal(await input.inputValue(), name);
+  await input.focus();
+  await page.locator('#spellCanvas').click({position:{x:10, y:10}});
+  assert.equal(await list.isHidden(), true);
+  assert.equal(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), preview,
+    'Browsing, cancelling and empty results must not change the spell');
+}
+
 async function main() {
   const browser = await chromium.launch({args:['--disable-gpu']});
   try {
@@ -937,6 +979,7 @@ async function main() {
       });
       await page.goto(pathToFileURL(path.join(root, 'standalone.html')).href);
       assert.equal(new URL(page.url()).protocol, 'file:');
+      await pickerInteractionTest(page);
       const catalogue = await catalogueBaseline(page);
       const render = {
         platform:process.platform,
