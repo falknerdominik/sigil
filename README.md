@@ -11,16 +11,16 @@ Its source is [explanation.qmd](docs/explanation.qmd)
 
 ## Gallery
 
-![Sigil workbench showing the spell picker, appearance controls, and a gold Fireball sigil in the Obsidian theme](docs/gallery/workbench.webp)
+![Sigil workbench showing Cornucopia, a druid focus spell, on a green semicircular base](docs/gallery/workbench.webp)
 
-Fireball in two themes shows how the same spell can look different without
-changing what it encodes. Moonward and Tideglass are custom spells with
-different attributes and drawing settings. All four sigils were exported
-from Sigil with rank filtering turned off.
+Fireball uses the Fire trait theme, while Cornucopia pairs the Primal theme
+with a semicircular base. Moonward and Tideglass are custom spells with
+different attributes and drawing settings. All four sigils were exported from
+Sigil with rank filtering turned off.
 
-| Fireball · Constellations | Fireball · Obsidian |
+| Fireball · Fire | Cornucopia · Primal |
 | --- | --- |
-| ![Fireball sigil in the Constellations theme](docs/fireball-sigil.png) | ![Fireball drawn as gold curves on dark volcanic stone](docs/gallery/fireball-obsidian.webp) |
+| ![Fireball drawn in ember orange in the Fire trait theme](docs/fireball-sigil.png) | ![Cornucopia with a semicircular base and leafy green Primal ornaments](docs/gallery/cornucopia-primal.webp) |
 | **Moonward · Divine** | **Tideglass · Tattoo** |
 | ![Moonward drawn as an angular gold sigil on ivory parchment](docs/gallery/moonward-divine.webp) | ![Tideglass drawn in tapered charcoal ink on a warm skin tone](docs/gallery/tideglass-tattoo.webp) |
 
