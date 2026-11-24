@@ -28,6 +28,15 @@ Sigil with rank filtering turned off.
 - **Moonward:** rank 5, Divine, touch, 1 hour, light, spirit damage, emanation.
 - **Tideglass:** rank 7, Primal, 60 feet, sustained, water, cold damage, cone.
 
+### Spell cards
+
+Sigil's spell-card export pairs the sigil with its attributes, traits, and an
+editable description. Select either card to view it at full size.
+
+| Moonward · Divine | Tideglass · Tattoo |
+| --- | --- |
+| [![Moonward spell card with an angular gold sigil and a lunar ward description](docs/gallery/moonward-spell-card.webp)](docs/gallery/moonward-spell-card.webp) | [![Tideglass spell card with a charcoal sigil and a frozen seawater description](docs/gallery/tideglass-spell-card.webp)](docs/gallery/tideglass-spell-card.webp) |
+
 ## Development and verification
 
 Use Node.js 22 (22.13 or newer) or 24+ and Quarto CLI 1.11.9.
