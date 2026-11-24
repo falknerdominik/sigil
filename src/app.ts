@@ -55,6 +55,57 @@ const select = (id: string) => elementOf(id, HTMLSelectElement);
 const button = (id: string) => elementOf(id, HTMLButtonElement);
 const textarea = (id: string) => elementOf(id, HTMLTextAreaElement);
 const canvasElement = (id: string) => elementOf(id, HTMLCanvasElement);
+const editorPanel = $('editorPanel');
+const editorNavigation = $('editorNavigation');
+const editorLinks = Array.from(editorNavigation.querySelectorAll<HTMLButtonElement>('[data-scroll-target]'));
+const editorSections = editorLinks.map(link => $(link.dataset.scrollTarget || ''));
+// Move the complete Style group once; existing inputs and listeners stay intact.
+$('notationSection').before($('designSection'));
+const mobileEditor = window.matchMedia('(max-width:850px)');
+function setEditorSection(section: HTMLElement) {
+    for (const [index, link] of editorLinks.entries()) {
+        const active = editorSections[index] === section;
+        link.classList.toggle('is-current', active);
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+    }
+}
+function updateEditorSection() {
+    const marker = editorNavigation.getBoundingClientRect().bottom + 12;
+    let active = editorSections[0];
+    for (const section of editorSections) {
+        if (section.getBoundingClientRect().top <= marker) active = section;
+    }
+    if (!mobileEditor.matches && editorPanel.scrollTop > 0 &&
+        editorPanel.scrollHeight - editorPanel.clientHeight - editorPanel.scrollTop < 2)
+        active = editorSections[editorSections.length - 1];
+    setEditorSection(active);
+}
+let editorScrollFrame = 0;
+function scheduleEditorSection() {
+    cancelAnimationFrame(editorScrollFrame);
+    editorScrollFrame = requestAnimationFrame(updateEditorSection);
+}
+for (const [index, link] of editorLinks.entries()) {
+    link.addEventListener('click', () => {
+        const section = editorSections[index];
+        const offset = editorNavigation.offsetHeight + 8;
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+        setEditorSection(section);
+        if (mobileEditor.matches)
+            window.scrollTo({top:window.scrollY + section.getBoundingClientRect().top - offset, behavior});
+        else
+            editorPanel.scrollTo({
+                top:editorPanel.scrollTop + section.getBoundingClientRect().top -
+                    editorNavigation.getBoundingClientRect().top - offset,
+                behavior
+            });
+    });
+}
+editorPanel.addEventListener('scroll', scheduleEditorSection, {passive:true});
+window.addEventListener('scroll', scheduleEditorSection, {passive:true});
+window.addEventListener('resize', scheduleEditorSection);
+editorPanel.addEventListener('toggle', scheduleEditorSection, true);
 function dialog(id: string): HTMLElement & Partial<Pick<HTMLDialogElement, 'showModal' | 'close'>> {
     const element = $(id);
     if (element.tagName !== 'DIALOG')
@@ -142,6 +193,7 @@ let colorPreferences = loadColors();
 function refreshColorControls() {
     for (const key of COLOR_KEYS)
         input(COLOR_IDS[key]).value = colorPreferences[currentDesign][key];
+    syncThemeSelector();
 }
 function saveColors() {
     try {
@@ -155,6 +207,55 @@ const initialDesign = select('designTheme').value;
 const freshDesignPreferences = () => Object.fromEntries(Object.entries(DESIGN_DEFAULTS).map(([key, values]) => [key, { ...values }]));
 let currentDesign = initialDesign;
 let designPreferences = freshDesignPreferences();
+const themeGroups = {
+    surfaces: $('surfacesThemes'), traditions: $('traditionsThemes'), traits: $('traitsThemes')
+};
+function themeGroupFor(option: HTMLOptionElement) {
+    return option.value.startsWith('trait-') ? 'traits' :
+        option.parentElement instanceof HTMLOptGroupElement ? 'traditions' : 'surfaces';
+}
+function showThemeGroup(group: keyof typeof themeGroups) {
+    for (const [name, choices] of Object.entries(themeGroups)) {
+        choices.hidden = name !== group;
+        button(`${name}Category`).setAttribute('aria-pressed', String(name === group));
+    }
+}
+const themeRadios = Array.from(select('designTheme').options).map(option => {
+    const group = themeGroupFor(option);
+    const label = document.createElement('label');
+    label.className = 'theme-choice';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'visibleThemeChoice';
+    radio.value = option.value;
+    radio.setAttribute('aria-label', option.text);
+    const swatch = document.createElement('span');
+    swatch.className = 'theme-choice-swatch';
+    swatch.setAttribute('aria-hidden', 'true');
+    swatch.style.setProperty('--swatch-bg', FACTORY_COLORS[option.value].background);
+    swatch.style.setProperty('--swatch-line', FACTORY_COLORS[option.value].lines);
+    const title = document.createElement('span');
+    title.className = 'theme-choice-label';
+    title.textContent = option.text.split(' - ')[0];
+    label.append(radio, swatch, title);
+    themeGroups[group].append(label);
+    return radio;
+});
+function syncThemeSelector() {
+    const source = select('designTheme');
+    for (const radio of themeRadios)
+        radio.checked = radio.value === source.value;
+    showThemeGroup(themeGroupFor(source.selectedOptions[0]));
+}
+for (const group of ['surfaces', 'traditions', 'traits'] as const)
+    button(`${group}Category`).addEventListener('click', () => showThemeGroup(group));
+$('themeChoices').addEventListener('change', event => {
+    if (event.target instanceof HTMLInputElement && event.target.checked) {
+        const source = select('designTheme');
+        source.value = event.target.value;
+        source.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+});
 // Read reset values from the initial form rather than duplicating them here.
 // All of these controls affect Canvas presentation, never the binary notation.
 const initialDrawingValues = Object.fromEntries(DRAWING_CONTROLS.map(id => {
@@ -258,11 +359,7 @@ function showRenderError(error: unknown) {
     $('renderError').hidden = false;
 }
 function updateNotationInfo(visible: VisibleNotation = calculation.represent(currentSpell, drawing.settings.rankComplexity).visible) {
-    // Count complete Layer 1 chords and Layer 2 orbits, including Rank connections.
     const filtered = visible.revealCount < visible.totalRevealable;
-    $('notationMeta').hidden = !filtered;
-    $('notationModeBadge').textContent = filtered
-        ? `Visualization is filtered (${visible.revealCount}/${visible.totalRevealable} elements)` : '';
     const rankMeta = $('rankRevealBadge').parentElement;
     if (!rankMeta)
         throw new Error('Missing rank reveal container');
@@ -443,7 +540,7 @@ function loadAllSpells(keepSelection = false) {
     calculation.setChordAttributes(attributesFor(activeAttributes, CHORD_ATTRIBUTE_IDS));
     calculation.setOrbitAttributes(attributesFor(activeAttributes, ORBIT_ATTRIBUTE_IDS));
     const preferred = catalogue.entries.find(entry => entry.id === oldEntry) ||
-        catalogue.entries.find(entry => entry.name.toLowerCase() === 'fireball') || catalogue.entries[0];
+        catalogue.entries.find(entry => entry.name.toLowerCase() === 'scrying') || catalogue.entries[0];
     if (preferred)
         chooseSpell(preferred.id);
     else

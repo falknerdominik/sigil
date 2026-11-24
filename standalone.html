@@ -48,12 +48,12 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .online-dot { display:inline-block; width:6px; height:6px; background:#b3c89c; border-radius:50%; vertical-align:middle; margin-right:8px; box-shadow:0 0 0 3px rgba(179,200,156,.11); }
 .workspace {
   display:grid; grid-template-columns: 318px minmax(0, 1fr);
-  gap: 27px; padding: 13px 29px 18px 27px; width:100%;
+  gap: 27px; padding: 13px 3px 18px 3px; width:100%;
   height: calc(100vh - 82px); min-height: 670px;
   max-width: 1800px; margin: 0 auto;
 }
 .control-panel {
-  overflow-y:auto; padding: 14px 13px 30px 5px;
+  overflow-y:auto; padding: 0 13px 30px 5px;
   scrollbar-width:thin; scrollbar-color:#405057 transparent;
 }
 .section-kicker { display:flex; align-items:center; gap:11px; color:var(--gold); font-size:10px; font-weight:800; letter-spacing:2.0px; }
@@ -250,12 +250,6 @@ h2 { font:normal 33px/1.05 Georgia,"Times New Roman",serif; color:#f0eddf; margi
 .rank-view-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap;
   color:#a3b0aa; font-size:10px; margin:7px 0 0; }
 .rank-view-meta .k-chip { white-space:nowrap; }
-.preview-heading-row { display:flex; gap:11px; align-items:center; flex-wrap:wrap; }
-.notation-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0; }
-.notation-pill { border:1px solid #6b5b46; color:#ddc39d; padding:3px 7px;
-  border-radius:4px; background:#332d24; font-size:10px; letter-spacing:.3px; }
-.notation-pill.is-full { border-color:#4e665e; color:#c2dbcc; background:#20352f; }
-.notation-count { font-size:10px; color:#91a19b; }
 /* Independently choose which view the exported PNG contains. */
 .export-tools { display:flex; gap:6px; align-items:center; }
 .export-tools select { height:40px; max-width:139px; min-width:130px;
@@ -279,9 +273,6 @@ h2 { font:normal 33px/1.05 Georgia,"Times New Roman",serif; color:#f0eddf; margi
 .preview-toolbar h2 { margin:7px 0 6px; }
 
 .preview-toolbar { padding-bottom:6px; }
-
-/* Prioritize the canvas on narrower desktops: keep the mode, omit its count. */
-@media (max-width:1250px) { .notation-count { display:none; } }
 
 /* v3.0: one compact, coherent, expandable section per notation layer. */
 .layer-panel.field-group { display:block; padding:0; }
@@ -502,8 +493,7 @@ html[data-ui-mode="light"] .spell-picker-status,
 html[data-ui-mode="light"] .catalog-status,
 html[data-ui-mode="light"] .slider-value,
 html[data-ui-mode="light"] .rank-view-meta,
-html[data-ui-mode="light"] .preview-subtitle,
-html[data-ui-mode="light"] .notation-count {color:#586c6b;}
+html[data-ui-mode="light"] .preview-subtitle {color:#586c6b;}
 html[data-ui-mode="light"] .catalog-error {color:#963d2f;}
 html[data-ui-mode="light"] .k-chip,
 html[data-ui-mode="light"] .layer-panel-meta {
@@ -571,9 +561,6 @@ html[data-ui-mode="light"] .credits-close:hover {
 html[data-ui-mode="light"] .export-tools .btn-secondary {color:#324649;}
 html[data-ui-mode="light"] .btn-primary {background:#c48e48; border-color:#ad7736; color:#1c292a;}
 html[data-ui-mode="light"] .btn-primary:hover {background:#d4a160;}
-html[data-ui-mode="light"] .notation-pill {
-  color:#795326; background:#fbf0da; border-color:#d7b78e;
-}
 html[data-ui-mode="light"] .canvas-frame {
   border-color:#cad5d0; box-shadow:0 10px 28px rgba(39,55,51,.12);
 }
@@ -599,6 +586,64 @@ html[data-ui-mode="light"] .credits-policy-notice {
 }
 html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 
+/* Scroll navigation keeps the existing editor controls mounted. */
+.sidebar-sticky {
+  position:sticky; top:0; z-index:40; padding:12px 0;
+  background:#141e20; border-bottom:1px solid var(--line); margin-bottom:18px;
+}
+.section-jumps, .theme-categories {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px;
+}
+.jump-link, .theme-categories button {
+  min-width:0; border:1px solid transparent; border-radius:4px;
+  background:transparent; color:var(--muted); padding:8px 2px;
+  font-size:11px; line-height:14px; font-weight:650;
+}
+.jump-link:hover, .theme-categories button:hover { color:inherit; background:#1d2b2e; }
+.jump-link[aria-current], .theme-categories button[aria-pressed=true] {
+  color:#e9e5da; background:#1d2b2e; border-color:var(--line);
+}
+.editor-section { scroll-margin-top:66px; }
+.control-panel { scroll-padding-top:66px; }
+.editor-section > .group-label { margin-top:0; }
+#spellSection { border-top:0; padding-top:0; }
+#designHeading { color:var(--muted); font-size:10px; letter-spacing:1px; }
+.theme-categories { border:1px solid var(--line); border-radius:5px; padding:3px; }
+.theme-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:12px; }
+.theme-choice {
+  position:relative; min-width:0; min-height:49px; padding:7px 8px;
+  display:flex; align-items:center; gap:9px; border:1px solid var(--line);
+  border-radius:5px; color:inherit; font-size:11px; cursor:pointer;
+}
+.theme-choice:hover { border-color:var(--muted); }
+.theme-choice:has(input:checked) { border-color:var(--gold); background:#1d2b2e; }
+.theme-choice:has(input:focus-visible) { outline:2px solid var(--gold); outline-offset:2px; }
+.theme-choice input { position:absolute; inset:0; width:100%; height:100%; opacity:0; margin:0; cursor:pointer; }
+.theme-choice-label { min-width:0; line-height:1.25; overflow-wrap:anywhere; }
+.theme-choice-swatch {
+  position:relative; width:28px; height:28px; flex:none; border-radius:50%;
+  border:1px solid #7f7f7f; background:var(--swatch-bg);
+}
+.theme-choice-swatch::before {
+  content:''; position:absolute; width:12px; height:12px; left:6px; top:6px;
+  border:1.5px solid var(--swatch-line); border-radius:50%;
+}
+.theme-choice-swatch::after {
+  content:''; position:absolute; width:24px; height:1px; left:1px; top:13px;
+  background:var(--swatch-line); transform:rotate(-36deg);
+}
+html[data-ui-mode="light"] .sidebar-sticky { background:#f5f3ec; }
+html[data-ui-mode="light"] .jump-link:hover,
+html[data-ui-mode="light"] .theme-categories button:hover,
+html[data-ui-mode="light"] .jump-link[aria-current],
+html[data-ui-mode="light"] .theme-categories button[aria-pressed=true],
+html[data-ui-mode="light"] .theme-choice:has(input:checked) { color:#263638; background:#e8ede5; }
+@media (max-width:850px) {
+  html { scroll-padding-top:66px; }
+  .control-panel { scroll-padding-top:0; }
+  .editor-section.field-group { display:block; }
+}
+
 </style>
 </head>
 <body>
@@ -617,9 +662,16 @@ html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 </div>
 </header>
 <main class="workspace">
-<aside aria-label="Spell parameters" class="control-panel">
-<div class="field-group">
-<div class="group-label">SPELL</div>
+<aside aria-label="Spell parameters" class="control-panel" id="editorPanel">
+<div class="sidebar-sticky" id="editorNavigation">
+<nav class="section-jumps" aria-label="Editor sections">
+<button class="jump-link is-current" type="button" data-scroll-target="spellSection" aria-controls="spellSection" aria-current="location">Spell</button>
+<button class="jump-link" type="button" data-scroll-target="designSection" aria-controls="designSection">Style</button>
+<button class="jump-link" type="button" data-scroll-target="notationSection" aria-controls="notationSection">Notation</button>
+</nav>
+</div>
+<section class="field-group editor-section" id="spellSection" aria-labelledby="spellHeading">
+<h3 class="group-label" id="spellHeading">SPELL</h3>
 
 <div class="field spell-picker-field">
 <div class="field-label"><label for="spellPickerInput">Find a spell</label><span class="k-chip" id="catalogCount">Loading...</span></div>
@@ -635,7 +687,7 @@ html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 
 <div class="field">
 <label for="spellName">Spell name</label>
-<input id="spellName" maxlength="85" spellcheck="false" type="text" value="Fireball"/>
+<input id="spellName" maxlength="85" spellcheck="false" type="text" value="Scrying"/>
 </div>
 <details class="spell-card-details" id="spellCardDetails">
 <summary>Spell card details</summary>
@@ -650,7 +702,9 @@ html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 </div>
 </details>
 
-</div>
+</section>
+<section class="editor-section" id="notationSection" aria-labelledby="notationHeading">
+<h3 class="group-label" id="notationHeading">NOTATION</h3>
 <details class="field-group layer-panel attributes-group" id="layer1Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 1. VERTICES</span></summary><div class="layer-panel-body">
 <p class="field-help">Five chord groups share 11 vertices.</p>
 <div class="field">
@@ -851,10 +905,12 @@ html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 <div class="field-label"><label for="identityMarkerOpacity">Layer 3 opacity</label><span class="slider-value" id="identityMarkerOpacityValue">0.45</span></div>
 <input id="identityMarkerOpacity" max="1" min="0" step="0.05" type="range" value="0.45"/>
 </div><p class="field-help">Mixed uses all three marker styles. Large markers may overlap.</p></div></details></div></details>
+</section>
 <p class="render-error" hidden="" id="renderError" role="alert"></p>
-<div aria-labelledby="designHeading" class="field-group design-group">
-<div class="group-label" id="designHeading">THEME</div>
-<div class="field">
+<section aria-labelledby="styleHeading" class="field-group design-group editor-section" id="designSection">
+<h3 class="group-label" id="styleHeading">STYLE</h3>
+<div class="group-label" id="designHeading">APPEARANCE</div>
+<div class="field" hidden>
 <label for="designTheme">Appearance</label>
 <select id="designTheme">
 <option value="plain">Plain - manuscript parchment</option>
@@ -871,6 +927,18 @@ html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 </optgroup>
 <optgroup label="Primary trait themes"><option value="trait-none">Unbound / no trait</option><option value="trait-healing">Healing</option><option value="trait-mental">Mental</option><option value="trait-illusion">Illusion</option><option value="trait-fire">Fire</option><option value="trait-cold">Cold</option><option value="trait-electricity">Electricity</option><option value="trait-acid">Acid</option><option value="trait-poison">Poison</option><option value="trait-water">Water</option><option value="trait-air">Air</option><option value="trait-earth">Earth</option><option value="trait-plant">Plant</option><option value="trait-wood">Wood</option><option value="trait-metal">Metal</option><option value="trait-light">Light</option><option value="trait-darkness">Darkness</option><option value="trait-polymorph">Polymorph</option><option value="trait-teleportation">Teleportation</option><option value="trait-summon">Summon</option><option value="trait-force">Force</option><option value="trait-spirit">Spirit</option><option value="trait-vitality">Vitality</option><option value="trait-void">Void</option><option value="trait-incapacitation">Incapacitation</option><option value="trait-emotion">Emotion</option><option value="trait-detection">Detection</option><option value="trait-shadow">Shadow</option><option value="trait-sonic">Sonic</option><option value="trait-attack">Attack</option><option value="trait-other">Other</option></optgroup></select>
 </div>
+<div class="theme-browser">
+<div class="theme-categories" role="group" aria-label="Theme categories">
+<button type="button" id="surfacesCategory" data-theme-group="surfaces" aria-pressed="true" aria-controls="surfacesThemes">Surfaces</button>
+<button type="button" id="traditionsCategory" data-theme-group="traditions" aria-pressed="false" aria-controls="traditionsThemes">Traditions</button>
+<button type="button" id="traitsCategory" data-theme-group="traits" aria-pressed="false" aria-controls="traitsThemes">Traits</button>
+</div>
+<div id="themeChoices" role="radiogroup" aria-labelledby="designHeading">
+<div class="theme-choices" id="surfacesThemes"></div>
+<div class="theme-choices" id="traditionsThemes" hidden></div>
+<div class="theme-choices" id="traitsThemes" hidden></div>
+</div>
+</div>
 <p class="field-help" id="designDescription">A silver star chart with a sweeping galactic haze and celestial coordinates.</p>
 <div aria-labelledby="paletteHeading" class="palette-settings">
 <div class="palette-heading" id="paletteHeading">Theme colors</div>
@@ -881,7 +949,7 @@ html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 </div>
 <button class="btn-import palette-reset" id="resetThemeColors" type="button">Reset theme colors</button>
 </div>
-<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INKWORK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes. Your spell encoding stays identical.</p><div class="hand-ink-settings">
+<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes. Your spell encoding stays identical.</p><div class="hand-ink-settings">
 <label class="toggle-row" for="handDrawnInk"><span>Feather &amp; ink strokes</span><input id="handDrawnInk" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <p class="field-help">Thick at the start, fine at the end. Wobble and feathering add natural ink edges.</p>
 <div class="hand-ink-parameters" id="handInkParameters">
@@ -930,20 +998,17 @@ html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 </div>
 </div>
 </details>
-</div>
+</section>
 </aside>
 <!-- The preview grows to fill the available workspace. -->
 <section aria-label="Generated spell circle" class="preview-area">
 <div class="preview-toolbar">
 <div>
-<div class="preview-heading-row">
-<div class="notation-meta" id="notationMeta"><span class="notation-pill" id="notationModeBadge" aria-live="polite" title="Visible Layer 1 and 2 elements; hidden elements still exist in the full notation."></span></div>
-</div>
-<h2 id="spellTitle">Fireball</h2>
+<h2 id="spellTitle">Scrying</h2>
 
 </div>
 <div class="toolbar-actions">
-<button class="btn-secondary" id="resetSpell" title="Restore the Fireball example" type="button">↺ <span>Reset</span></button>
+<button class="btn-secondary" id="resetSpell" title="Restore the Scrying example" type="button">↺ <span>Reset</span></button>
 <div class="export-tools"><button class="btn-secondary export-action" id="exportPng" title="Export the sigil exactly as shown" type="button">Export PNG</button><button class="btn-secondary export-action" id="exportTransparentPng" title="Export the sigil without the theme background or ornaments" type="button">Transparent PNG</button><button class="btn-primary export-action" id="exportSpellCard" title="Export a spell card with the current sigil, casting time, traits and full description" type="button">Export Spell Card</button></div>
 </div>
 </div>
@@ -4707,6 +4772,54 @@ const select = (id) => elementOf(id, HTMLSelectElement);
 const button = (id) => elementOf(id, HTMLButtonElement);
 const textarea = (id) => elementOf(id, HTMLTextAreaElement);
 const canvasElement = (id) => elementOf(id, HTMLCanvasElement);
+const editorPanel = $("editorPanel");
+const editorNavigation = $("editorNavigation");
+const editorLinks = Array.from(editorNavigation.querySelectorAll("[data-scroll-target]"));
+const editorSections = editorLinks.map((link) => $(link.dataset.scrollTarget || ""));
+$("notationSection").before($("designSection"));
+const mobileEditor = window.matchMedia("(max-width:850px)");
+function setEditorSection(section) {
+  for (const [index, link] of editorLinks.entries()) {
+    const active = editorSections[index] === section;
+    link.classList.toggle("is-current", active);
+    if (active) link.setAttribute("aria-current", "location");
+    else link.removeAttribute("aria-current");
+  }
+}
+function updateEditorSection() {
+  const marker = editorNavigation.getBoundingClientRect().bottom + 12;
+  let active = editorSections[0];
+  for (const section of editorSections) {
+    if (section.getBoundingClientRect().top <= marker) active = section;
+  }
+  if (!mobileEditor.matches && editorPanel.scrollTop > 0 && editorPanel.scrollHeight - editorPanel.clientHeight - editorPanel.scrollTop < 2)
+    active = editorSections[editorSections.length - 1];
+  setEditorSection(active);
+}
+let editorScrollFrame = 0;
+function scheduleEditorSection() {
+  cancelAnimationFrame(editorScrollFrame);
+  editorScrollFrame = requestAnimationFrame(updateEditorSection);
+}
+for (const [index, link] of editorLinks.entries()) {
+  link.addEventListener("click", () => {
+    const section = editorSections[index];
+    const offset = editorNavigation.offsetHeight + 8;
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+    setEditorSection(section);
+    if (mobileEditor.matches)
+      window.scrollTo({ top: window.scrollY + section.getBoundingClientRect().top - offset, behavior });
+    else
+      editorPanel.scrollTo({
+        top: editorPanel.scrollTop + section.getBoundingClientRect().top - editorNavigation.getBoundingClientRect().top - offset,
+        behavior
+      });
+  });
+}
+editorPanel.addEventListener("scroll", scheduleEditorSection, { passive: true });
+window.addEventListener("scroll", scheduleEditorSection, { passive: true });
+window.addEventListener("resize", scheduleEditorSection);
+editorPanel.addEventListener("toggle", scheduleEditorSection, true);
 function dialog(id) {
   const element = $(id);
   if (element.tagName !== "DIALOG")
@@ -4786,6 +4899,7 @@ let colorPreferences = loadColors();
 function refreshColorControls() {
   for (const key of COLOR_KEYS)
     input(COLOR_IDS[key]).value = colorPreferences[currentDesign][key];
+  syncThemeSelector();
 }
 function saveColors() {
   try {
@@ -4798,6 +4912,56 @@ const initialDesign = select("designTheme").value;
 const freshDesignPreferences = () => Object.fromEntries(Object.entries(DESIGN_DEFAULTS).map(([key, values]) => [key, { ...values }]));
 let currentDesign = initialDesign;
 let designPreferences = freshDesignPreferences();
+const themeGroups = {
+  surfaces: $("surfacesThemes"),
+  traditions: $("traditionsThemes"),
+  traits: $("traitsThemes")
+};
+function themeGroupFor(option) {
+  return option.value.startsWith("trait-") ? "traits" : option.parentElement instanceof HTMLOptGroupElement ? "traditions" : "surfaces";
+}
+function showThemeGroup(group) {
+  for (const [name, choices] of Object.entries(themeGroups)) {
+    choices.hidden = name !== group;
+    button(`${name}Category`).setAttribute("aria-pressed", String(name === group));
+  }
+}
+const themeRadios = Array.from(select("designTheme").options).map((option) => {
+  const group = themeGroupFor(option);
+  const label = document.createElement("label");
+  label.className = "theme-choice";
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.name = "visibleThemeChoice";
+  radio.value = option.value;
+  radio.setAttribute("aria-label", option.text);
+  const swatch = document.createElement("span");
+  swatch.className = "theme-choice-swatch";
+  swatch.setAttribute("aria-hidden", "true");
+  swatch.style.setProperty("--swatch-bg", FACTORY_COLORS[option.value].background);
+  swatch.style.setProperty("--swatch-line", FACTORY_COLORS[option.value].lines);
+  const title = document.createElement("span");
+  title.className = "theme-choice-label";
+  title.textContent = option.text.split(" - ")[0];
+  label.append(radio, swatch, title);
+  themeGroups[group].append(label);
+  return radio;
+});
+function syncThemeSelector() {
+  const source = select("designTheme");
+  for (const radio of themeRadios)
+    radio.checked = radio.value === source.value;
+  showThemeGroup(themeGroupFor(source.selectedOptions[0]));
+}
+for (const group of ["surfaces", "traditions", "traits"])
+  button(`${group}Category`).addEventListener("click", () => showThemeGroup(group));
+$("themeChoices").addEventListener("change", (event) => {
+  if (event.target instanceof HTMLInputElement && event.target.checked) {
+    const source = select("designTheme");
+    source.value = event.target.value;
+    source.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+});
 const initialDrawingValues = Object.fromEntries(DRAWING_CONTROLS.map((id) => {
   const control = drawingControl(id);
   return [id, control instanceof HTMLInputElement && control.type === "checkbox" ? control.checked : control.value];
@@ -4898,8 +5062,6 @@ function showRenderError(error) {
 }
 function updateNotationInfo(visible = calculation.represent(currentSpell, drawing.settings.rankComplexity).visible) {
   const filtered = visible.revealCount < visible.totalRevealable;
-  $("notationMeta").hidden = !filtered;
-  $("notationModeBadge").textContent = filtered ? `Visualization is filtered (${visible.revealCount}/${visible.totalRevealable} elements)` : "";
   const rankMeta = $("rankRevealBadge").parentElement;
   if (!rankMeta)
     throw new Error("Missing rank reveal container");
@@ -5080,7 +5242,7 @@ function loadAllSpells(keepSelection = false) {
     replaceOptions(select(attribute.id), attribute.options);
   calculation.setChordAttributes(attributesFor(activeAttributes, CHORD_ATTRIBUTE_IDS));
   calculation.setOrbitAttributes(attributesFor(activeAttributes, ORBIT_ATTRIBUTE_IDS));
-  const preferred = catalogue.entries.find((entry) => entry.id === oldEntry) || catalogue.entries.find((entry) => entry.name.toLowerCase() === "fireball") || catalogue.entries[0];
+  const preferred = catalogue.entries.find((entry) => entry.id === oldEntry) || catalogue.entries.find((entry) => entry.name.toLowerCase() === "scrying") || catalogue.entries[0];
   if (preferred)
     chooseSpell(preferred.id);
   else

@@ -361,8 +361,195 @@ async function pngDownload(page, button) {
   };
 }
 
+async function selectTheme(page, design) {
+  const group = design.startsWith('trait-') ? 'traits' :
+    ['arcane', 'divine', 'occult', 'primal'].includes(design) ? 'traditions' : 'surfaces';
+  await page.locator(`[data-theme-group="${group}"]`).click();
+  await page.locator(`#themeChoices input[value="${design}"]`).check();
+}
+
+async function navigationTest(browser) {
+  const context = await browser.newContext({
+    offline:true, viewport:{width:1280, height:900}, reducedMotion:'reduce'
+  });
+  try {
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(pathToFileURL(path.join(root, 'standalone.html')).href);
+    assert.equal(await page.locator('#spellName').inputValue(), 'Scrying');
+    assert.equal(await page.locator('#spellVariant').inputValue(), 'aon-1662');
+    assert.equal(await page.locator('#spellTitle').textContent(), 'Scrying');
+    assert.equal(await page.getByText('THE WORKBENCH', {exact:true}).count(), 0);
+    const nav = page.getByRole('navigation', {name:'Editor sections'});
+    assert.deepEqual(await nav.getByRole('button').allTextContents(), ['Spell', 'Style', 'Notation']);
+    assert.deepEqual(await page.locator('.control-panel > section').evaluateAll(sections =>
+      sections.map(section => section.id)), ['spellSection', 'designSection', 'notationSection']);
+    assert.equal(await page.locator('#spellSection #spellCardDetails').count(), 1);
+    for (const id of ['inkworkSection', 'transformsSection'])
+      assert.equal(await page.locator(`#designSection > #${id}`).count(), 1);
+    for (const id of ['layer1Panel', 'moreAttributes', 'layer3Panel'])
+      assert.equal(await page.locator(`#notationSection > #${id}`).count(), 1);
+    assert.equal(await page.locator('.preview-toolbar #exportPng, .preview-toolbar #exportTransparentPng, .preview-toolbar #exportSpellCard').count(), 3);
+    assert.equal(await page.locator('#themeChoices input').count(), 41);
+    assert.equal(await page.locator('[role="tab"]').count(), 0);
+    const ids = await page.locator('[id]').evaluateAll(nodes => nodes.map(node => node.id));
+    assert.equal(new Set(ids).size, ids.length, 'IDs must remain unique');
+    await page.evaluate(() => {
+      window.navigationControls = [...document.querySelectorAll('.control-panel input[id], .control-panel select[id], .control-panel textarea[id]')];
+    });
+
+    for (const design of await page.locator('#designTheme option').evaluateAll(options => options.map(option => option.value))) {
+      await selectTheme(page, design);
+      assert.equal(await page.locator('#designTheme').inputValue(), design);
+      assert.equal(await page.evaluate(() => window.eval('drawing.settings.design')), design);
+    }
+    await page.locator('#designTheme').selectOption('trait-fire', {force:true});
+    assert.equal(await page.locator('#traitsCategory').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#themeChoices input[value="trait-fire"]').isChecked(), true);
+    await selectTheme(page, 'plain');
+    const plain = page.locator('#themeChoices input[value="plain"]');
+    await plain.focus();
+    await plain.press('ArrowRight');
+    assert.equal(await page.locator('#designTheme').inputValue(), 'constellations');
+    await page.locator('#colorLines').fill('#325c7f');
+    await page.locator('#resetThemeColors').click();
+    assert.equal(await page.locator('#colorLines').inputValue(), '#e4f4ff');
+    await selectTheme(page, 'obsidian');
+
+    await page.locator('#inkworkSection > summary').click();
+    assert.equal(await page.locator('#inkWobble').isDisabled(), true);
+    await page.locator('label[for="handDrawnInk"]').click();
+    assert.equal(await page.locator('#inkWobble').isEnabled(), true);
+    await page.locator('#inkWobble').fill('1.4');
+    assert.equal(await page.locator('#rerollDecorations').isDisabled(), true);
+    await page.locator('label[for="decorations"]').click();
+    const seed = await page.evaluate(() => window.eval('drawing.settings.decorationSeed'));
+    const notation = await page.evaluate(() => JSON.stringify(window.eval('calculation.encode(currentSpell)')));
+    await page.locator('#rerollDecorations').click();
+    assert.notEqual(await page.evaluate(() => window.eval('drawing.settings.decorationSeed')), seed);
+    assert.equal(await page.evaluate(() => JSON.stringify(window.eval('calculation.encode(currentSpell)'))), notation);
+
+    await page.locator('#transformsSection > summary').click();
+    await page.locator('#rotation').fill('35');
+    await page.locator('#stretch').fill('1.2');
+    await page.locator('label[for="mirror"]').click();
+    await page.locator('label[for="showGuides"]').click();
+    await page.locator('#vertexLabelMode').selectOption('numbers');
+    for (const id of ['layer1Panel', 'moreAttributes', 'layer3Panel']) {
+      await page.locator(`#${id} > summary`).click();
+      await page.locator(`#${id} details > summary`).click();
+    }
+    await page.locator('#baseShape').selectOption('quadratic');
+    assert.equal(await page.locator('#baseBend').isVisible(), true);
+    await page.locator('#connectionStyle').selectOption('straight');
+    assert.equal(await page.locator('#curvature').isVisible(), false);
+    assert.equal(await page.locator('#arcSide').isVisible(), false);
+    await page.locator('#connectionStyle').selectOption('curved');
+    assert.equal(await page.locator('#curvature').isVisible(), true);
+    await page.locator('#dotStyle').selectOption('none');
+    assert.equal(await page.locator('#vertexSize').isDisabled(), true);
+    await page.locator('#dotStyle').selectOption('diamond');
+    await page.locator('#orbitWidth').fill('1.75');
+    await page.locator('#identityTickShape').selectOption('mixed');
+    for (const id of ['identityLineControls', 'identityDotControls', 'identitySquareControls'])
+      assert.equal(await page.locator(`#${id}`).isVisible(), true);
+    await page.locator('#identityDotFill').selectOption('outline');
+    assert.equal(await page.locator('#identityPointStrokeWidth').isVisible(), true);
+    await page.locator('#identityTickShape').selectOption('line');
+    assert.equal(await page.locator('#identityPointStrokeWidth').isVisible(), false);
+    await page.locator('#spellCardDetails summary').click();
+    await page.locator('#cardTraits').fill('edited trait');
+    await page.locator('#cardDescription').fill('Edited card description.');
+
+    const snapshot = () => page.evaluate(() => ({
+      values:window.navigationControls.map(control => [control.id, control.value, control.checked, control.disabled]),
+      expanded:[...document.querySelectorAll('details')].map(element => [element.id, element.open]),
+      settings:JSON.stringify(window.eval('drawing.settings')),
+      notation:JSON.stringify(window.eval('calculation.encode(currentSpell)')),
+      preview:document.getElementById('spellCanvas').toDataURL()
+    }));
+    const before = await snapshot();
+    for (const name of ['Style', 'Notation', 'Spell']) {
+      const link = nav.getByRole('button', {name, exact:true});
+      await link.focus();
+      await link.press('Enter');
+      await page.waitForFunction(name =>
+        document.querySelector('.jump-link[aria-current]')?.textContent === name, name);
+      assert.equal(await page.evaluate(() => window.scrollY), 0, 'Desktop navigation must not scroll the page');
+      assert.deepEqual(await snapshot(), before, 'Navigation must preserve all values, expansion, encoding and pixels');
+      const target = await link.getAttribute('aria-controls');
+      const position = await page.evaluate(id => ({
+        heading:document.getElementById(id).getBoundingClientRect().top,
+        nav:document.getElementById('editorNavigation').getBoundingClientRect().bottom
+      }), target);
+      assert(position.heading >= position.nav - 1,
+        `${name} heading must clear the sticky navigation: ${JSON.stringify(position)}`);
+    }
+    await page.locator('#editorPanel').evaluate(panel => { panel.scrollTop = panel.scrollHeight; });
+    await page.waitForFunction(() => document.querySelector('.jump-link[aria-current]')?.textContent === 'Notation');
+    const stickyTop = await page.evaluate(() => {
+      const panel = document.getElementById('editorPanel').getBoundingClientRect();
+      const navigation = document.getElementById('editorNavigation');
+      const nav = navigation.getBoundingClientRect();
+      return {
+        gap:nav.top - panel.top,
+        covered:navigation.contains(document.elementFromPoint(nav.left + nav.width / 2, panel.top + 1))
+      };
+    });
+    assert(Math.abs(stickyTop.gap) < 1, 'Sticky navigation must meet the top of the scrollable sidebar');
+    assert(stickyTop.covered, 'Scrolled controls must not show through above the navigation');
+    await page.locator('#editorPanel').evaluate(panel => { panel.scrollTop = 0; });
+    await page.waitForFunction(() => document.querySelector('.jump-link[aria-current]')?.textContent === 'Spell');
+    assert(await page.evaluate(() => window.navigationControls.every(control =>
+      control.isConnected && document.getElementById(control.id) === control)), 'Controls must never be recreated');
+
+    for (const width of [850, 390, 320]) {
+      await page.setViewportSize({width, height:844});
+      for (const name of ['Spell', 'Style', 'Notation']) {
+        const link = nav.getByRole('button', {name, exact:true});
+        await link.click();
+        await page.waitForFunction(name =>
+          document.querySelector('.jump-link[aria-current]')?.textContent === name, name);
+        assert.equal(await page.locator('#editorPanel').evaluate(panel => panel.scrollTop), 0);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+        const target = await link.getAttribute('aria-controls');
+        assert(await page.evaluate(id =>
+          document.getElementById(id).getBoundingClientRect().top >=
+            document.getElementById('editorNavigation').getBoundingClientRect().bottom - 1, target),
+        `${width}px mobile headings must clear the navigation`);
+      }
+      assert(await page.evaluate(() => window.scrollY > 0), 'Mobile navigation must scroll the page');
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForFunction(() => document.querySelector('.jump-link[aria-current]')?.textContent === 'Spell');
+    }
+    const after = await snapshot();
+    assert.deepEqual(after.values, before.values);
+    assert.deepEqual(after.expanded, before.expanded);
+    assert.equal(after.notation, before.notation);
+    await page.setViewportSize({width:1280, height:900});
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.evaluate(() => window.scrollTo(0, 0));
+    for (const name of ['Style', 'Notation', 'Spell']) {
+      const link = nav.getByRole('button', {name, exact:true});
+      await link.click();
+      await page.waitForFunction(id => {
+        const gap = document.getElementById(id).getBoundingClientRect().top -
+          document.getElementById('editorNavigation').getBoundingClientRect().bottom;
+        return gap >= 7 && gap <= 10;
+      }, await link.getAttribute('aria-controls'));
+      assert.equal(await link.getAttribute('aria-current'), 'location');
+    }
+    assert.deepEqual(errors, []);
+    console.log('PASS - workbench navigation, all 41 theme radios, control retention, conditional controls and desktop/mobile scrolling.');
+  } finally {
+    await context.close();
+  }
+}
+
 async function smokeTest(page) {
   assert.equal(await page.locator('#catalogCount').textContent(), '1,400 spells');
+  // Catalogue capture explicitly selects Fireball for the historical pixel fixtures.
   assert.equal(await page.locator('#spellName').inputValue(), 'Fireball');
 
   for (const id of ['inkworkSection', 'transformsSection']) {
@@ -374,7 +561,7 @@ async function smokeTest(page) {
   const cornerOrnaments = page.locator('#cornerOrnaments');
   assert.equal(await cornerOrnaments.isChecked(), true);
   const originalTheme = await page.locator('#designTheme').inputValue();
-  await page.locator('#designTheme').selectOption('trait-fire');
+  await selectTheme(page, 'trait-fire');
   const decorated = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
   const encoding = await page.evaluate(() => JSON.stringify(window.eval('calculation.encode(currentSpell)')));
   await page.locator('label[for="cornerOrnaments"]').click();
@@ -384,7 +571,7 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#decorations').isChecked(), false);
   await page.locator('label[for="cornerOrnaments"]').click();
   assert.equal(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), decorated);
-  await page.locator('#designTheme').selectOption(originalTheme);
+  await selectTheme(page, originalTheme);
   await page.locator('#inkworkSection > summary').click();
 
   for (const [layer, control] of [
@@ -465,12 +652,16 @@ async function smokeTest(page) {
   await page.locator('#creditsClose').click();
   assert.equal(await page.locator('#creditsDialog').isVisible(), false);
 
+  const filteredPreview = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
+  assert.equal(await page.locator('#notationMeta, #notationModeBadge').count(), 0);
   await page.locator('label[for="rankComplexity"]').click();
   assert.equal(await page.locator('#rankComplexity').isChecked(), false);
-  assert.equal(await page.locator('#notationMeta').isHidden(), true);
+  assert.match(await page.locator('#rankViewHint').textContent(), /All chords and orbits are visible/);
+  assert.notEqual(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), filteredPreview);
   await page.locator('label[for="rankComplexity"]').click();
   assert.equal(await page.locator('#rankComplexity').isChecked(), true);
-  assert.equal(await page.locator('#notationMeta').isVisible(), true);
+  assert.match(await page.locator('#rankViewHint').textContent(), /Turn off to show every chord and orbit/);
+  assert.equal(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), filteredPreview);
 
   const beforeOrbitStyle = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
   const orbitWidth = page.locator('#orbitWidth');
@@ -499,7 +690,7 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), beforeMode);
   assert.equal(await page.evaluate(() => JSON.stringify(window.eval('calculation.encode(currentSpell)'))), beforeEncoding);
 
-  await page.locator('#designTheme').selectOption('plain');
+  await selectTheme(page, 'plain');
   assert.notEqual(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), beforeMode);
   assert.equal(await page.evaluate(() => JSON.stringify(window.eval('calculation.encode(currentSpell)'))), beforeEncoding);
   await page.locator('#colorLines').fill('#325c7f');
@@ -581,8 +772,8 @@ async function smokeTest(page) {
 
   await page.reload();
   assert.equal(await page.locator('html').getAttribute('data-ui-mode'), 'light');
-  assert.equal(await page.locator('#spellName').inputValue(), 'Fireball');
-  await page.locator('#designTheme').selectOption('plain');
+  assert.equal(await page.locator('#spellName').inputValue(), 'Scrying');
+  await selectTheme(page, 'plain');
   assert.equal(await page.locator('#colorLines').inputValue(), '#325c7f');
 
   await page.locator('#layer1Panel > summary').click();
@@ -590,8 +781,8 @@ async function smokeTest(page) {
   await layout.locator('summary').click();
   await page.locator('#dotStyle').selectOption('diamond');
   await page.locator('#vertexSize').fill('1.5');
-  await page.locator('#designTheme').selectOption('blueprint');
-  await page.locator('#designTheme').selectOption('plain');
+  await selectTheme(page, 'blueprint');
+  await selectTheme(page, 'plain');
   assert.equal(await page.locator('#dotStyle').inputValue(), 'diamond');
   assert.equal(await page.locator('#vertexSize').inputValue(), '1.5');
   await page.locator('label[for="mirror"]').click();
@@ -599,12 +790,13 @@ async function smokeTest(page) {
   await page.locator('label[for="cornerOrnaments"]').click();
   await page.locator('#resetSpell').click();
   assert.equal(await page.locator('#designTheme').inputValue(), 'constellations');
-  assert.equal(await page.locator('#spellName').inputValue(), 'Fireball');
+  assert.equal(await page.locator('#spellName').inputValue(), 'Scrying');
+  assert.equal(await page.locator('#spellVariant').inputValue(), 'aon-1662');
   assert.equal(await page.locator('#mirror').isChecked(), false);
   assert.equal(await page.locator('#identityTickWidth').inputValue(), '1');
   assert.equal(await page.locator('#identityMarkerOpacity').inputValue(), '0.45');
   assert.equal(await cornerOrnaments.isChecked(), true);
-  await page.locator('#designTheme').selectOption('plain');
+  await selectTheme(page, 'plain');
   assert.equal(await page.locator('#colorLines').inputValue(), '#325c7f');
   await page.evaluate(() => {
     const original = HTMLCanvasElement.prototype.toBlob;
@@ -618,14 +810,14 @@ async function smokeTest(page) {
     assert.match(await page.locator('#renderError').textContent(), /PNG creation failed/);
   }
   await page.evaluate(() => window.restoreToBlob());
-  await page.locator('#designTheme').selectOption('tattoo');
+  await selectTheme(page, 'tattoo');
   assert.match(await page.locator('#designDescription').textContent(), /blackwork/);
   assert.equal(await page.locator('#vertexSize').inputValue(), '0.5');
   const tattooPreview = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
   await page.locator('#colorBackground').fill('#ad7960');
   assert.notEqual(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), tattooPreview);
-  await page.locator('#designTheme').selectOption('plain');
-  await page.locator('#designTheme').selectOption('tattoo');
+  await selectTheme(page, 'plain');
+  await selectTheme(page, 'tattoo');
   assert.equal(await page.locator('#colorBackground').inputValue(), '#ad7960');
   const tattoo = await pngDownload(page, '#exportTransparentPng');
   assert(tattoo.transparentPixels > tattoo.width * tattoo.height * .8);
@@ -720,6 +912,7 @@ async function unavailableStorageTest(browser) {
 async function main() {
   const browser = await chromium.launch({args:['--disable-gpu']});
   try {
+    await navigationTest(browser);
     const context = await browser.newContext({
       offline:true,
       viewport:{width:1280, height:900},

@@ -40,12 +40,12 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .online-dot { display:inline-block; width:6px; height:6px; background:#b3c89c; border-radius:50%; vertical-align:middle; margin-right:8px; box-shadow:0 0 0 3px rgba(179,200,156,.11); }
 .workspace {
   display:grid; grid-template-columns: 318px minmax(0, 1fr);
-  gap: 27px; padding: 13px 29px 18px 27px; width:100%;
+  gap: 27px; padding: 13px 3px 18px 3px; width:100%;
   height: calc(100vh - 82px); min-height: 670px;
   max-width: 1800px; margin: 0 auto;
 }
 .control-panel {
-  overflow-y:auto; padding: 14px 13px 30px 5px;
+  overflow-y:auto; padding: 0 13px 30px 5px;
   scrollbar-width:thin; scrollbar-color:#405057 transparent;
 }
 .section-kicker { display:flex; align-items:center; gap:11px; color:var(--gold); font-size:10px; font-weight:800; letter-spacing:2.0px; }
@@ -242,12 +242,6 @@ h2 { font:normal 33px/1.05 Georgia,"Times New Roman",serif; color:#f0eddf; margi
 .rank-view-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap;
   color:#a3b0aa; font-size:10px; margin:7px 0 0; }
 .rank-view-meta .k-chip { white-space:nowrap; }
-.preview-heading-row { display:flex; gap:11px; align-items:center; flex-wrap:wrap; }
-.notation-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0; }
-.notation-pill { border:1px solid #6b5b46; color:#ddc39d; padding:3px 7px;
-  border-radius:4px; background:#332d24; font-size:10px; letter-spacing:.3px; }
-.notation-pill.is-full { border-color:#4e665e; color:#c2dbcc; background:#20352f; }
-.notation-count { font-size:10px; color:#91a19b; }
 /* Independently choose which view the exported PNG contains. */
 .export-tools { display:flex; gap:6px; align-items:center; }
 .export-tools select { height:40px; max-width:139px; min-width:130px;
@@ -271,9 +265,6 @@ h2 { font:normal 33px/1.05 Georgia,"Times New Roman",serif; color:#f0eddf; margi
 .preview-toolbar h2 { margin:7px 0 6px; }
 
 .preview-toolbar { padding-bottom:6px; }
-
-/* Prioritize the canvas on narrower desktops: keep the mode, omit its count. */
-@media (max-width:1250px) { .notation-count { display:none; } }
 
 /* v3.0: one compact, coherent, expandable section per notation layer. */
 .layer-panel.field-group { display:block; padding:0; }
@@ -494,8 +485,7 @@ html[data-ui-mode="light"] .spell-picker-status,
 html[data-ui-mode="light"] .catalog-status,
 html[data-ui-mode="light"] .slider-value,
 html[data-ui-mode="light"] .rank-view-meta,
-html[data-ui-mode="light"] .preview-subtitle,
-html[data-ui-mode="light"] .notation-count {color:#586c6b;}
+html[data-ui-mode="light"] .preview-subtitle {color:#586c6b;}
 html[data-ui-mode="light"] .catalog-error {color:#963d2f;}
 html[data-ui-mode="light"] .k-chip,
 html[data-ui-mode="light"] .layer-panel-meta {
@@ -563,9 +553,6 @@ html[data-ui-mode="light"] .credits-close:hover {
 html[data-ui-mode="light"] .export-tools .btn-secondary {color:#324649;}
 html[data-ui-mode="light"] .btn-primary {background:#c48e48; border-color:#ad7736; color:#1c292a;}
 html[data-ui-mode="light"] .btn-primary:hover {background:#d4a160;}
-html[data-ui-mode="light"] .notation-pill {
-  color:#795326; background:#fbf0da; border-color:#d7b78e;
-}
 html[data-ui-mode="light"] .canvas-frame {
   border-color:#cad5d0; box-shadow:0 10px 28px rgba(39,55,51,.12);
 }
@@ -590,3 +577,61 @@ html[data-ui-mode="light"] .credits-policy-notice {
   border-left-color:#ac864b; background:#f2f4ee;
 }
 html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
+
+/* Scroll navigation keeps the existing editor controls mounted. */
+.sidebar-sticky {
+  position:sticky; top:0; z-index:40; padding:12px 0;
+  background:#141e20; border-bottom:1px solid var(--line); margin-bottom:18px;
+}
+.section-jumps, .theme-categories {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px;
+}
+.jump-link, .theme-categories button {
+  min-width:0; border:1px solid transparent; border-radius:4px;
+  background:transparent; color:var(--muted); padding:8px 2px;
+  font-size:11px; line-height:14px; font-weight:650;
+}
+.jump-link:hover, .theme-categories button:hover { color:inherit; background:#1d2b2e; }
+.jump-link[aria-current], .theme-categories button[aria-pressed=true] {
+  color:#e9e5da; background:#1d2b2e; border-color:var(--line);
+}
+.editor-section { scroll-margin-top:66px; }
+.control-panel { scroll-padding-top:66px; }
+.editor-section > .group-label { margin-top:0; }
+#spellSection { border-top:0; padding-top:0; }
+#designHeading { color:var(--muted); font-size:10px; letter-spacing:1px; }
+.theme-categories { border:1px solid var(--line); border-radius:5px; padding:3px; }
+.theme-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:12px; }
+.theme-choice {
+  position:relative; min-width:0; min-height:49px; padding:7px 8px;
+  display:flex; align-items:center; gap:9px; border:1px solid var(--line);
+  border-radius:5px; color:inherit; font-size:11px; cursor:pointer;
+}
+.theme-choice:hover { border-color:var(--muted); }
+.theme-choice:has(input:checked) { border-color:var(--gold); background:#1d2b2e; }
+.theme-choice:has(input:focus-visible) { outline:2px solid var(--gold); outline-offset:2px; }
+.theme-choice input { position:absolute; inset:0; width:100%; height:100%; opacity:0; margin:0; cursor:pointer; }
+.theme-choice-label { min-width:0; line-height:1.25; overflow-wrap:anywhere; }
+.theme-choice-swatch {
+  position:relative; width:28px; height:28px; flex:none; border-radius:50%;
+  border:1px solid #7f7f7f; background:var(--swatch-bg);
+}
+.theme-choice-swatch::before {
+  content:''; position:absolute; width:12px; height:12px; left:6px; top:6px;
+  border:1.5px solid var(--swatch-line); border-radius:50%;
+}
+.theme-choice-swatch::after {
+  content:''; position:absolute; width:24px; height:1px; left:1px; top:13px;
+  background:var(--swatch-line); transform:rotate(-36deg);
+}
+html[data-ui-mode="light"] .sidebar-sticky { background:#f5f3ec; }
+html[data-ui-mode="light"] .jump-link:hover,
+html[data-ui-mode="light"] .theme-categories button:hover,
+html[data-ui-mode="light"] .jump-link[aria-current],
+html[data-ui-mode="light"] .theme-categories button[aria-pressed=true],
+html[data-ui-mode="light"] .theme-choice:has(input:checked) { color:#263638; background:#e8ede5; }
+@media (max-width:850px) {
+  html { scroll-padding-top:66px; }
+  .control-panel { scroll-padding-top:0; }
+  .editor-section.field-group { display:block; }
+}

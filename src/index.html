@@ -23,9 +23,16 @@
 </div>
 </header>
 <main class="workspace">
-<aside aria-label="Spell parameters" class="control-panel">
-<div class="field-group">
-<div class="group-label">SPELL</div>
+<aside aria-label="Spell parameters" class="control-panel" id="editorPanel">
+<div class="sidebar-sticky" id="editorNavigation">
+<nav class="section-jumps" aria-label="Editor sections">
+<button class="jump-link is-current" type="button" data-scroll-target="spellSection" aria-controls="spellSection" aria-current="location">Spell</button>
+<button class="jump-link" type="button" data-scroll-target="designSection" aria-controls="designSection">Style</button>
+<button class="jump-link" type="button" data-scroll-target="notationSection" aria-controls="notationSection">Notation</button>
+</nav>
+</div>
+<section class="field-group editor-section" id="spellSection" aria-labelledby="spellHeading">
+<h3 class="group-label" id="spellHeading">SPELL</h3>
 
 <div class="field spell-picker-field">
 <div class="field-label"><label for="spellPickerInput">Find a spell</label><span class="k-chip" id="catalogCount">Loading...</span></div>
@@ -41,7 +48,7 @@
 
 <div class="field">
 <label for="spellName">Spell name</label>
-<input id="spellName" maxlength="85" spellcheck="false" type="text" value="Fireball"/>
+<input id="spellName" maxlength="85" spellcheck="false" type="text" value="Scrying"/>
 </div>
 <details class="spell-card-details" id="spellCardDetails">
 <summary>Spell card details</summary>
@@ -56,7 +63,9 @@
 </div>
 </details>
 
-</div>
+</section>
+<section class="editor-section" id="notationSection" aria-labelledby="notationHeading">
+<h3 class="group-label" id="notationHeading">NOTATION</h3>
 <details class="field-group layer-panel attributes-group" id="layer1Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 1. VERTICES</span></summary><div class="layer-panel-body">
 <p class="field-help">Five chord groups share 11 vertices.</p>
 <div class="field">
@@ -257,10 +266,12 @@
 <div class="field-label"><label for="identityMarkerOpacity">Layer 3 opacity</label><span class="slider-value" id="identityMarkerOpacityValue">0.45</span></div>
 <input id="identityMarkerOpacity" max="1" min="0" step="0.05" type="range" value="0.45"/>
 </div><p class="field-help">Mixed uses all three marker styles. Large markers may overlap.</p></div></details></div></details>
+</section>
 <p class="render-error" hidden="" id="renderError" role="alert"></p>
-<div aria-labelledby="designHeading" class="field-group design-group">
-<div class="group-label" id="designHeading">THEME</div>
-<div class="field">
+<section aria-labelledby="styleHeading" class="field-group design-group editor-section" id="designSection">
+<h3 class="group-label" id="styleHeading">STYLE</h3>
+<div class="group-label" id="designHeading">APPEARANCE</div>
+<div class="field" hidden>
 <label for="designTheme">Appearance</label>
 <select id="designTheme">
 <option value="plain">Plain - manuscript parchment</option>
@@ -277,6 +288,18 @@
 </optgroup>
 <optgroup label="Primary trait themes"><option value="trait-none">Unbound / no trait</option><option value="trait-healing">Healing</option><option value="trait-mental">Mental</option><option value="trait-illusion">Illusion</option><option value="trait-fire">Fire</option><option value="trait-cold">Cold</option><option value="trait-electricity">Electricity</option><option value="trait-acid">Acid</option><option value="trait-poison">Poison</option><option value="trait-water">Water</option><option value="trait-air">Air</option><option value="trait-earth">Earth</option><option value="trait-plant">Plant</option><option value="trait-wood">Wood</option><option value="trait-metal">Metal</option><option value="trait-light">Light</option><option value="trait-darkness">Darkness</option><option value="trait-polymorph">Polymorph</option><option value="trait-teleportation">Teleportation</option><option value="trait-summon">Summon</option><option value="trait-force">Force</option><option value="trait-spirit">Spirit</option><option value="trait-vitality">Vitality</option><option value="trait-void">Void</option><option value="trait-incapacitation">Incapacitation</option><option value="trait-emotion">Emotion</option><option value="trait-detection">Detection</option><option value="trait-shadow">Shadow</option><option value="trait-sonic">Sonic</option><option value="trait-attack">Attack</option><option value="trait-other">Other</option></optgroup></select>
 </div>
+<div class="theme-browser">
+<div class="theme-categories" role="group" aria-label="Theme categories">
+<button type="button" id="surfacesCategory" data-theme-group="surfaces" aria-pressed="true" aria-controls="surfacesThemes">Surfaces</button>
+<button type="button" id="traditionsCategory" data-theme-group="traditions" aria-pressed="false" aria-controls="traditionsThemes">Traditions</button>
+<button type="button" id="traitsCategory" data-theme-group="traits" aria-pressed="false" aria-controls="traitsThemes">Traits</button>
+</div>
+<div id="themeChoices" role="radiogroup" aria-labelledby="designHeading">
+<div class="theme-choices" id="surfacesThemes"></div>
+<div class="theme-choices" id="traditionsThemes" hidden></div>
+<div class="theme-choices" id="traitsThemes" hidden></div>
+</div>
+</div>
 <p class="field-help" id="designDescription">A silver star chart with a sweeping galactic haze and celestial coordinates.</p>
 <div aria-labelledby="paletteHeading" class="palette-settings">
 <div class="palette-heading" id="paletteHeading">Theme colors</div>
@@ -287,7 +310,7 @@
 </div>
 <button class="btn-import palette-reset" id="resetThemeColors" type="button">Reset theme colors</button>
 </div>
-<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INKWORK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes. Your spell encoding stays identical.</p><div class="hand-ink-settings">
+<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes. Your spell encoding stays identical.</p><div class="hand-ink-settings">
 <label class="toggle-row" for="handDrawnInk"><span>Feather &amp; ink strokes</span><input id="handDrawnInk" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <p class="field-help">Thick at the start, fine at the end. Wobble and feathering add natural ink edges.</p>
 <div class="hand-ink-parameters" id="handInkParameters">
@@ -336,20 +359,17 @@
 </div>
 </div>
 </details>
-</div>
+</section>
 </aside>
 <!-- The preview grows to fill the available workspace. -->
 <section aria-label="Generated spell circle" class="preview-area">
 <div class="preview-toolbar">
 <div>
-<div class="preview-heading-row">
-<div class="notation-meta" id="notationMeta"><span class="notation-pill" id="notationModeBadge" aria-live="polite" title="Visible Layer 1 and 2 elements; hidden elements still exist in the full notation."></span></div>
-</div>
-<h2 id="spellTitle">Fireball</h2>
+<h2 id="spellTitle">Scrying</h2>
 
 </div>
 <div class="toolbar-actions">
-<button class="btn-secondary" id="resetSpell" title="Restore the Fireball example" type="button">↺ <span>Reset</span></button>
+<button class="btn-secondary" id="resetSpell" title="Restore the Scrying example" type="button">↺ <span>Reset</span></button>
 <div class="export-tools"><button class="btn-secondary export-action" id="exportPng" title="Export the sigil exactly as shown" type="button">Export PNG</button><button class="btn-secondary export-action" id="exportTransparentPng" title="Export the sigil without the theme background or ornaments" type="button">Transparent PNG</button><button class="btn-primary export-action" id="exportSpellCard" title="Export a spell card with the current sigil, casting time, traits and full description" type="button">Export Spell Card</button></div>
 </div>
 </div>

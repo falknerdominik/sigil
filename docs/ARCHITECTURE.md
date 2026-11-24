@@ -73,6 +73,27 @@ normalized spell data. Extra range options come from the active catalogue;
 their order affects their encoded bits. See
 [the calculation reference](HOW-IT-IS-CALCULATED.qmd) for the formulas.
 
+### Editor navigation
+
+The sidebar has three scroll destinations: **Spell**, **Style**, and
+**Notation**. Spell contains the picker, name and card details. Style contains
+Appearance, Ink & Ornament, and Layout & Guides; Notation contains the three
+independently collapsible layers. The complete Style group is reparented once
+before Notation during controller setup, preserving its original controls.
+
+The sticky workbench navigation uses buttons with `aria-current="location"`,
+not tabs or routes. Above 850 px it scrolls the sidebar; at smaller widths it
+scrolls the page. Destination offsets account for the sticky header. Scroll
+events update the active button, and reduced-motion preferences disable smooth
+scrolling. Navigation never recreates inputs or resets expanded panels.
+
+Appearance radios are generated once from the existing `designTheme` options,
+grouped as Surfaces (6), Traditions (4), and Traits (31). The hidden select keeps
+its ID and remains the source of truth: radio changes dispatch its existing
+change event, while theme changes and Reset synchronize the radios and category.
+Category buttons only filter the visible choices; they do not select a theme.
+All drawing, palette, catalogue and export logic is unchanged.
+
 ## Build and verification
 
 Install development dependencies with `npm ci`. `npm run compile` type-checks
@@ -132,10 +153,10 @@ for the preview, normal PNG, transparent PNG and spell-card exports.
 Each layer's visual options include a 0–1 opacity multiplier; 0 hides its
 encoded strokes and 1 preserves the theme's original opacity. Encoding and
 geometry fitting are unaffected.
-Layers 1–3, their visual options, Inkwork & Ornament and Layout & Guides are
-collapsed initially. The latter two sections belong to Theme.
+Layers 1–3, their visual options, Ink & Ornament and Layout & Guides are
+collapsed initially. The latter two sections belong to Style.
 Layer 3 defaults to 1 px line markers and a 0.45 opacity multiplier.
-Theme's Inkwork & Ornament section has a Corner ornaments toggle (on by
+Style's Ink & Ornament section has a Corner ornaments toggle (on by
 default), independent of randomized decorations. It controls the fixed corner
 motifs in the preview, normal PNG and spell-card exports, leaving the background
 and encoding intact. Transparent PNG excludes the backdrop and its ornaments
@@ -174,6 +195,9 @@ Five rendering cases (including Tattoo) and the normal sigil and spell-card PNG
 downloads hash raw RGBA pixels, not PNG bytes. Separate checks cover transparent
 export alpha, deterministic theme rendering, decoration seeds, skin colors and
 unchanged notation and geometry across all base themes and trait presets.
+Navigation checks cover all theme radios, keyboard interaction, retained control
+nodes and state, conditional settings, and sidebar/page scrolling at desktop,
+850 px, 390 px and 320 px widths.
 The pixel baseline was captured on Debian 12, Linux arm64 with Playwright's Chromium 159.0.8154.6,
 software rendering, `en-US` locale and device scale factor 1. Pixel checks
 require the same browser and platform; differences in system fonts or graphics
