@@ -19,23 +19,22 @@ with a semicircular base. Moonward and Tideglass are custom spells with
 different attributes and drawing settings. All four sigils were exported from
 Sigil with rank filtering turned off.
 
-| Fireball · Fire | Cornucopia · Primal |
+| Fireball - Fire | Cornucopia - Primal |
 | --- | --- |
 | ![Fireball drawn in ember orange in the Fire trait theme](docs/fireball-sigil.png) | ![Cornucopia with a semicircular base and leafy green Primal ornaments](docs/gallery/cornucopia-primal.webp) |
-| **Moonward · Divine** | **Tideglass · Tattoo** |
+| **Moonward - Divine** | **Tideglass - Tattoo** |
 | ![Moonward drawn as an angular gold sigil on ivory parchment](docs/gallery/moonward-divine.webp) | ![Tideglass drawn in tapered charcoal ink on a warm skin tone](docs/gallery/tideglass-tattoo.webp) |
-
-- **Moonward:** rank 5, Divine, touch, 1 hour, light, spirit damage, emanation.
-- **Tideglass:** rank 7, Primal, 60 feet, sustained, water, cold damage, cone.
 
 ### Spell cards
 
 Sigil's spell-card export pairs the sigil with its attributes, traits, and an
-editable description. Select either card to view it at full size.
+editable description. Select a card to view it at full size.
 
-| Electric Arc · Cantrip · Blueprint | Freeze Time · Rank 10 · Occult |
+| Electric Arc - Cantrip - Blueprint | Freeze Time - Rank 10 - Occult |
 | --- | --- |
 | [![Electric Arc cantrip card with an angular cyan sigil on a drafting grid](docs/gallery/electric-arc-spell-card.webp)](docs/gallery/electric-arc-spell-card.webp) | [![Freeze Time rank 10 spell card with a curved violet sigil on a dark ritual backdrop](docs/gallery/freeze-time-spell-card.webp)](docs/gallery/freeze-time-spell-card.webp) |
+| **Heal - Rank 1 - Herbarium** | **Haste - Rank 3 - Arcane** |
+| [![Heal spell card with a pale green sigil framed by botanical ornaments](docs/gallery/heal-spell-card.webp)](docs/gallery/heal-spell-card.webp) | [![Haste spell card with angular lavender lines on a deep indigo backdrop](docs/gallery/haste-spell-card.webp)](docs/gallery/haste-spell-card.webp) |
 
 ## Development and verification
 
