@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" data-ui-mode="dark">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="dark" name="color-scheme"/>
+<title>Sigil — Pathfinder 2e spell designer</title>
+<link href="styles.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar">
+<div class="brand">
+<div>
+<div class="brand-name">Sigil</div>
+<div class="brand-kicker">Create sigils for Pathfinder spells</div>
+</div>
+</div>
+<div class="topbar-attribution">
+  <button class="ui-mode-button" id="uiModeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode"><span id="uiModeIcon" aria-hidden="true">☼</span><span id="uiModeLabel">Light mode</span></button>
+  <button class="credits-open" id="creditsOpen" type="button" aria-haspopup="dialog" aria-controls="creditsDialog">Credits &amp; licenses</button>
+  <a class="coffee-button" href="https://www.buymeacoffee.com/dominikfalkner" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee (external link)"><span aria-hidden="true">☕</span> Buy me a coffee</a>
+</div>
+</header>
+<main class="workspace">
+<aside aria-label="Spell parameters" class="control-panel">
+<div class="field-group">
+<div class="group-label">SPELL</div>
+
+<div class="field spell-picker-field">
+<div class="field-label"><label for="spellPickerInput">Find a spell</label><span class="k-chip" id="catalogCount">Loading...</span></div>
+<div class="spell-picker" id="spellPicker">
+<input aria-autocomplete="list" aria-controls="spellPickerList" aria-expanded="false" aria-haspopup="listbox" autocomplete="off" id="spellPickerInput" placeholder="Search name, rank, trait, source..." role="combobox" spellcheck="false" type="search"/>
+<button aria-controls="spellPickerList" aria-expanded="false" aria-label="Open spell choices" class="spell-picker-toggle" id="spellPickerToggle" type="button">⌄</button>
+<div class="spell-picker-list" hidden="" id="spellPickerList" role="listbox"></div>
+</div>
+<p aria-live="polite" class="spell-picker-status" id="spellPickerStatus" role="status"></p>
+<p class="field-help catalog-error" id="catalogError" role="alert" hidden></p>
+</div>
+
+
+<div class="field">
+<label for="spellName">Spell name</label>
+<input id="spellName" maxlength="85" spellcheck="false" type="text" value="Fireball"/>
+</div>
+<details class="spell-card-details" id="spellCardDetails">
+<summary>Spell card details</summary>
+<p class="field-help">Loaded from the spell list. Edit these for your card; the sigil stays unchanged.</p>
+<div class="field">
+<label for="cardTraits">Traits (comma-separated)</label>
+<input id="cardTraits" type="text" spellcheck="false" placeholder="e.g. fire, evocation"/>
+</div>
+<div class="field">
+<label for="cardDescription">Spell description</label>
+<textarea id="cardDescription" rows="7" spellcheck="true" placeholder="Write the spell description for the card..."></textarea>
+</div>
+</details>
+
+</div>
+<details class="field-group layer-panel attributes-group" id="layer1Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 1. VERTICES</span></summary><div class="layer-panel-body">
+<p class="field-help">Five chord groups share 11 vertices.</p>
+<div class="field">
+<div class="field-label"><label for="rank">Spell rank</label><span class="k-chip">k=1</span></div>
+<select id="rank"></select>
+</div>
+<div class="rank-view-control">
+<label class="toggle-row" for="rankComplexity"><span>Filter details by rank</span><input checked="" id="rankComplexity" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
+<div class="rank-view-meta"><span class="k-chip" id="rankRevealBadge">40% optional detail</span><span id="rankRevealHelp"></span></div>
+<p class="field-help" id="rankViewHint">Turn off to show every chord and orbit. The ID always stays visible.</p>
+</div>
+<div class="field">
+<div class="field-label"><label for="tradition">Tradition</label><span class="k-chip">k=2</span></div>
+<select id="tradition"></select>
+</div>
+<div class="field">
+<div class="field-label"><label for="range">Range category</label><span class="k-chip">k=3</span></div>
+<select id="range"></select>
+</div>
+<div class="field">
+<div class="field-label"><label for="duration">Duration</label><span class="k-chip">k=4</span></div>
+<select id="duration"></select>
+</div>
+<div class="field">
+<div class="field-label"><label for="effectTrait">Primary trait</label><span class="k-chip">k=5</span></div>
+<select id="effectTrait"></select>
+</div>
+<details class="advanced-panel">
+<summary>Visual options</summary>
+<div class="advanced-content">
+<div class="field slider-field">
+<div class="field-label"><label for="chordOpacity">Layer 1 opacity</label><span class="slider-value" id="chordOpacityValue">1</span></div>
+<input id="chordOpacity" max="1" min="0" step="0.05" type="range" value="1"/>
+</div>
+<div class="field" id="polygonSidesRow">
+<label for="polygonSides">Polygon contour</label>
+<select id="polygonSides">
+<option selected="" value="smooth">Smooth / circular</option>
+<option value="3">Triangle - 3 sides</option>
+<option value="4">Square - 4 sides</option>
+<option value="5">Pentagon - 5 sides</option>
+<option value="6">Hexagon - 6 sides</option>
+<option value="8">Octagon - 8 sides</option>
+<option value="12">Dodecagon - 12 sides</option>
+</select>
+</div>
+<div class="field">
+<label for="baseShape">Base curve</label>
+<select id="baseShape">
+<option selected="" value="polygon">Regular circle</option>
+<option value="semicircle">Semicircle</option>
+<option value="quarter">Quarter circle</option>
+<option value="quadratic">Quadratic function</option>
+<option value="cubic">Cubic function</option>
+</select>
+</div>
+<div class="field slider-field" hidden="" id="baseBendRow">
+<div class="field-label"><label for="baseBend">Function bend</label><span class="slider-value" id="baseBendValue">100%</span></div>
+<input id="baseBend" max="1.6" min="0.6" step="0.1" type="range" value="1"/>
+</div>
+<div class="field">
+<label for="connectionStyle">Connections</label>
+<select id="connectionStyle">
+<option value="straight">Straight lines</option>
+<option value="centered">Centred semicircles</option>
+<option selected="" value="curved">Non-centred circular arcs</option>
+</select>
+</div>
+<div class="field">
+<label for="dotStyle">Vertex style</label>
+<select id="dotStyle">
+<option value="circle">Circle (center dot)</option>
+<option value="empty">Empty space (hollow ring)</option>
+<option value="none">None (no vertex marker)</option>
+<option selected="" value="star">Star</option>
+<option value="diamond">Diamond</option>
+<option value="square">Square</option>
+<option value="triangle">Triangle</option>
+<option value="hexagon">Hexagon</option>
+<option value="cross">Cross</option>
+</select>
+</div>
+<div class="field slider-field" id="vertexSizeRow">
+<div class="field-label"><label for="vertexSize">Vertex size</label><span class="slider-value" id="vertexSizeValue">70%</span></div>
+<input id="vertexSize" max="2.5" min="0.5" step="0.1" type="range" value="0.7"/>
+</div>
+<div class="field slider-field" id="vertexStrokeRow">
+<div class="field-label"><label for="vertexStroke">Vertex border thickness</label><span class="slider-value" id="vertexStrokeValue">1 px</span></div>
+<input id="vertexStroke" max="5" min="0.5" step="0.25" type="range" value="1"/>
+</div>
+<div class="field slider-field" hidden="" id="curvatureRow">
+<div class="field-label"><label for="curvature">Arc depth</label><span class="slider-value" id="curvatureValue">22%</span></div>
+<input id="curvature" max="0.47" min="0.05" step="0.01" type="range" value="0.22"/>
+</div>
+<div class="field" hidden="" id="arcSideRow">
+<label for="arcSide">Arc direction</label>
+<select id="arcSide">
+<option value="inward">Inward</option>
+<option value="outward">Outward</option>
+<option selected="" value="alternate">Alternating</option>
+</select>
+</div>
+</div>
+</details>
+</div></details><details class="field-group layer-panel layer2-panel" id="moreAttributes"><summary class="layer-panel-summary"><span class="group-label">LAYER 2. ORBITS</span></summary><div class="layer-panel-body">
+<p class="field-help">Each orbit combines up to four parts: 22.5°, 45°, 90° and 180°.</p>
+<div class="additional-fields">
+<div class="field"><div class="field-label"><label for="damage">Damage type</label><span class="k-chip">+22.5°</span></div><select id="damage"></select></div>
+<div class="field"><div class="field-label"><label for="area">Area shape</label><span class="k-chip">+45°</span></div><select id="area"></select></div>
+<div class="field"><div class="field-label"><label for="castActions">Casting time</label><span class="k-chip">+90°</span></div><select id="castActions"></select></div>
+<div class="field"><div class="field-label"><label for="castTraits">Casting traits</label><span class="k-chip">+180°</span></div><select id="castTraits"></select></div>
+</div>
+<details class="advanced-panel">
+<summary>Visual options</summary>
+<div class="advanced-content"><div class="field slider-field">
+<div class="field-label"><label for="orbitOpacity">Layer 2 opacity</label><span class="slider-value" id="orbitOpacityValue">1</span></div>
+<input id="orbitOpacity" max="1" min="0" step="0.05" type="range" value="1"/>
+</div><div class="field slider-field">
+<div class="field-label"><label for="orbitWidth">Orbit thickness</label><span class="slider-value" id="orbitWidthValue">1.25 px</span></div>
+<input id="orbitWidth" max="3" min="0.5" step="0.25" type="range" value="1.25"/>
+</div><div class="field">
+<label for="orbitLineStyle">Orbit line type</label>
+<select id="orbitLineStyle">
+<option selected="" value="solid">Solid</option>
+<option value="dashed">Dashed</option>
+<option value="dotted">Dotted</option>
+</select>
+</div></div></details></div></details>
+<details class="field-group layer-panel layer3-panel" id="layer3Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 3. SPELL FINGERPRINT</span></summary><div class="layer-panel-body">
+<p class="field-help">The fingerprint encodes the source / variant ID in binary: a mark is 1, a gap is 0.</p>
+<div class="field">
+<label for="spellVariant">Spell ID / source ID</label>
+<input id="spellVariant" maxlength="70" placeholder="e.g. aon-1461 or a custom ID" spellcheck="false" type="text" value=""/>
+</div>
+<p class="field-help">Bundled spells use their source / variant IDs automatically. Custom spells receive an editable generated ID. Keep it distinct for same-named spells.</p>
+<details class="advanced-panel">
+<summary>Visual options</summary>
+<div class="advanced-content"><div class="field">
+<label for="identityTickShape">Marker shape</label>
+<select id="identityTickShape">
+<option selected="" value="line">Lines</option>
+<option value="dot">Dots</option>
+<option value="square">Squares</option>
+<option value="mixed">Mixed - lines, dots &amp; squares</option>
+</select>
+</div><div class="marker-style-group" id="identityLineControls">
+<div class="marker-style-label">LINE MARKERS</div>
+<div class="field slider-field">
+<div class="field-label"><label for="identityTickWidth">Line thickness</label><span class="slider-value" id="identityTickWidthValue">1 px</span></div>
+<input id="identityTickWidth" max="3" min="0.5" step="0.1" type="range" value="1"/>
+</div>
+<div class="field">
+<label for="identityTickLineStyle">Line pattern</label>
+<select id="identityTickLineStyle">
+<option selected="" value="solid">Solid</option>
+<option value="dashed">Dashed</option>
+<option value="dotted">Dotted</option>
+</select>
+</div>
+</div><div class="marker-style-group" hidden="" id="identityDotControls">
+<div class="marker-style-label">DOT MARKERS</div>
+<div class="field slider-field">
+<div class="field-label"><label for="identityDotSize">Dot diameter</label><span class="slider-value" id="identityDotSizeValue">3.5 px</span></div>
+<input id="identityDotSize" max="10" min="1" step="0.5" type="range" value="3.5"/>
+</div>
+<div class="field">
+<label for="identityDotFill">Dot appearance</label>
+<select id="identityDotFill">
+<option selected="" value="filled">Filled</option>
+<option value="outline">Hollow / outline</option>
+</select>
+</div>
+</div><div class="marker-style-group" hidden="" id="identitySquareControls">
+<div class="marker-style-label">SQUARE MARKERS</div>
+<div class="field slider-field">
+<div class="field-label"><label for="identitySquareSize">Square size</label><span class="slider-value" id="identitySquareSizeValue">4.5 px</span></div>
+<input id="identitySquareSize" max="12" min="1" step="0.5" type="range" value="4.5"/>
+</div>
+<div class="field">
+<label for="identitySquareFill">Square appearance</label>
+<select id="identitySquareFill">
+<option selected="" value="filled">Filled</option>
+<option value="outline">Hollow / outline</option>
+</select>
+</div>
+<div class="field">
+<label for="identitySquareOrientation">Square orientation</label>
+<select id="identitySquareOrientation">
+<option selected="" value="tangent">Follow tick direction</option>
+<option value="upright">Upright</option>
+<option value="diamond">Diamond (45°)</option>
+</select>
+</div>
+</div><div class="field slider-field" hidden="" id="identityPointStrokeRow">
+<div class="field-label"><label for="identityPointStrokeWidth">Hollow marker border</label><span class="slider-value" id="identityPointStrokeWidthValue">1 px</span></div>
+<input id="identityPointStrokeWidth" max="3" min="0.5" step="0.25" type="range" value="1"/>
+</div><div class="field slider-field">
+<div class="field-label"><label for="identityMarkerOpacity">Layer 3 opacity</label><span class="slider-value" id="identityMarkerOpacityValue">0.45</span></div>
+<input id="identityMarkerOpacity" max="1" min="0" step="0.05" type="range" value="0.45"/>
+</div><p class="field-help">Mixed uses all three marker styles. Large markers may overlap.</p></div></details></div></details>
+<p class="render-error" hidden="" id="renderError" role="alert"></p>
+<div aria-labelledby="designHeading" class="field-group design-group">
+<div class="group-label" id="designHeading">THEME</div>
+<div class="field">
+<label for="designTheme">Appearance</label>
+<select id="designTheme">
+<option value="plain">Plain - manuscript parchment</option>
+<option selected="" value="constellations">Constellations - celestial atlas</option>
+<option value="blueprint">Blueprint - drafting paper</option>
+<option value="obsidian">Obsidian - volcanic inlay</option>
+<option value="herbarium">Herbarium - specimen journal</option>
+<option value="tattoo">Tattoo - fine blackwork on skin</option>
+<optgroup label="Pathfinder traditions">
+<option value="arcane">Arcane - aether lattice</option>
+<option value="divine">Divine - illuminated ivory</option>
+<option value="occult">Occult - lunar ritual</option>
+<option value="primal">Primal - fern canopy</option>
+</optgroup>
+<optgroup label="Primary trait themes"><option value="trait-none">Unbound / no trait</option><option value="trait-healing">Healing</option><option value="trait-mental">Mental</option><option value="trait-illusion">Illusion</option><option value="trait-fire">Fire</option><option value="trait-cold">Cold</option><option value="trait-electricity">Electricity</option><option value="trait-acid">Acid</option><option value="trait-poison">Poison</option><option value="trait-water">Water</option><option value="trait-air">Air</option><option value="trait-earth">Earth</option><option value="trait-plant">Plant</option><option value="trait-wood">Wood</option><option value="trait-metal">Metal</option><option value="trait-light">Light</option><option value="trait-darkness">Darkness</option><option value="trait-polymorph">Polymorph</option><option value="trait-teleportation">Teleportation</option><option value="trait-summon">Summon</option><option value="trait-force">Force</option><option value="trait-spirit">Spirit</option><option value="trait-vitality">Vitality</option><option value="trait-void">Void</option><option value="trait-incapacitation">Incapacitation</option><option value="trait-emotion">Emotion</option><option value="trait-detection">Detection</option><option value="trait-shadow">Shadow</option><option value="trait-sonic">Sonic</option><option value="trait-attack">Attack</option><option value="trait-other">Other</option></optgroup></select>
+</div>
+<p class="field-help" id="designDescription">A silver star chart with a sweeping galactic haze and celestial coordinates.</p>
+<div aria-labelledby="paletteHeading" class="palette-settings">
+<div class="palette-heading" id="paletteHeading">Theme colors</div>
+<div class="palette-grid">
+<label for="colorBackground">Background <input aria-label="Theme background color" id="colorBackground" type="color" value="#0e1c35"/></label>
+<label for="colorLines">Connections <input aria-label="Theme connections color" id="colorLines" type="color" value="#e4f4ff"/></label>
+<label for="colorVertices">Vertices <input aria-label="Theme vertices color" id="colorVertices" type="color" value="#f4faff"/></label>
+</div>
+<button class="btn-import palette-reset" id="resetThemeColors" type="button">Reset theme colors</button>
+</div>
+<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INKWORK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes. Your spell encoding stays identical.</p><div class="hand-ink-settings">
+<label class="toggle-row" for="handDrawnInk"><span>Feather &amp; ink strokes</span><input id="handDrawnInk" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
+<p class="field-help">Thick at the start, fine at the end. Wobble and feathering add natural ink edges.</p>
+<div class="hand-ink-parameters" id="handInkParameters">
+<div class="field slider-field">
+<div class="field-label"><label for="inkWobble">Stroke irregularity</label><span class="slider-value" id="inkWobbleValue">1.0 px</span></div>
+<input id="inkWobble" max="3" min="0" step="0.1" type="range" value="1"/>
+</div>
+<div class="field slider-field">
+<div class="field-label"><label for="inkPressure">Nib taper / stroke start</label><span class="slider-value" id="inkPressureValue">35%</span></div>
+<input id="inkPressure" max="2.5" min="0" step="0.05" type="range" value="0.35"/>
+</div>
+<div class="field slider-field">
+<div class="field-label"><label for="inkFeather">Ink feathering</label><span class="slider-value" id="inkFeatherValue">30%</span></div>
+<input id="inkFeather" max="1" min="0" step="0.05" type="range" value="0.3"/>
+</div>
+</div>
+</div><div class="decorations-settings">
+<label class="toggle-row" for="cornerOrnaments"><span>Corner ornaments</span><input checked="" id="cornerOrnaments" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
+<label class="toggle-row" for="decorations"><span>Randomized decorations</span><input id="decorations" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
+<div class="decorations-action">
+<span class="field-help" id="decorationDescription">Extra star clusters, light trails, and asterisms.</span>
+<button class="btn-import btn-reroll" disabled="" id="rerollDecorations" title="Create a new decorative variation without changing the spell" type="button">↻ Reroll</button>
+</div>
+</div></div></details>
+<details class="field-group transform-group layer-panel" id="transformsSection">
+<summary class="layer-panel-summary"><span class="group-label">LAYOUT &amp; GUIDES</span></summary>
+<div class="layer-panel-body" id="advancedOptions">
+<div class="field slider-field">
+<div class="field-label"><label for="rotation">Rotate sigil</label><span class="slider-value" id="rotationValue">0°</span></div>
+<input id="rotation" max="180" min="-180" step="5" type="range" value="0"/>
+</div>
+<div class="field slider-field">
+<div class="field-label"><label for="stretch">Horizontal stretch</label><span class="slider-value" id="stretchValue">100%</span></div>
+<input id="stretch" max="1.35" min="0.6" step="0.05" type="range" value="1"/>
+</div>
+<label class="toggle-row" for="mirror"><span>Mirror sigil</span><input id="mirror" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
+<label class="toggle-row" for="showGuides"><span>Construction guides</span><input id="showGuides" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
+<div class="field">
+<label for="vertexLabelMode">Vertex annotations</label>
+<select id="vertexLabelMode">
+<option value="none">None</option>
+<option value="numbers">Numbers (all vertices)</option>
+<option value="attributes">Attribute names (anchor nodes)</option>
+</select>
+
+</div>
+</div>
+</details>
+</div>
+</aside>
+<!-- The preview grows to fill the available workspace. -->
+<section aria-label="Generated spell circle" class="preview-area">
+<div class="preview-toolbar">
+<div>
+<div class="preview-heading-row">
+<div class="notation-meta" id="notationMeta"><span class="notation-pill" id="notationModeBadge" aria-live="polite" title="Visible Layer 1 and 2 elements; hidden elements still exist in the full notation."></span></div>
+</div>
+<h2 id="spellTitle">Fireball</h2>
+
+</div>
+<div class="toolbar-actions">
+<button class="btn-secondary" id="resetSpell" title="Restore the Fireball example" type="button">↺ <span>Reset</span></button>
+<div class="export-tools"><button class="btn-secondary export-action" id="exportPng" title="Export the sigil exactly as shown" type="button">Export PNG</button><button class="btn-secondary export-action" id="exportTransparentPng" title="Export the sigil without the theme background or ornaments" type="button">Transparent PNG</button><button class="btn-primary export-action" id="exportSpellCard" title="Export a spell card with the current sigil, casting time, traits and full description" type="button">Export Spell Card</button></div>
+</div>
+</div>
+<div class="canvas-frame">
+<canvas aria-label="Spell sigil with vertex connections, orbits, and a spell fingerprint encoding the source / variant ID; rank-based visualization may hide some encoded mechanical geometry." id="spellCanvas" role="img"></canvas>
+</div>
+</section>
+</main>
+</div>
+<dialog class="credits-dialog" id="creditsDialog" aria-labelledby="creditsTitle" aria-describedby="creditsLead">
+  <div class="credits-header">
+    <div>
+      <p class="credits-eyebrow">SIGIL</p>
+      <h2 id="creditsTitle">Credits &amp; licenses</h2>
+    </div>
+    <button class="credits-close" type="button" id="creditsClose" aria-label="Close credits">&times;</button>
+  </div>
+  <div class="credits-content">
+    <p id="creditsLead"><strong>Sigil is a free, unofficial Pathfinder fan project.</strong> Anyone can access and use it without payment, registration, or a paywall. Donations are optional and never unlock content.</p>
+    <p>No software license has been selected for Sigil's code. Redistribution rights for the bundled spell text remain under review.</p>
+    <section aria-labelledby="creditsPaizoHeading">
+      <h3 id="creditsPaizoHeading">Pathfinder spell material</h3>
+      <p>Pathfinder and associated spell names, game rules and descriptions are the intellectual property of <strong>Paizo Inc.</strong> and other credited rightsholders where applicable. The project is not affiliated with Paizo.</p>
+      <p class="credits-policy-notice">Sigil uses trademarks and/or copyrights owned by Paizo Inc., used under Paizo's Community Use Policy (<a href="https://paizo.com/licenses/communityuse" target="_blank" rel="noopener noreferrer">paizo.com/licenses/communityuse</a>). We are expressly prohibited from charging you to use or access this content. Sigil is not published, endorsed, or specifically approved by Paizo. For more information about Paizo Inc. and Paizo products, visit <a href="https://paizo.com" target="_blank" rel="noopener noreferrer">paizo.com</a>.</p>
+    </section>
+    <section aria-labelledby="creditsSpellWritingHeading">
+      <h3 id="creditsSpellWritingHeading">Spell Writing Guide</h3>
+      <p>Sigil's notation was inspired by <strong>The Gorilla of Destiny</strong>'s <a href="https://www.gorillaofdestiny.com/books-and-compendiums" target="_blank" rel="noopener noreferrer"><em>Spell Writing Guide</em></a> and the <a href="https://github.com/GorillaOfDestiny/SpellWriting" target="_blank" rel="noopener noreferrer">SpellWriting project</a>. This is an independent adaptation, not an official edition or an endorsed project.</p>
+    </section>
+    <section aria-labelledby="creditsSupportHeading">
+      <h3 id="creditsSupportHeading">Support Sigil</h3>
+      <p>Want to support the project? <a href="https://www.buymeacoffee.com/dominikfalkner" target="_blank" rel="noopener noreferrer">Buy me a coffee</a>.</p>
+      <p>Contact: <a href="https://codeberg.org/dominikfalkner" target="_blank" rel="noopener noreferrer">codeberg.org/dominikfalkner</a></p>
+    </section>
+  </div>
+</dialog>
+<script src="generated/spell-calculation.browser.js"></script>
+<script src="generated/spell-drawing.browser.js"></script>
+<script src="generated/spell-catalog.browser.js"></script>
+<script src="../data/spell-data.js"></script>
+<script src="generated/spell-card.browser.js"></script>
+<script src="generated/constants.browser.js"></script>
+<script src="generated/download.browser.js"></script>
+<script src="generated/app.browser.js"></script>
+</body>
+</html>

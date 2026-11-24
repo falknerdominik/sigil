@@ -1,0 +1,28 @@
+{
+  "name": "Sigil · Pathfinder 2e",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "forwardPorts": [4173],
+  "portsAttributes": {
+    "4173": {
+      "label": "Sigil canvas preview",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postStartCommand": "bash .devcontainer/start-preview.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "ritwickdey.LiveServer"
+      ],
+      "settings": {
+        "editor.formatOnSave": false
+      }
+    }
+  },
+  "remoteUser": "node"
+}

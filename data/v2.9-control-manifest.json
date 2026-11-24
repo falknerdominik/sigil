@@ -1,0 +1,484 @@
+{
+  "inputs": {
+    "spellPickerInput": {
+      "type": "search"
+    },
+    "spellName": {
+      "type": "text",
+      "value": "Fireball",
+      "maxlength": "85"
+    },
+    "rankComplexity": {
+      "type": "checkbox",
+      "checked": "checked"
+    },
+    "spellVariant": {
+      "type": "text",
+      "value": "",
+      "maxlength": "70"
+    },
+    "colorBackground": {
+      "type": "color",
+      "value": "#0e1c35"
+    },
+    "colorLines": {
+      "type": "color",
+      "value": "#e4f4ff"
+    },
+    "colorVertices": {
+      "type": "color",
+      "value": "#f4faff"
+    },
+    "decorations": {
+      "type": "checkbox"
+    },
+    "baseBend": {
+      "type": "range",
+      "value": "1",
+      "min": "0.6",
+      "max": "1.6",
+      "step": "0.1"
+    },
+    "vertexSize": {
+      "type": "range",
+      "value": "0.7",
+      "min": "0.5",
+      "max": "2.5",
+      "step": "0.1"
+    },
+    "vertexStroke": {
+      "type": "range",
+      "value": "1",
+      "min": "0.5",
+      "max": "5",
+      "step": "0.25"
+    },
+    "curvature": {
+      "type": "range",
+      "value": "0.22",
+      "min": "0.05",
+      "max": "0.47",
+      "step": "0.01"
+    },
+    "vertexArcWidth": {
+      "type": "range",
+      "value": "1.25",
+      "min": "0.5",
+      "max": "3",
+      "step": "0.25"
+    },
+    "identityTickWidth": {
+      "type": "range",
+      "value": "0.8",
+      "min": "0.5",
+      "max": "3",
+      "step": "0.1"
+    },
+    "identityDotSize": {
+      "type": "range",
+      "value": "3.5",
+      "min": "1",
+      "max": "10",
+      "step": "0.5"
+    },
+    "identitySquareSize": {
+      "type": "range",
+      "value": "4.5",
+      "min": "1",
+      "max": "12",
+      "step": "0.5"
+    },
+    "identityPointStrokeWidth": {
+      "type": "range",
+      "value": "1",
+      "min": "0.5",
+      "max": "3",
+      "step": "0.25"
+    },
+    "identityMarkerOpacity": {
+      "type": "range",
+      "value": "1",
+      "min": "0.2",
+      "max": "1",
+      "step": "0.05"
+    },
+    "rotation": {
+      "type": "range",
+      "value": "0",
+      "min": "-180",
+      "max": "180",
+      "step": "5"
+    },
+    "stretch": {
+      "type": "range",
+      "value": "1",
+      "min": "0.6",
+      "max": "1.35",
+      "step": "0.05"
+    },
+    "mirror": {
+      "type": "checkbox"
+    },
+    "showGuides": {
+      "type": "checkbox"
+    }
+  },
+  "selects": {
+    "ruleset": [
+      {
+        "value": "remaster",
+        "selected": false,
+        "label": "Pathfinder 2e · Remaster"
+      },
+      {
+        "value": "legacy",
+        "selected": false,
+        "label": "Pathfinder 2e · Legacy"
+      }
+    ],
+    "rank": [],
+    "tradition": [],
+    "range": [],
+    "duration": [],
+    "effectTrait": [],
+    "damage": [],
+    "area": [],
+    "castActions": [],
+    "castTraits": [],
+    "designTheme": [
+      {
+        "value": "plain",
+        "selected": false,
+        "label": "Plain · parchment"
+      },
+      {
+        "value": "constellations",
+        "selected": true,
+        "label": "Constellations · star chart"
+      },
+      {
+        "value": "blueprint",
+        "selected": false,
+        "label": "Blueprint · arcane diagram"
+      },
+      {
+        "value": "obsidian",
+        "selected": false,
+        "label": "Obsidian · gilded stone"
+      },
+      {
+        "value": "herbarium",
+        "selected": false,
+        "label": "Herbarium · botanical folio"
+      },
+      {
+        "value": "arcane",
+        "selected": false,
+        "label": "Arcane · aether lattice"
+      },
+      {
+        "value": "divine",
+        "selected": false,
+        "label": "Divine · sacred halo"
+      },
+      {
+        "value": "occult",
+        "selected": false,
+        "label": "Occult · veiled ritual"
+      },
+      {
+        "value": "primal",
+        "selected": false,
+        "label": "Primal · wild grove"
+      }
+    ],
+    "baseShape": [
+      {
+        "value": "polygon",
+        "selected": true,
+        "label": "Regular circle"
+      },
+      {
+        "value": "semicircle",
+        "selected": false,
+        "label": "Semicircle"
+      },
+      {
+        "value": "quarter",
+        "selected": false,
+        "label": "Quarter circle"
+      },
+      {
+        "value": "quadratic",
+        "selected": false,
+        "label": "Quadratic function"
+      },
+      {
+        "value": "cubic",
+        "selected": false,
+        "label": "Cubic function"
+      }
+    ],
+    "polygonSides": [
+      {
+        "value": "smooth",
+        "selected": true,
+        "label": "Smooth / circular"
+      },
+      {
+        "value": "3",
+        "selected": false,
+        "label": "Triangle · 3 sides"
+      },
+      {
+        "value": "4",
+        "selected": false,
+        "label": "Square · 4 sides"
+      },
+      {
+        "value": "5",
+        "selected": false,
+        "label": "Pentagon · 5 sides"
+      },
+      {
+        "value": "6",
+        "selected": false,
+        "label": "Hexagon · 6 sides"
+      },
+      {
+        "value": "8",
+        "selected": false,
+        "label": "Octagon · 8 sides"
+      },
+      {
+        "value": "12",
+        "selected": false,
+        "label": "Dodecagon · 12 sides"
+      }
+    ],
+    "connectionStyle": [
+      {
+        "value": "straight",
+        "selected": false,
+        "label": "Straight lines"
+      },
+      {
+        "value": "centered",
+        "selected": false,
+        "label": "Centred semicircles"
+      },
+      {
+        "value": "curved",
+        "selected": true,
+        "label": "Non-centred circular arcs"
+      }
+    ],
+    "dotStyle": [
+      {
+        "value": "circle",
+        "selected": false,
+        "label": "Circle (center dot)"
+      },
+      {
+        "value": "empty",
+        "selected": false,
+        "label": "Empty space (hollow ring)"
+      },
+      {
+        "value": "none",
+        "selected": false,
+        "label": "None (no vertex marker)"
+      },
+      {
+        "value": "star",
+        "selected": true,
+        "label": "Star"
+      },
+      {
+        "value": "diamond",
+        "selected": false,
+        "label": "Diamond"
+      },
+      {
+        "value": "square",
+        "selected": false,
+        "label": "Square"
+      },
+      {
+        "value": "triangle",
+        "selected": false,
+        "label": "Triangle"
+      },
+      {
+        "value": "hexagon",
+        "selected": false,
+        "label": "Hexagon"
+      },
+      {
+        "value": "cross",
+        "selected": false,
+        "label": "Cross"
+      }
+    ],
+    "arcSide": [
+      {
+        "value": "inward",
+        "selected": false,
+        "label": "Inward"
+      },
+      {
+        "value": "outward",
+        "selected": false,
+        "label": "Outward"
+      },
+      {
+        "value": "alternate",
+        "selected": true,
+        "label": "Alternating"
+      }
+    ],
+    "vertexArcLineStyle": [
+      {
+        "value": "solid",
+        "selected": true,
+        "label": "Solid"
+      },
+      {
+        "value": "dashed",
+        "selected": false,
+        "label": "Dashed"
+      },
+      {
+        "value": "dotted",
+        "selected": false,
+        "label": "Dotted"
+      }
+    ],
+    "identityTickShape": [
+      {
+        "value": "line",
+        "selected": true,
+        "label": "Lines"
+      },
+      {
+        "value": "dot",
+        "selected": false,
+        "label": "Dots"
+      },
+      {
+        "value": "square",
+        "selected": false,
+        "label": "Squares"
+      },
+      {
+        "value": "mixed",
+        "selected": false,
+        "label": "Mixed · lines, dots & squares"
+      }
+    ],
+    "identityTickLineStyle": [
+      {
+        "value": "solid",
+        "selected": true,
+        "label": "Solid"
+      },
+      {
+        "value": "dashed",
+        "selected": false,
+        "label": "Dashed"
+      },
+      {
+        "value": "dotted",
+        "selected": false,
+        "label": "Dotted"
+      }
+    ],
+    "identityDotFill": [
+      {
+        "value": "filled",
+        "selected": true,
+        "label": "Filled"
+      },
+      {
+        "value": "outline",
+        "selected": false,
+        "label": "Hollow / outline"
+      }
+    ],
+    "identitySquareFill": [
+      {
+        "value": "filled",
+        "selected": true,
+        "label": "Filled"
+      },
+      {
+        "value": "outline",
+        "selected": false,
+        "label": "Hollow / outline"
+      }
+    ],
+    "identitySquareOrientation": [
+      {
+        "value": "tangent",
+        "selected": true,
+        "label": "Follow tick direction"
+      },
+      {
+        "value": "upright",
+        "selected": false,
+        "label": "Upright"
+      },
+      {
+        "value": "diamond",
+        "selected": false,
+        "label": "Diamond (45°)"
+      }
+    ],
+    "vertexLabelMode": [
+      {
+        "value": "none",
+        "selected": false,
+        "label": "None"
+      },
+      {
+        "value": "numbers",
+        "selected": false,
+        "label": "Numbers (all vertices)"
+      },
+      {
+        "value": "attributes",
+        "selected": false,
+        "label": "Attribute names (anchor nodes)"
+      }
+    ],
+    "exportMode": [
+      {
+        "value": "current",
+        "selected": false,
+        "label": "Displayed view"
+      },
+      {
+        "value": "ranked",
+        "selected": false,
+        "label": "Rank visualization"
+      },
+      {
+        "value": "full",
+        "selected": false,
+        "label": "Full notation"
+      }
+    ]
+  },
+  "buttons": [
+    "exportPng",
+    "rerollDecorations",
+    "resetSpell",
+    "resetThemeColors",
+    "spellPickerToggle"
+  ],
+  "details": {
+    "moreAttributes": true,
+    "encodedLayerStyles": true,
+    "advancedOptions": false
+  }
+}

@@ -1,0 +1,342 @@
+{
+  "source": "spell.json",
+  "spells": 1403,
+  "skipped": 0,
+  "description": "Maximize singleton spell profiles; break ties by minimizing collisions; names/IDs/edition excluded.",
+  "core7": {
+    "fields": [
+      "rank",
+      "tradition",
+      "damage",
+      "area",
+      "range",
+      "castActions",
+      "duration"
+    ],
+    "singletons": 1098,
+    "profiles": 1222,
+    "ambiguous": 305,
+    "pairs": 307,
+    "collisionGroups": 124,
+    "maxGroup": 9
+  },
+  "core8": {
+    "searched": 7,
+    "top": [
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "heightening"
+        ],
+        "singletons": 1215,
+        "profiles": 1294,
+        "ambiguous": 188,
+        "pairs": 170,
+        "collisionGroups": 79,
+        "maxGroup": 7
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "effectTrait"
+        ],
+        "singletons": 1215,
+        "profiles": 1293,
+        "ambiguous": 188,
+        "pairs": 175,
+        "collisionGroups": 78,
+        "maxGroup": 7
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "castTraits"
+        ],
+        "singletons": 1214,
+        "profiles": 1298,
+        "ambiguous": 189,
+        "pairs": 134,
+        "collisionGroups": 84,
+        "maxGroup": 5
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "targets"
+        ],
+        "singletons": 1172,
+        "profiles": 1263,
+        "ambiguous": 231,
+        "pairs": 255,
+        "collisionGroups": 91,
+        "maxGroup": 9
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "rarity"
+        ],
+        "singletons": 1157,
+        "profiles": 1255,
+        "ambiguous": 246,
+        "pairs": 261,
+        "collisionGroups": 98,
+        "maxGroup": 9
+      }
+    ]
+  },
+  "core9": {
+    "searched": 21,
+    "top": [
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "effectTrait",
+          "castTraits"
+        ],
+        "singletons": 1288,
+        "profiles": 1338,
+        "ambiguous": 115,
+        "pairs": 87,
+        "collisionGroups": 50,
+        "maxGroup": 5
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "castTraits",
+          "heightening"
+        ],
+        "singletons": 1287,
+        "profiles": 1340,
+        "ambiguous": 116,
+        "pairs": 76,
+        "collisionGroups": 53,
+        "maxGroup": 4
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "effectTrait",
+          "heightening"
+        ],
+        "singletons": 1275,
+        "profiles": 1330,
+        "ambiguous": 128,
+        "pairs": 103,
+        "collisionGroups": 55,
+        "maxGroup": 6
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "targets",
+          "heightening"
+        ],
+        "singletons": 1258,
+        "profiles": 1316,
+        "ambiguous": 145,
+        "pairs": 147,
+        "collisionGroups": 58,
+        "maxGroup": 7
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "area",
+          "range",
+          "castActions",
+          "duration",
+          "defense",
+          "castTraits"
+        ],
+        "singletons": 1257,
+        "profiles": 1321,
+        "ambiguous": 146,
+        "pairs": 108,
+        "collisionGroups": 64,
+        "maxGroup": 5
+      }
+    ]
+  },
+  "any9": {
+    "searched": 2002,
+    "top": [
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "castActions",
+          "defense",
+          "duration",
+          "targets",
+          "effectTrait",
+          "castTraits",
+          "heightening"
+        ],
+        "singletons": 1332,
+        "profiles": 1362,
+        "ambiguous": 71,
+        "pairs": 55,
+        "collisionGroups": 30,
+        "maxGroup": 4
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "range",
+          "castActions",
+          "defense",
+          "duration",
+          "effectTrait",
+          "castTraits",
+          "heightening"
+        ],
+        "singletons": 1327,
+        "profiles": 1360,
+        "ambiguous": 76,
+        "pairs": 56,
+        "collisionGroups": 33,
+        "maxGroup": 4
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "castActions",
+          "duration",
+          "targets",
+          "rarity",
+          "effectTrait",
+          "castTraits",
+          "heightening"
+        ],
+        "singletons": 1327,
+        "profiles": 1359,
+        "ambiguous": 76,
+        "pairs": 59,
+        "collisionGroups": 32,
+        "maxGroup": 4
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "range",
+          "castActions",
+          "duration",
+          "targets",
+          "effectTrait",
+          "castTraits",
+          "heightening"
+        ],
+        "singletons": 1326,
+        "profiles": 1359,
+        "ambiguous": 77,
+        "pairs": 58,
+        "collisionGroups": 33,
+        "maxGroup": 4
+      },
+      {
+        "fields": [
+          "rank",
+          "tradition",
+          "damage",
+          "castActions",
+          "duration",
+          "targets",
+          "effectTrait",
+          "castTraits",
+          "heightening"
+        ],
+        "singletons": 1324,
+        "profiles": 1359,
+        "ambiguous": 79,
+        "pairs": 55,
+        "collisionGroups": 35,
+        "maxGroup": 4
+      }
+    ]
+  },
+  "full14": {
+    "fields": [
+      "rank",
+      "tradition",
+      "damage",
+      "area",
+      "range",
+      "spellType",
+      "castActions",
+      "defense",
+      "duration",
+      "targets",
+      "rarity",
+      "effectTrait",
+      "castTraits",
+      "heightening"
+    ],
+    "singletons": 1352,
+    "profiles": 1374,
+    "ambiguous": 51,
+    "pairs": 38,
+    "collisionGroups": 22,
+    "maxGroup": 4
+  }
+}
