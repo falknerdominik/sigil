@@ -23,7 +23,16 @@ assert.equal(notation.vertexCount, 11);
 assert.equal(notation.chords.reduce((sum, group) => sum + group.edges.length, 0), 20);
 assert.deepEqual(Object.keys(notation.chords[0]).sort(), ['id','label','color','k','edges'].sort());
 assert.equal(notation.orbits.length, 4);
-assert(notation.orbits.every(orbit => orbit.units === 15 && orbit.sweep === 15 * Math.PI / 8));
+assert(notation.orbits.every(orbit => orbit.units === 15 && orbit.sweep === 2 * Math.PI));
+for (const count of [1, 2, 4, 8]) {
+  const attributes = Array.from({length:count}, (_, index) => ({
+    sectionUnits:2 ** index, vertices:[0]
+  }));
+  const [orbit] = SpellCalculation.combineOrbits(1, attributes);
+  assert.equal(orbit.units, 2 ** count - 1);
+  assert(Math.abs(orbit.sweep - 2 * Math.PI) < 1e-12,
+    'All attributes at a vertex must always complete a circle');
+}
 const orbitDetail = SpellCalculation.detailDrawOrder(notation).find(item => item.kind === 'orbit');
 assert.deepEqual(Object.keys(orbitDetail).sort(), ['kind', 'orbit']);
 assert(notation.orbits.includes(orbitDetail.orbit));

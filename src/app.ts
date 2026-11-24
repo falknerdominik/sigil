@@ -369,8 +369,8 @@ function updateNotationInfo(visible: VisibleNotation = calculation.represent(cur
     $('rankRevealHelp').textContent = filtered
         ? `${visible.optionalVisible} of ${visible.optionalTotal} non-Rank elements shown.` : '';
     $('rankViewHint').textContent = filtered
-        ? 'Turn off to show every chord and orbit. The ID stays complete.'
-        : 'All chords and orbits are visible. The ID stays complete.';
+        ? 'Turn off to show all details in Vertices and Orbits. The ID stays complete.'
+        : 'All details in Vertices and Orbits are visible. The ID stays complete.';
 }
 function render() {
     const spell = readState();

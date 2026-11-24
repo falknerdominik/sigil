@@ -1,605 +1,130 @@
 ---
 title: "How Sigil Is Calculated"
-subtitle: "Pathfinder spell sigil encoding and drawing"
+subtitle: "From spell mechanics to chords, orbits, and a spell fingerprint"
 format:
   html:
     toc: true
-    code-fold: true
+    toc-depth: 2
+    embed-resources: true
 execute:
-  echo: false
+  eval: false
 ---
 
-# How Sigil Is Calculated
+This guide assumes you have already read [*The Spell Writing Guide*](https://www.gorillaofdestiny.com/books-and-compendiums) by The Gorilla of Destiny. Its binary-pattern and chord-based approach is the conceptual foundation for Sigil. Here, we follow a spell from its selected mechanics and identifying source/variant ID through the current calculations and into a rendered sigil.
 
-A self-contained mathematical guide to Sigil v2.18. You do **not** need to read *The Spell Writing Guide* first.
+**Encoded information is not the same as visible strokes.** A chord can be bent, an orbit can be hidden, and a fingerprint mark can be restyled without changing what was calculated. Understanding that distinction makes the three layers easier to follow.
 
-Sigil turns nine categorical spell attributes and one identity string into three independent sets of information. The first two sets encode a spell's mechanics; the third identifies a catalogue record. **Encoding happens before drawing.** Shapes, colors, layout, ornament, curved connections, and rank-based hiding do not alter the encoded bits.
+The order matters: preprocessing chooses *what* to represent; legibility determines *where* to represent it; shared encoding turns choices into bits; layer calculations turn bits into data; drawing makes that data visible.
 
-This document describes the current implementation, not the planned refactor. The eleven-vertex calculations below apply to the shipped five-primary-attribute editor; the reusable renderer also supports other attribute counts.
+## 1. Why these attributes and these three layers?
 
-| Layer | Input | Mathematical representation |
+There are two separate design decisions: **which mechanical attributes to include**, and **how to distribute their information across the image**.
+
+**First, select a useful mechanical vocabulary.** Historical preprocessing compared how well combinations of categorical attributes distinguished spells in a Pathfinder 2e catalogue. The historical experiment described in the revision brief used **1,403 records**, required **seven core mechanics**, and imposed a maximum of **nine categorical attributes**. It compared the added distinctiveness offered by candidate fields under those constraints. The current catalogue described by the supplied calculation guide contains **1,400 records**; the historical counts should not be mistaken for measurements on that newer catalogue. The resulting nine-attribute vocabulary is a practical, data-informed choice **within a specified limit**, not proof that nine is an unconstrained mathematical optimum.
+
+**Second, make that vocabulary legible.** Encoding nine attributes as nine separate chord families would create a crowded web of crossing connections. Sigil therefore keeps a Guide-inspired first layer of **five chord families on eleven vertices** and assigns the **other four mechanical attributes** to circular **orbits** centered on individual vertices. These circles carry information locally, without creating more vertex-to-vertex crossings, and are intended to be easier to recognize. This five/four allocation is a visual design decision, **not** a conclusion established by the historical attribute-selection experiment.
+
+Even nine mechanics cannot identify every spell uniquely: two catalogue records can have the same mechanical categories. A separate, third layer therefore encodes an assigned **spell fingerprint** from the source/variant ID, independently of those categories.
+
+| Layer | Encoded input | Representation |
 |---|---|---|
-| **1 — Chords** | Rank, Tradition, Range, Duration, Primary Trait | Five sets of connections between numbered vertices |
-| **2 — Orbits** | Damage, Area, Casting time, Casting traits | A number from 0 to 15 at each vertex, shown as a partial circle **around that vertex** |
-| **3 — Identity** | Spell source/variant ID | A length-prefixed sequence of UTF-8 bits, displayed as marks |
+| **1 — Chords** | Rank, Tradition, Range, Duration, Primary Trait | Five chord families on eleven vertices |
+| **2 — Orbits** | Damage, Area, Casting time, Casting traits | One weighted circular arc or full circle per active vertex |
+| **3 — Spell fingerprint** | Source/variant ID, **not another mechanical attribute** | Ordered binary markers |
 
-**Terminology:** The editor names its layers **Vertices**, **Orbits**, and **Spell Fingerprint**. An **orbit** is a Layer 2 partial circle centered on one vertex. A **chord** is an encoded connection between **two** vertices. An optionally curved chord remains a *connection*, not an orbit. The spell fingerprint is the encoded source/variant ID, not a hash of the spell's contents. Visual-only connection curvature is discussed near the end.
+## 2. Shared encoding: from a category to bits
 
-## 1. Mathematical vocabulary
+Layers 1 and 2 begin with the **same conversion**, before either chords or orbits are calculated:
 
-- A **vertex** (plural *vertices*) is a numbered anchor point. Sigil has eleven, numbered `0` to `10`. The number belongs to the point even if you change the outline.
-- A **chord** is mathematically a straight segment joining two points on a circle. In Sigil it means the *logical connection* between two numbered vertices. The renderer can later bend that connection without changing its endpoints.
-- A **bit** is either `0` or `1`. An eleven-bit **word**, such as `00001111000`, gives one on/off value to each of the eleven vertices. The **leftmost** bit is vertex 0.
-- An **index** is a zero-based position in a list: first = 0, second = 1, and so on.
-- `a mod n` is the remainder after dividing `a` by `n`. For example, `13 mod 11 = 2`. This is how vertex numbering wraps around after 10.
-- A **prime** number has no positive divisors other than 1 and itself. Eleven is prime.
-- **Hamming weight** is the number of `1` bits in a word. For example, `00001111000` has weight 4.
-- `floor(x)` rounds **down** to an integer; `ceil(x)` rounds **up**. For example, `floor(3.8)=3` and `ceil(3.2)=4`.
-- One full turn is `360° = 2π` radians. Code often stores angles in radians; this guide shows degrees as well.
+**Chosen category → index in that attribute's ordered options → fixed binary pattern → consistent rotation → active vertices.**
 
-These definitions are enough to follow all three encoding layers.
+Each attribute has an ordered list of allowed category values. For a non-`none` selection, Sigil finds its **zero-based index** in that list (excluding a `none` sentinel, where one exists), selects the corresponding dictionary pattern, and applies a deterministic left rotation. The resulting word contains **eleven bits**: the leftmost represents vertex `0`, the rightmost vertex `10`. A `0` means inactive; a `1` means active. Where `none` applies, it bypasses the dictionary and becomes the all-zero word, `00000000000`.
 
-## 2. Why there are eleven vertices
+The dictionary is organized around **binary necklaces**. Imagine rotating a string of bits around a circle: patterns that differ only because they start at different points belong to the same rotation family. Sigil keeps a consistent representative for each family rather than treating every rotation as a new pattern. The current eleven-bit dictionary contains **186 nonconstant necklaces**, arranged in a fixed order. A consistent rotation of the selected representative then determines which numbered vertices are active.
 
-Layer 1 needs one distinguishable chord family per primary attribute. There are five primary attributes, so set `m = 5` and choose the smallest prime at least `2m + 1`:
+The **order of options** is part of the calculation, not just an interface detail. Reproducing or reversing the result requires the same option lists and the same ordered dictionary; this matters especially for Range options appended from a loaded catalogue. No chord, orbit, or fingerprint mark has yet been drawn at this stage.
 
-$$
-n=\operatorname{nextPrime}(2m+1)=\operatorname{nextPrime}(11)=11.
-$$
+## 3. Layer 1 — Chords
 
-Number the vertices `0, 1, ..., 10`. A **chord distance** `k` counts how many numbered positions you advance along the cyclic sequence. Starting at vertex `i`, its other endpoint is
+The first layer uses the shared active vertices to create **logical connections between pairs of vertices**. Five primary mechanical attributes need five distinguishable connection rules. The shipped scheme uses **eleven numbered vertices** because eleven is the smallest suitable prime for five distinct undirected chord families.
 
-$$
-j=(i+k)\bmod 11.
-$$
+Each family advances by its own number of positions, called its **step** `k`:
 
-For example, `i = 9` and `k = 4` give `(9+4) mod 11 = 2`, so the chord connects vertices **9 and 2**.
-
-Five distances are sufficient: `k = 1, 2, 3, 4, 5`. There is no separate sixth family: advancing six positions from one endpoint is equivalent to going backward five from the other, and chords are **undirected** (the connection `2–9` is the same as `9–2`). Each of the five distances produces eleven different undirected pairs. None of the pairs are repeated between families, giving
-
-$$
-5\times 11=55=\binom{11}{2}=\frac{11\times 10}{2}
-$$
-
-pairs in total. The notation `11 choose 2` counts how many different pairs can be picked from eleven vertices. Thus, the five families cover **every possible pair exactly once**.
-
-The prime number eleven also matters for the pattern dictionary explained next.
-
-## 3. How any attribute value becomes eleven bits
-
-This conversion is shared by Layers 1 and 2. A category such as `Fire`, `Self`, or `Cantrip` is **not** translated from its spelling. Instead, Sigil finds the category's position in an ordered option list, then looks up a fixed bit pattern.
-
-### 3.1 Circular rotations and binary necklaces
-
-A **left rotation** moves the first bit to the end. For a short five-bit illustration:
-
-```text
-00101  →  01010  →  10100  →  01001  →  10010  →  00101
-```
-
-All five words differ only by rotation. This group is called a **binary necklace**. Sigil uses *one representative* from each necklace: the lexicographically smallest rotation. Lexicographic comparison starts from the left; `0` comes before `1`.
-
-Let `ρᵣ(b)` mean rotate an eleven-bit word `b` left by `r` positions. The canonical representative is
-
-$$
-C(b)=\min_{0\le r<11}\rho_r(b).
-$$
-
-**Why does the number 11 help?** A word that repeats after fewer than eleven rotations has a repeating block whose length divides eleven. Because eleven is prime, the only possible shorter repeating block has length one: all zeroes or all ones. Once those two constant words are excluded, **every remaining eleven-bit word has eleven distinct rotations**.
-
-There are `2¹¹ = 2048` possible eleven-bit words (each of eleven positions has two choices). Remove the two constant words and divide into groups of eleven:
-
-$$
-\boxed{N_{\mathrm{necklaces}}=\frac{2^{11}-2}{11}=\frac{2046}{11}=186.}
-$$
-
-So the dictionary has **186** unique entries. The code calls the generating function `uniqueNecklaces(11)`.
-
-### 3.2 Which necklace comes first?
-
-`preferredDictionary(11)` sorts the 186 canonical representatives. It favors words with four `1` bits. The target is calculated as
-
-$$
-w_* =\max\bigl(3,\operatorname{round}(0.36\times 11)\bigr)
-=\max(3,4)=4.
-$$
-
-First sort by the **absolute difference** between the Hamming weight and 4, then alphabetically by the binary string when tied. For instance, weights 4, 3 or 5, and 2 or 6 have respective distances 0, 1, and 2 from the target.
-
-The beginning of the **actual implementation dictionary** is:
-
-| Zero-based index `q` | Canonical word `Cq` | Number of ones |
-|---:|---|---:|
-| 0 | `00000001111` | 4 |
-| 1 | `00000010111` | 4 |
-| 2 | `00000011011` | 4 |
-| 3 | `00000011101` | 4 |
-| 4 | `00000100111` | 4 |
-| 5 | `00000101011` | 4 |
-
-These entries were checked against `SpellCalculation.preferredDictionary(11)`.
-
-### 3.3 Finding the option index
-
-For each attribute, take its ordered `options` in `constants.ts`, remove the option whose *value* is `none` if present, and number the remaining values starting at `q = 0`. Examples from the actual options:
-
-The editor appends previously unseen range values from the active catalogue after the fixed options, sorted using a numeric-aware locale comparison. Their indices, and thus their bit patterns, can change if the catalogue's extra ranges change. Fixed options retain their existing positions.
-
-| Attribute | `q = 0` | `q = 1` | `q = 2` |
-|---|---|---|---|
-| Rank | `cantrip` | `1` | `2` |
-| Range | `Self` | `Touch` | `5 feet` |
-| Duration | `Instant` | `1 round` | `1 minute` |
-| Damage | `Acid` | `Bleed` | `Bludgeoning` |
-| Casting time | `1 action` | `2 actions` | `3 actions` |
-
-**Not every editor control offers `none`.** In this version, Rank, Duration, and Casting time have no `none` choice. The renderer's attribute lookup nevertheless reserves `none` as an all-zero word and does not assign it a dictionary index:
-
-```text
-none → 00000000000
-```
-
-### 3.4 Rotating the dictionary word
-
-For `n` vertices, `prepareAttributes()` computes an orientation from dictionary entry `Cq`:
-
-$$
-r=(11(a+j)+7q+3)\bmod n.
-$$
-
-The shipped editor has `n=11`, so this becomes:
-
-$$
-r=(11(a+j)+7q+3)\bmod 11,
-$$
-
-where `a` is the layer offset (`0` for Layer 1, `5` for Layer 2), and `j` is the attribute position within that layer. Since `11(a+j)` is always divisible by 11, the expression actually simplifies to
-
-$$
-\boxed{r=(7q+3)\bmod 11},
-\qquad \boxed{B_q=\rho_r(C_q)}.
-$$
-
-**Implementation subtlety:** For **11 vertices**, the rotation depends on the **option index only**, *not* on which attribute it is. This simplification does not generally hold for other supported vertex counts. An attribute's role is distinguished later by its chord distance (Layer 1) or numerical weight (Layer 2).
-
-**Example A — first option:** `q=0`, so `C₀ = 00000001111` and `r=(7×0+3) mod 11=3`. Three left rotations produce:
-
-```text
-original      00000001111
-rotate left 1 00000011110
-rotate left 2 00000111100
-rotate left 3 00001111000  ← final B₀
-```
-
-The `1` bits are at **vertices 4, 5, 6, and 7** (counting from zero).
-
-**Example B — second option:** `q=1`, so `C₁ = 00000010111` and `r=(7×1+3) mod 11=10`. Rotating left by ten is the same as rotating right by one:
-
-```text
-C₁               00000010111
-rotate left 10   10000001011
-```
-
-The active vertices are **0, 7, 9, and 10**. Thus `Self` and `Touch`, for example, have distinct patterns even though both belong to Range.
-
-The same canonical dictionary and rotation rule apply to every non-`none` mechanical attribute.
-
-## 4. Layer 1 — chords between vertices
-
-Layer 1 has five attributes. Each gets its own chord distance `k`:
-
-| Attribute | Distance `k` | Meaning of a `1` at vertex `i` |
-|---|---:|---|
-| Rank | 1 | Connect `i` to `(i+1) mod 11` |
-| Tradition | 2 | Connect `i` to `(i+2) mod 11` |
-| Range | 3 | Connect `i` to `(i+3) mod 11` |
-| Duration | 4 | Connect `i` to `(i+4) mod 11` |
-| Primary Trait | 5 | Connect `i` to `(i+5) mod 11` |
-
-For each attribute, read its eleven bits left-to-right, corresponding to vertices 0 through 10. If a bit is `0`, that vertex contributes nothing for this attribute. If it is `1`, make exactly one connection according to the table:
-
-$$
-\boxed{B_q[i]=1\;\Longrightarrow\; \{i,(i+k)\bmod 11\}.}
-$$
-
-Curly braces signify an unordered pair: a connection has no direction. No drawing angle or chord length needs to be measured to understand the encoding.
-
-### Worked Layer 1 example — real valid options
-
-Choose these five values from `constants.ts`:
-
-| Attribute | Chosen value | Option index `q` | Bit word | Chord distance |
-|---|---|---:|---|---:|
-| Rank | `cantrip` | 0 | `00001111000` | 1 |
-| Tradition | `Arcane` | 0 | `00001111000` | 2 |
-| Range | `Self` | 0 | `00001111000` | 3 |
-| Duration | `Instant` | 0 | `00001111000` | 4 |
-| Primary Trait | `Healing` | 0 | `00001111000` | 5 |
-
-These are valid application values. They happen to all be first choices, so they share the same active **starting vertices** `{4,5,6,7}`. Their endpoints differ because their chord distances differ.
-
-| Attribute | Start at 4 | Start at 5 | Start at 6 | Start at 7 |
-|---|---|---|---|---|
-| Rank (`k=1`) | 4–5 | 5–6 | 6–7 | 7–8 |
-| Tradition (`k=2`) | 4–6 | 5–7 | 6–8 | 7–9 |
-| Range (`k=3`) | 4–7 | 5–8 | 6–9 | 7–10 |
-| Duration (`k=4`) | 4–8 | 5–9 | 6–10 | **7–0** |
-| Primary Trait (`k=5`) | 4–9 | 5–10 | **6–0** | **7–1** |
-
-For example, Duration starting at vertex 7 ends at `(7+4) mod 11 = 11 mod 11 = 0`. The wraparound is intentional.
-
-Each of five attributes contributes four chords, so the Layer 1 result has
-
-$$
-\boxed{5\times 4=20\text{ chords}.}
-$$
-
-**Interpretation:** These are twenty specific unordered vertex pairs. Even if you later draw them differently, the pairs remain exactly the same.
-
-## 5. Layer 2 — orbits around vertices
-
-Layer 2 adds four more attributes, but does **not** add new chords. Instead, it combines the four bits associated with each vertex into **one number**. That number is displayed as a partial circle **around the vertex**; this guide calls it an **orbit**.
-
-Attribute preparation is internal; the drawing output contains only combined
-orbits:
-
-| Type | Represents |
-|---|---|
-| `OrbitAttribute` (internal) | One prepared Layer 2 attribute, including its value-to-bits lookup and weight. |
-| `Orbit` (output) | One combined orbit at a vertex: its vertex index, total weight and sweep angle in radians. |
-
-[`combineOrbits`](../src/spell-calculation.ts) combines the selected attributes'
-active vertices and weights into `Orbit` objects, one for each active vertex.
-The intermediate attribute encodings are not returned.
-
-### 5.1 Why use the weights 1, 2, 4, and 8?
-
-The weights are powers of two:
-
-| Attribute | Index `j` | Weight `2ʲ` |
-|---|---:|---:|
-| Damage | 0 | 1 |
-| Area | 1 | 2 |
-| Casting time | 2 | 4 |
-| Casting traits | 3 | 8 |
-
-At a given vertex `i`, each attribute contributes either its weight (bit `1`) or zero (bit `0`). Their sum is
-
-$$
-\boxed{U_i=b_{0,i}+2b_{1,i}+4b_{2,i}+8b_{3,i}.}
-$$
-
-Because `b` is always `0` or `1`, the smallest sum is 0, and the largest is `1+2+4+8=15`. There are `2⁴=16` different combinations of four bits, and **every combination has a unique sum**. This is exactly how a four-bit binary number works.
-
-For example, `U=5` can only be `1+4` among these weights: Damage and Casting time are active; Area and Casting traits are inactive. Their two contributions become one `Orbit` with a 112.5° sweep. The binary value `0101` (read in order 8,4,2,1) represents 5.
-
-### 5.2 Converting the sum to an orbit
-
-Divide a full circle into sixteen equal angular units. Each is
-
-$$
-\Delta\theta=\frac{360^\circ}{16}=22.5^\circ
-\qquad\left(=\frac{\pi}{8}\text{ radians}\right).
-$$
-
-The orbit around vertex `i` covers
-
-$$
-\boxed{\theta_i=U_i\times22.5^\circ.}
-$$
-
-- `U=0`: no orbit.
-- `U=1`: 22.5° of a circle.
-- `U=5`: 112.5°.
-- `U=8`: 180° (half a circle).
-- `U=15`: 337.5°, leaving a gap of 22.5°.
-
-An orbit is **one combined partial circle**, not four separate rings. Its **sweep angle** contains the information; the drawing radius is a visual choice.
-
-### Worked Layer 2 example — continuing the same spell
-
-Choose four valid application values:
-
-| Attribute | Value | `q` | Bits | Weight |
-|---|---|---:|---|---:|
-| Damage | `Acid` | 0 | `00001111000` | 1 |
-| Area | `Burst` | 0 | `00001111000` | 2 |
-| Casting time | `1 action` | 0 | `00001111000` | 4 |
-| Casting traits | `Concentrate` | 0 | `00001111000` | 8 |
-
-At vertices 4, 5, 6 and 7 all four attributes have a `1`, so
-
-$$
-U_4=U_5=U_6=U_7=1+2+4+8=15.
-$$
-
-Their orbit sweeps are
-
-$$
-\theta_4=\theta_5=\theta_6=\theta_7=15\times22.5^\circ
-=\boxed{337.5^\circ}.
-$$
-
-At every other vertex, the four bits are zero, so `U=0` and there is no orbit.
-
-**Layer 2 result:** four vertex-centered orbits, one each at vertices **4, 5, 6, and 7**, sweeping **337.5°**. Combined with Layer 1, the example now represents **20 chords plus four orbits**.
-
-### Can the four attributes be recovered?
-
-Yes—if the complete orbit sweep is known. Divide the angle by 22.5° to recover the integer `U`, then write that number in four-bit binary. For example,
-
-$$
-112.5^\circ/22.5^\circ=5=0101_2.
-$$
-
-This means `8→0`, `4→1`, `2→0`, and `1→1`: only Casting time and Damage are active at that vertex. Repeating this at all eleven vertices reconstructs the four *bit words*, which can then be mapped back to category values using the dictionary and option order. Measuring the angle from pixels is a separate, less reliable problem.
-
-## 6. Layer 3 — encoding the spell identity
-
-The first two layers can be identical for two different spells. Layer 3 stores an identifying **source/variant ID string**, not a spell name, edition, or the nine attribute values. The catalogue picker ID is derived from that variant. A unique supplied source ID or Archives of Nethys ID is retained when it fits; a missing ID is derived from normalized spell data. Colliding IDs receive deterministic content-based suffixes, so the assigned variants are unique within the catalogue and independent of row order. Identical records have no intrinsic way to distinguish one copy from another. Assigned IDs can change if a source-ID collision is introduced or removed.
-
-### 6.1 The actual encoding steps
-
-The code builds a two-element JSON array, converts it to UTF-8 bytes, prepends a sixteen-bit byte count, and converts every byte to eight bits:
-
-```js
-const fields = ['spell-id', String(spell.variant || '')];
-const bytes = new TextEncoder().encode(JSON.stringify(fields));
-const bits = bytes.length.toString(2).padStart(16, '0') +
-  Array.from(bytes, byte => byte.toString(2).padStart(8, '0')).join('');
-```
-
-**JSON** provides a reproducible way to represent the two strings, including their quotation marks, brackets, comma, and any necessary escaping. **UTF-8** converts the resulting text into bytes; a byte is eight bits. Some non-ASCII characters require more than one UTF-8 byte.
-
-If the JSON contains `L` bytes, its payload has `8L` bits. Add sixteen bits containing `L` itself:
-
-$$
-\boxed{N_{\mathrm{bits}}=16+8L},\qquad L\le192.
-$$
-
-The 192-byte restriction applies to the **whole encoded JSON**, not just the ID. For example, quote marks and brackets count toward `L`. The 16-bit header records the count, not the number of visible characters.
-
-`decodeIdentity(bits)` reads the first sixteen bits as `L`, verifies the full length, decodes exactly `L` bytes as UTF-8 JSON, and extracts the second string. The exactness applies to the **string after** `String(spell.variant || '')`—for instance, an original numeric zero is converted to an empty string by that expression.
-
-### Worked Layer 3 example — ID `demo-1`
-
-Assign the same example spell the ID `demo-1`. The serialized text is:
-
-```json
-["spell-id","demo-1"]
-```
-
-Every character here is ASCII and occupies one UTF-8 byte:
-
-- `[` = 1 byte
-- `"spell-id"` = 10 bytes (including two quote marks)
-- `,` = 1 byte
-- `"demo-1"` = 8 bytes (including two quote marks)
-- `]` = 1 byte
-
-Thus `L = 1 + 10 + 1 + 8 + 1 = 21` bytes.
-
-The decimal number 21 is `10101` in binary (`16+4+1`). Pad to sixteen bits:
-
-```text
-0000000000010101   ← sixteen-bit byte-length header
-```
-
-Convert the JSON characters to eight-bit UTF-8 values. Here are **all** the bytes in order:
-
-```text
-[  01011011      "  00100010      s  01110011
-p  01110000      e  01100101      l  01101100
-l  01101100      -  00101101      i  01101001
-d  01100100      "  00100010      ,  00101100
-"  00100010      d  01100100      e  01100101
-m  01101101      o  01101111      -  00101101
-1  00110001      "  00100010      ]  01011101
-```
-
-There are `21 × 8 = 168` payload bits. Prepend the sixteen-bit header:
-
-$$
-\boxed{N_{\mathrm{bits}}=16+168=184.}
-$$
-
-Layer 3 therefore defines **184 ordered bit positions**, not necessarily 184 visible marks. The renderer displays something only for `1` bits; a `0` has an invisible but still allocated position.
-
-**Layer 3 result:** the example carries the exact `demo-1` identity string in a 184-bit, length-prefixed payload. That payload is independent of its 20 Layer 1 chords and four Layer 2 orbits.
-
-## 7. Combined worked example and reversibility
-
-The following is a **mathematically valid set of values in `constants.ts`**, chosen because every selected value has option index zero. It is an encoding demonstration, not a claim that these mechanics describe an actual published spell.
-
-| Layer | Input | Calculated outcome |
-|---|---|---|
-| 1 | Cantrip, Arcane, Self, Instant, Healing | 5 families × 4 active starting bits = **20 chords** |
-| 2 | Acid, Burst, 1 action, Concentrate | `U=15` at vertices 4–7 = **four 337.5° orbits** |
-| 3 | `demo-1` | **21 JSON bytes**, **184 total bits** |
-
-All nine selected mechanical values use `q=0`, so their bit word is `00001111000`. You can reproduce this with `SpellCalculation.encode(spell)` and the application attribute definitions from `constants.ts`. See [Architecture](ARCHITECTURE.md#using-calculation-without-a-canvas) for a runnable Node example.
-
-**What is reversible?** In memory, the five chord families recover their eleven-bit words; the four orbit integers recover their contributing bits; the complete Layer 3 bitstream recovers its ID string. Matching mechanical words back to names additionally requires the same dictionary and ordered option lists. This is **not** a promise that a screenshot or PNG can be converted back into the complete underlying data.
-
----
-
-# Visual layout and drawing (does not change encoding)
-
-The remaining sections explain how the encoded items appear on canvas. They are not part of the necklace, chord-family, orbit-value, or identity-bit calculations.
-
-## 8. Placing vertices on a contour
-
-For the default eleven-point circular outline, the normalized vertex coordinates are
-
-$$
-P_i=(\cos\phi_i,\sin\phi_i),\qquad
-\phi_i=-\frac{\pi}{2}+\frac{2\pi i}{11}.
-$$
-
-The first point is `(0,-1)`, visually at the top on a canvas where positive `y` points downward. Each next point advances by `360°/11 ≈ 32.727°`.
-
-The renderer also allows **3–12 polygon corners**. These are *outline* corners, not the eleven encoding vertices; the latter are distributed approximately evenly by distance along the outline. An open contour similarly keeps eleven encoding vertices spread by sampled path length.
-
-Open contour functions use `t` from 0 to 1, `x=2t−1`, and a bend setting `a` clamped to `[0.6,1.6]`:
-
-| Contour | Unnormalized coordinates `(x(t), y(t))` |
-|---|---|
-| Semicircle | `(-cos(πt), -sin(πt))` |
-| Quarter circle | `(sin(πt/2), cos(πt/2))` |
-| Quadratic | `(x, 1.35a(1−x²))` |
-| Cubic | `(x, 1.8a(x³−0.87x))` |
-
-Open contours are recentered and divided by their largest half-extent before subsequent transformations.
-
-## 9. Layer 3 tracks and marker placement
-
-The identity bitstream is laid out in ordered slots along one or more outward-offset tracks. For canvas dimensions `W × H`, define
-
-$$
-R_0=0.39\min(W,H),\qquad
-S=\max\left(48,\left\lfloor\frac{2\pi R_0\cdot1.21}{7}\right\rfloor\right).
-$$
-
-`S` is the maximum number of bit slots per track, with at least 48 positions. The number of tracks is
-
-$$
-N_{\mathrm{tracks}}=\left\lceil\frac{16+8L}{S}\right\rceil.
-$$
-
-**Example:** for a 300 × 300 canvas, `R₀=117`, so `S=floor(2π ×117×1.21 /7)=127`. Our 184-bit identity requires `ceil(184/127)=2` tracks, with 127 slots on the first and 57 on the second. Their normalized outward offsets are `0.21` and `0.254`, using `0.21 + 0.044h` for track number `h` starting at zero. Line markers extend inward by `0.033` normalized units.
-
-A `1` can be shown as a line, dot, or square; a `0` occupies an empty slot. In the *mixed* style, a visible `1` takes its shape from its **absolute bit index** modulo 3: 0=line, 1=dot, 2=square, then repeat. Zero positions still count when deciding the index.
-
-Tracks with only one or two slots use additional contour samples to determine marker direction.
-
-## 10. Optional curved **connections** between two vertices
-
-This section concerns the appearance of **Layer 1 chords only**. These are **not the Layer 2 orbits**. A chord connecting vertices `p` and `q` can be drawn as a straight segment or as part of a circle passing through the same endpoints. Its encoded endpoints do not change.
-
-For a curved connection, let `d` be the straight endpoint distance and `s` its **sagitta**: the perpendicular distance from the straight chord midpoint to the bowed connection. With `s>0`, the radius of the circle used for drawing is
-
-$$
-\boxed{R=\frac{d^2}{8s}+\frac{s}{2}}.
-$$
-
-**Where does this formula come from?** Draw a right triangle from the circle's center to one endpoint and to the chord midpoint. Half the chord has length `d/2`; the center-to-chord distance is `R−s`. By the Pythagorean theorem,
-
-$$
-(R-s)^2+\left(\frac d2\right)^2=R^2.
-$$
-
-Expand and cancel `R²`: `−2Rs+s²+d²/4=0`. Solve for `R` to obtain `R = d²/(8s)+s/2`.
-
-For a normal curved connection, `s = dc`, with curvature `c` clamped to `[0.05,0.47]`. The *centred* semicircle style uses `s=d/2`.
-
-**Example:** when `d=100` pixels and `c=0.2`, the sagitta is `s=20` pixels, and
-
-$$
-R=\frac{10000}{8\times20}+\frac{20}{2}
-=62.5+10=\boxed{72.5\text{ pixels}}.
-$$
-
-Let `M` be the chord midpoint, `n̂` a perpendicular unit vector, and `ε` the chosen bend side (`+1` or `−1`). The circle center is
-
-$$
-O=M+\varepsilon(s-R)\hat n.
-$$
-
-The drawn connection passes through both endpoints and the offset midpoint `M+εs n̂`. Inward, outward, and alternating styles choose `ε`. This construction is performed **after transforming the endpoints**, so the connection remains circular rather than turning into a stretched ellipse.
-
-## 11. Transforming and fitting the geometry
-
-Let `m=−1` mean mirror horizontally (`m=1` means unchanged), `f` be horizontal stretch in `[0.6,1.35]`, and `α` the rotation angle. Then
-
-$$
-T(x,y)=
-\begin{pmatrix}\cos\alpha&-\sin\alpha\\\sin\alpha&\cos\alpha\end{pmatrix}
-\begin{pmatrix}mfx\\y\end{pmatrix}.
-$$
-
-This first mirrors/stretches horizontally and then rotates. For example, `(1,0)` with `m=−1`, `f=1.2`, and `α=90°` becomes `(0,−1.2)`.
-
-For canvas width `W`, height `H`, transformed absolute extents `X,Y`, and padding
-
-$$
-p=\max(27,\min(42,0.058\min(W,H))),
-$$
-
-the approximate fit scale, omitting protective minimum clamps, is
-
-$$
-\lambda=\min\left(\frac{W/2-p}{X},\frac{H/2-p}{Y}\right),\qquad
-P_{\mathrm{canvas}}=(W/2,H/2)+\lambda T(P).
-$$
-
-The fit includes the contour, Layer 1 connection endpoints, extrema of curved connections, and **all** Layer 3 slots—even zero-bit slots. It uses the full unfiltered Layer 1 geometry. Node glyph dimensions and Layer 2 orbit radii do not separately enter these bounds; padding generally provides room.
-
-Layer 2 orbits are drawn as **circles around already-transformed vertices**, not ellipses scaled by the transform. Their start direction is chosen relative to the canvas center, while their **angular sweep** retains the encoded orbit value.
-
-## 12. Rank-based visibility filter
-
-The rank filter hides some optional mechanical shapes for a cleaner image. It does **not** modify `encode()` or the stored Layer 3 bitstream.
-
-| Rank | Fraction of optional elements shown `f` |
+| Attribute | Step `k` |
 |---|---:|
-| Cantrip | 0.20 |
-| 1–3 | 0.40 |
-| 4–6 | 0.60 |
-| 7–8 | 0.80 |
-| 9–10 | 1.00 |
+| Rank | 1 |
+| Tradition | 2 |
+| Range | 3 |
+| Duration | 4 |
+| Primary Trait | 5 |
 
-All Rank-family chords remain visible. Every *other* Layer 1 chord and every **whole** Layer 2 orbit counts as one optional element, regardless of the orbit's sweep. The code groups chords by attribute, sorts orbits by vertex, and interleaves these pools deterministically.
-
-If there are `M` optional elements, it displays the first `ceil(fM)`. The final visible mechanical count is
+At every vertex `i` where an attribute's bit is `1`, that attribute adds a connection from `i` to:
 
 $$
-\boxed{N_{\mathrm{visible}}=N_{\mathrm{rank\ chords}}+\lceil fM\rceil.}
+(i+k)\bmod 11
 $$
 
-**Example:** the worked spell has 4 Rank chords, 16 other chords, and 4 orbits: `M=20`. As a cantrip, `f=0.2`, so four optional elements plus the four Rank chords are shown, for **8 out of 24** mechanical elements. Turning the filter off reveals all **24**. The preview count may exceed 20% of the total because Rank chords are exempt.
+Here `i` is the active vertex number, `k` is the attribute's step, and `mod 11` means **wrap around to vertex 0 after vertex 10**. A `0` bit adds no connection. A **chord** is this encoded, undirected pair of endpoints; it remains the same chord if the renderer later draws a curved rather than a straight line.
 
-## 13. Optional feather-and-ink rendering
+**Output of Layer 1:** five separate sets of encoded vertex-to-vertex connections, one set per primary attribute.
 
-Hand-drawn strokes are sampled along their length and filled with variable-width ribbon shapes. Let `t` be progress from 0 to 1, `w₀` a base width, and pressure `p` in `[0,2.5]`. Define the smoothstep function
+## 4. Layer 2 — Orbits
 
-$$
-E(t)=3t^2-2t^3,
-$$
+Adding four more chord families would increase the number of crossing connections. Instead, Layer 2 uses the shared eleven-bit words to calculate a **single orbit value at each vertex**, without introducing any new vertex-to-vertex connection.
 
-with start and end widths
+At a given vertex, an active **Damage** bit contributes **1**, **Area** contributes **2**, **Casting time** contributes **4**, and **Casting traits** contributes **8**. An inactive bit contributes nothing. Add the contributions to obtain `U`, an integer from **0 through 15**. Because the weights are successive powers of two, every combination of active attributes has a different total; the four bits can be recovered from that total.
 
-$$
-w_{\mathrm{start}}=w_0(1+1.45p),\qquad
-w_{\mathrm{end}}=w_0\bigl(1-0.7\min(p,1)\bigr).
-$$
-
-The final width is
+The number determines the amount of a circle to draw around that vertex:
 
 $$
-\boxed{w(t)=\max\bigl(0.15,(1-E(t))w_{\mathrm{start}}+E(t)w_{\mathrm{end}}\bigr).}
+\text{orbit sweep} = U\times 24^\circ
 $$
 
-**Example:** for `w₀=2` pixels and pressure `p=1`, the widths are `4.9` pixels at the start and `0.6` at the end. At halfway, `E(0.5)=0.5`, giving `w(0.5)=2.75` pixels. Higher pressure makes the beginning thicker; beyond `p=1`, the ending stops thinning further as a fraction of its base width. Optional irregularity shifts samples sideways, feathering adds a faint wide ribbon, and dashes inherit the width profile at their position along the *original full stroke*. None changes any data bits.
+An orbit value of `0` draws nothing, while `15` gives a complete **360°** circle. Intermediate values give partial circular arcs. An **orbit is one combined arc or circle centered on that vertex**: it is neither four separate rings nor a curved chord between two vertices. The **sweep angle** is calculated information; the orbit's radius and decorative styling are drawing choices.
 
-## 14. Decoding, uniqueness, and exports
+## 5. Layer 3 — Spell fingerprint
 
-**In application data:** The mapping from named options to complete eleven-bit words is deterministic; the five Layer 1 families remain separate; each Layer 2 orbit sum uniquely determines its four constituent bits; and a complete, valid Layer 3 bitstring exactly reconstructs its encoded ID string. The same dictionary and `constants.ts` option order are necessary to translate mechanical bits back into names.
+Two distinct spells can share all nine categorical mechanics, so their chords and orbits can be identical. To distinguish records independently of those mechanics, Layer 3 stores a **spell fingerprint** based on the assigned **source/variant ID**. It is **not** a tenth mechanical attribute, an encoding of the spell name, or a hash of the mechanical values.
 
-**From a PNG:** There is **no guaranteed lossless pixel decoder**. Hidden zeros have no visible slot guides, strokes may overlap, filtered elements may be absent, and the PNG does not contain the dictionary. Sigil does **not** implement a pixel-based spell decoder.
+The calculation forms the pair `['spell-id', variant]`, with the variant represented as a string, **serializes it as JSON**, and converts the JSON text into **UTF-8 bytes**. It then prepends a **16-bit header that records the number of JSON bytes**, followed by eight bits for each byte. The supplied calculation guide specifies a **192-byte limit for the complete JSON payload**, not merely the ID text.
 
-**Uniqueness:** Two spells may share all nine mechanical categories, hence the same Layers 1 and 2. Imported Layer 3 IDs are unique within a catalogue, but manually reused custom IDs or IDs from separate catalogues can still collide.
+These bits occupy ordered marker positions. Each `1` is visibly marked; each `0` still has a position but is left unmarked. Changing the marker shape or track layout does not change the spell fingerprint bits.
 
-**Visual options:** 10 base themes (including Tattoo blackwork on customizable skin), 31 Primary Trait presets, ornaments, polygon and open shapes, glyphs, stroke effects, colors, interface light/dark mode, and curved connections only affect presentation. `Export PNG` renders the current view at **1800 × 1500** pixels; `Transparent PNG` omits the theme background and ornaments. `Export Spell Card` includes that view, the nine labeled attributes, traits, and the description on a themed, height-adjusted card.
+Different assigned IDs produce different fingerprints, including when the mechanical layers coincide. This is a **catalogue-record distinction, not a universal identity guarantee**: manually reused custom IDs or IDs reused across catalogues can still collide.
 
-## Sources and scope
+## 6. Drawing and filtering — after calculation
 
-- [`spell-calculation.ts`](../src/spell-calculation.ts): encoding, orbit summing, identity framing and visibility.
-- [`spell-math.ts`](../src/spell-math.ts): prime, rotation and necklace helpers.
-- [`spell-drawing.ts`](../src/spell-drawing.ts): geometry and rendering.
-- [`app.ts`](../src/app.ts): calculation and drawing coordination.
-- [`constants.ts`](../src/constants.ts): exact attribute option lists, their order, and layer assignments.
-- [`spell.json`](../data/spell.json): 1,400 bundled catalogue records.
-- [`README.md`](../README.md): usage and product overview.
-- [*The Spell Writing Guide*](https://www.gorillaofdestiny.com/books-and-compendiums) by The Gorilla of Destiny; related [SpellWriting repository](https://github.com/GorillaOfDestiny/SpellWriting).
+Only after the three layers are calculated does the renderer decide how to **show** them. It places the eleven logical vertices along a chosen contour, then draws Layer 1's endpoint pairs as straight or curved connections. Bending a chord does not change its encoded endpoints. It draws Layer 2's circular orbits **around their own vertices**; a curved Layer 1 chord must not be confused with an orbit. Finally, it places Layer 3's fingerprint bits in ordered marker slots. Marker style and placement affect appearance, not the underlying sequence.
 
-The five chord families draw on the guide's *Unique Binary Scheme*. Sigil's vertex **orbits**, length-prefixed identity bits, rank filter, and rendering/ink effects are **Sigil extensions**, not formulas taken from that guide. The examples and formulas in this revision were checked against the provided **v2.18 implementation**, including an explicit `encode()` run with the nine example values.
+A deterministic **rank-based visibility filter** makes lower-rank sigils *look* less crowded. It always retains the **Rank-family chords**. Other Layer 1 chords and **whole Layer 2 orbits** form the optional pool; the renderer retains a rank-dependent fraction of that pool in a stable order, rounding the number shown upward. It never truncates an orbit's sweep to achieve the percentage.
+
+| Rank | Optional mechanical elements displayed |
+|---|---:|
+| Cantrip | 20% |
+| 1–3 | 40% |
+| 4–6 | 60% |
+| 7–8 | 80% |
+| 9–10 | 100% |
+
+These percentages **do not apply** to Rank-family chords, the spell fingerprint, or every visible part of the drawing. The rule uses Rank as a *display heuristic*; it does not claim that every lower-rank spell has intrinsically simpler mechanics. Hiding a stroke or an entire orbit **does not recalculate the spell, delete its encoded data, or alter its fingerprint**.
+
+## 7. One compact worked example
+
+Consider this **constructed example**, chosen to illustrate the calculation; it is **not presented as a published Pathfinder 2e spell**. Its primary values are **Cantrip, Arcane, Self, Instant, Healing**; its orbit values are **Acid, `none`, 1 action, `none`** (in Damage, Area, Casting time, Casting traits order); and its assigned source/variant ID is `demo-1`. The seven non-`none` values are the first options of their respective attribute lists in the supplied source guide, so they use the same rotated bit word.
+
+| Stage | Input from the constructed spell | Calculated or displayed result |
+|---|---|---|
+| **Shared bits and Layer 1** | Rank = `cantrip`, option index `0`; Rank step `k = 1` | Rotated word `00001111000`; vertex **4** is active, so one Rank chord connects **4 to 5**. |
+| **Layer 2** | At vertex **4**, Acid is active (weight **1**) and 1 action is active (weight **4**); Area and Casting traits are `none` | `U = 1 + 4 = 5`, so this vertex has **one 120° orbit** (`5 × 24°`). |
+| **Layer 3** | Source/variant ID `demo-1` | JSON `["spell-id","demo-1"]` uses **21 UTF-8 bytes**; the **16-bit header** plus payload creates **184 ordered marker positions**, not necessarily 184 visible marks. |
+| **Rank filter** | Cantrip displays **20%** of optional mechanical elements | The full calculation has **4 Rank chords**, **16 other chords**, and **4 orbits**. Of the **20 optional** elements, **4** are shown; with all **4 Rank chords**, this yields **8 visible mechanical elements out of 24**. Hidden elements and fingerprint bits remain unchanged. |
+
+The complete internal mechanical encoding can be reconstructed when the same option lists and necklace dictionary are available, and the complete fingerprint bits retain the assigned ID. A **filtered drawing, screenshot, or exported image is not guaranteed to be losslessly decodable**: some calculated strokes may be absent, and visible geometry alone need not preserve every bit.
+
+## 8. Sources and scope
+
+- [*The Spell Writing Guide*](https://www.gorillaofdestiny.com/books-and-compendiums), by The Gorilla of Destiny: conceptual foundation for binary-pattern and chord-based spell writing. **Vertex-centered orbits, the spell fingerprint, and rank-based visibility filtering are Sigil extensions**, not rules attributed to that Guide.
+- `ATTRIBUTE-OPTIMIZATION.md`: the historical analysis named in the revision instructions. Its **1,403-record** scope and the **seven-required / nine-maximum** constraints are taken from that brief; the underlying analysis file was **not supplied** for independent inspection.
+- `HOW-IT-IS-CALCULATED(1).qmd`: the supplied baseline for the **current** eleven-vertex, five-chord/four-orbit calculation, fingerprint format, filtering behavior, and stated **1,400-record** catalogue size.
+
+The baseline refers to application files such as `src/spell-calculation.ts`, `src/spell-math.ts`, `src/spell-drawing.ts`, and `src/constants.ts`, but those files were not included here. This rewrite therefore **preserves the behavior documented in the supplied guide without claiming a fresh implementation audit or a rerun of the historical experiment**.

@@ -57,7 +57,10 @@ The drawing contract contains only:
 
 A `ChordGroup` retains its attribute ID, label, color, chord distance `k` and
 vertex-pair `edges`. An `Orbit` contains its vertex, combined weight `units`
-and angular `sweep`. Prepared attribute lookups and intermediate bit words
+and angular `sweep`. Layer 2 weights 1, 2, 4 and 8 contribute 24, 48, 96 and
+192 degrees; all four active bits at one vertex produce a complete circle.
+For `k` orbit attributes, each unit is `2*pi/(2^k-1)` radians.
+Prepared attribute lookups and intermediate bit words
 stay inside calculation; no separate encoded orbit-attribute type is returned.
 The visible view does not repeat the vertex count or identity bits.
 
@@ -187,8 +190,10 @@ custom attribute option. Before hashing, object keys are sorted recursively, arr
 preserved, and the result is serialized as UTF-8 JSON. Descriptions are
 covered by their record hash, not duplicated in the fixture. The test
 reads the app's internal state. A test-only adapter reconstructs removed
-diagnostic fields in the original fixture shape, while comparing the actual
-returned chords, orbits, identity bits and visibility counts. Keep that adapter
+diagnostic fields in the original fixture shape. It verifies the current
+full-circle orbit scale before restoring historical sweep metadata for catalogue
+hashing, preserving checks of the original bit mappings, chords, orbit units,
+identity bits and visibility counts. Keep that adapter
 out of the application and retain the same baseline when contracts change.
 
 Five rendering cases (including Tattoo) and the normal sigil and spell-card PNG

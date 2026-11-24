@@ -161,7 +161,7 @@ export class SpellCalculation {
                 units[vertexIndex] += attribute.sectionUnits;
         }
         // One orbit's sweep encodes the sum of its active attribute weights.
-        const anglePerUnit = (2 * Math.PI) / (2 ** attributes.length);
+        const anglePerUnit = (2 * Math.PI) / (2 ** attributes.length - 1);
         return units.flatMap((total, vertex) => total ? [{ vertex, units: total, sweep: total * anglePerUnit }] : []);
     }
     static decodeOrbitSections(units: number, attributes: Pick<AttributeDefinition, 'id'>[]): string[] {

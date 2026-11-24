@@ -21,13 +21,13 @@ The editor starts with **Scrying**. **Reset** restores this example and the draw
 
 | Layer | Encodes | Appearance |
 |---|---|---|
-| **1 · Vertices** | Rank, Tradition, Range, Duration, Primary Trait | Connections using one of five chord distances per attribute |
-| **2 · Orbits** | Damage, Area, Casting time, Casting traits | One partial circle around each active vertex, with an additive sweep angle |
+| **1 · Vertices** | Rank, Tradition, Range, Duration, Primary Trait | Connections between vertices using one of five connection distances per attribute |
+| **2 - Orbits** | Damage, Area, Casting time, Casting traits | One circle or arc per active vertex; all four active bits make a full circle |
 | **3 · Spell Fingerprint** | Source/variant ID only | Binary markers (lines, dots, squares, or mixed) along the contour |
 
 The spell fingerprint encodes the ID, not a hash of the spell's contents. Editing mechanics or card text does not change it unless the ID changes.
 
-Sigil uses **11 encoding vertices**, five chord families, and four additional attributes represented by vertex-centered orbits. The **Filter details by rank** setting hides some non-Rank chords and complete orbits for lower-rank spells, but never changes their stored bits or the complete Layer 3 ID. Switch it off to see full notation; filter details remain beside the setting in Layer 1.
+Sigil uses **11 encoding vertices**, five Layer 1 attribute groups, and four additional attributes represented by vertex-centered orbits. The **Filter details by rank** setting hides some non-Rank vertex connections and complete orbits for lower-rank spells, but never changes their stored bits or the complete Layer 3 ID. Switch it off to see full notation; filter details remain beside the setting in Layer 1.
 
 For the mathematics, worked examples and decoding caveats, read **[How Sigil Is Calculated](docs/HOW-IT-IS-CALCULATED.qmd)**. For the codebase structure and drawing contract, see [Architecture](docs/ARCHITECTURE.md).
 

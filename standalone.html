@@ -706,7 +706,7 @@ html[data-ui-mode="light"] .theme-choice:has(input:checked) { color:#263638; bac
 <section class="editor-section" id="notationSection" aria-labelledby="notationHeading">
 <h3 class="group-label" id="notationHeading">NOTATION</h3>
 <details class="field-group layer-panel attributes-group" id="layer1Panel"><summary class="layer-panel-summary"><span class="group-label">LAYER 1. VERTICES</span></summary><div class="layer-panel-body">
-<p class="field-help">Five chord groups share 11 vertices.</p>
+<p class="field-help">Five attribute groups connect 11 vertices.</p>
 <div class="field">
 <div class="field-label"><label for="rank">Spell rank</label><span class="k-chip">k=1</span></div>
 <select id="rank"></select>
@@ -714,7 +714,7 @@ html[data-ui-mode="light"] .theme-choice:has(input:checked) { color:#263638; bac
 <div class="rank-view-control">
 <label class="toggle-row" for="rankComplexity"><span>Filter details by rank</span><input checked="" id="rankComplexity" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <div class="rank-view-meta"><span class="k-chip" id="rankRevealBadge">40% optional detail</span><span id="rankRevealHelp"></span></div>
-<p class="field-help" id="rankViewHint">Turn off to show every chord and orbit. The ID always stays visible.</p>
+<p class="field-help" id="rankViewHint">Turn off to show all details in Vertices and Orbits. The ID stays complete.</p>
 </div>
 <div class="field">
 <div class="field-label"><label for="tradition">Tradition</label><span class="k-chip">k=2</span></div>
@@ -810,12 +810,12 @@ html[data-ui-mode="light"] .theme-choice:has(input:checked) { color:#263638; bac
 </div>
 </details>
 </div></details><details class="field-group layer-panel layer2-panel" id="moreAttributes"><summary class="layer-panel-summary"><span class="group-label">LAYER 2. ORBITS</span></summary><div class="layer-panel-body">
-<p class="field-help">Each orbit combines up to four parts: 22.5°, 45°, 90° and 180°.</p>
+<p class="field-help">Each orbit combines up to four parts: 24&deg;, 48&deg;, 96&deg; and 192&deg;. All four make a complete circle.</p>
 <div class="additional-fields">
-<div class="field"><div class="field-label"><label for="damage">Damage type</label><span class="k-chip">+22.5°</span></div><select id="damage"></select></div>
-<div class="field"><div class="field-label"><label for="area">Area shape</label><span class="k-chip">+45°</span></div><select id="area"></select></div>
-<div class="field"><div class="field-label"><label for="castActions">Casting time</label><span class="k-chip">+90°</span></div><select id="castActions"></select></div>
-<div class="field"><div class="field-label"><label for="castTraits">Casting traits</label><span class="k-chip">+180°</span></div><select id="castTraits"></select></div>
+<div class="field"><div class="field-label"><label for="damage">Damage type</label><span class="k-chip">+24&deg;</span></div><select id="damage"></select></div>
+<div class="field"><div class="field-label"><label for="area">Area shape</label><span class="k-chip">+48&deg;</span></div><select id="area"></select></div>
+<div class="field"><div class="field-label"><label for="castActions">Casting time</label><span class="k-chip">+96&deg;</span></div><select id="castActions"></select></div>
+<div class="field"><div class="field-label"><label for="castTraits">Casting traits</label><span class="k-chip">+192&deg;</span></div><select id="castTraits"></select></div>
 </div>
 <details class="advanced-panel">
 <summary>Visual options</summary>
@@ -1269,7 +1269,7 @@ var SigilCalculation = (() => {
         for (const vertexIndex of attribute.vertices)
           units[vertexIndex] += attribute.sectionUnits;
       }
-      const anglePerUnit = 2 * Math.PI / 2 ** attributes.length;
+      const anglePerUnit = 2 * Math.PI / (2 ** attributes.length - 1);
       return units.flatMap((total, vertex) => total ? [{ vertex, units: total, sweep: total * anglePerUnit }] : []);
     }
     static decodeOrbitSections(units, attributes) {
@@ -5068,7 +5068,7 @@ function updateNotationInfo(visible = calculation.represent(currentSpell, drawin
   rankMeta.hidden = !filtered;
   $("rankRevealBadge").textContent = filtered ? `${Math.round(visible.revealFraction * 100)}% optional detail` : "";
   $("rankRevealHelp").textContent = filtered ? `${visible.optionalVisible} of ${visible.optionalTotal} non-Rank elements shown.` : "";
-  $("rankViewHint").textContent = filtered ? "Turn off to show every chord and orbit. The ID stays complete." : "All chords and orbits are visible. The ID stays complete.";
+  $("rankViewHint").textContent = filtered ? "Turn off to show all details in Vertices and Orbits. The ID stays complete." : "All details in Vertices and Orbits are visible. The ID stays complete.";
 }
 function render() {
   const spell = readState();

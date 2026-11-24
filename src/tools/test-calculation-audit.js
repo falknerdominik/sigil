@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 const {SpellCalculation} = require('../generated/spell-calculation.cjs');
 const {SpellDrawing} = require('../generated/spell-drawing.cjs');
 const root = path.resolve(__dirname, '..', '..');
@@ -66,7 +67,7 @@ for(let mask=0;mask<16;mask++) {
   assert.equal(orbits.length,mask===0?0:1);
   if(mask) {
     assert.equal(orbits[0].units,mask);
-    assert(Math.abs(orbits[0].sweep - mask*Math.PI/8)<1e-10);
+    assert(Math.abs(orbits[0].sweep * 180/Math.PI - mask*24)<1e-10);
   }
   const decoded=SpellCalculation.decodeOrbitSections(mask,selected);
   assert.deepEqual(decoded,selected.filter(x=>mask&x.sectionUnits).map(x=>x.id));
@@ -74,6 +75,27 @@ for(let mask=0;mask<16;mask++) {
 const spell={name:'Math test',variant:'book-ñ-§',rank:'3',tradition:'Arcane',range:'Touch',
   duration:'Instant',effectTrait:'Fire',damage:'Fire',area:'Burst',castActions:'2 actions',castTraits:'Both'};
 const full=renderer.encode(spell);
+const constantsContext = {};
+vm.runInNewContext(fs.readFileSync(path.join(root, 'src/generated/constants.browser.js'), 'utf8'), constantsContext);
+const {SPELL_ATTRIBUTES, CHORD_ATTRIBUTE_IDS, ORBIT_ATTRIBUTE_IDS} =
+  JSON.parse(JSON.stringify(constantsContext.SigilConstants));
+const guideCalculation = new SpellCalculation(
+  CHORD_ATTRIBUTE_IDS.map(id => SPELL_ATTRIBUTES.find(attribute => attribute.id === id)),
+  ORBIT_ATTRIBUTE_IDS.map(id => SPELL_ATTRIBUTES.find(attribute => attribute.id === id)));
+const guideSpell = {
+  rank:'cantrip', tradition:'Arcane', range:'Self', duration:'Instant', effectTrait:'Healing',
+  damage:'Acid', area:'Burst', castActions:'1 action', castTraits:'Concentrate', variant:'demo-1'
+};
+const guideNotation = guideCalculation.encode(guideSpell);
+for (const attribute of [...guideCalculation.chordAttributes, ...guideCalculation.orbitAttributes])
+  assert.equal(attribute.lookup.get(guideSpell[attribute.id]), '00001111000');
+assert.equal(guideNotation.chords.reduce((sum, group) => sum + group.edges.length, 0), 20);
+assert.deepEqual(guideNotation.orbits.map(orbit => orbit.vertex), [4, 5, 6, 7]);
+assert(guideNotation.orbits.every(orbit => orbit.units === 15 && orbit.sweep === 2 * Math.PI));
+assert.equal(guideNotation.identityBits.length, 184);
+const guideVisible = SpellCalculation.applyRankComplexity(guideNotation, guideSpell);
+assert.equal(guideVisible.revealCount, 8);
+assert.equal(guideVisible.totalRevealable, 24);
 const identityBits=full.identityBits;
 const byteLength=new TextEncoder().encode(JSON.stringify(['spell-id',spell.variant])).length;
 assert.equal(identityBits.length,16+8*byteLength);

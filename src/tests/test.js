@@ -296,7 +296,7 @@ compactRenderer.drawingChords=compactEncoding.chords;
 assert.equal(compactEncoding.vertexCount,11);
 assert.deepEqual(compactEncoding.chords.map(group=>group.k),[1,2,3,4,5]);
 assert.deepEqual(compactCalculation.orbitAttributes.map(attribute=>attribute.sectionUnits),[1,2,4,8]);
-const radiansPerUnit=Math.PI/8; // 22.5 degrees for four secondary attributes
+const radiansPerUnit=2*Math.PI/15; // 24 degrees for four secondary attributes
 
 // All 16 subsets of the four secondary fields must map to unique orbit sweeps;
 // adding the fields must be equivalent to adding their angular sections.
@@ -343,6 +343,8 @@ assert.equal(drawnArcs.length,compactEncoding.orbits.length,
 for(let i=0;i<drawnArcs.length;i++) {
   assert(Math.abs(drawnArcs[i][4]-drawnArcs[i][3]-compactEncoding.orbits[i].sweep)<1e-8,
     'the drawn orbit has precisely the total angular sweep');
+  assert(Math.abs(drawnArcs[i][4]-drawnArcs[i][3]-2*Math.PI)<1e-8,
+    'all four attributes draw a complete orbit without a gap');
 }
 assert(arcDashes.every(dashes=>dashes.length===2), 'dashed style must reach the vertex orbit');
 assert.equal(fakeArcCtx.lineWidth,2);

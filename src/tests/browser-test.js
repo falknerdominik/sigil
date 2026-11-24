@@ -22,6 +22,14 @@ function canonical(value) {
 
 // Restore removed diagnostic metadata only for comparison with the original fixture.
 function baselineNotation(complete, visible, spell, calculation) {
+  // Verify the new full-circle scale, then restore historical sweep metadata
+  // so the original fixture still protects catalogue values and bit mappings.
+  const legacyOrbits = orbits => orbits.map(orbit => {
+    const combinations = 2 ** calculation.orbitAttributes.length;
+    if (Math.abs(orbit.sweep - orbit.units * (2 * Math.PI / (combinations - 1))) > 1e-12)
+      throw new Error('Orbit sweep must use the full-circle scale');
+    return {...orbit, sweep:orbit.units * (2 * Math.PI / combinations)};
+  });
   const attributeEncoding = (attribute, mode) => {
     const value = String(spell[attribute.id] ?? 'none');
     const bits = attribute.lookup.get(value);
@@ -41,7 +49,7 @@ function baselineNotation(complete, visible, spell, calculation) {
     decorations:calculation.orbitAttributes.map(attribute => ({
       ...attributeEncoding(attribute, 'vertex'), sectionUnits:attribute.sectionUnits
     })),
-    vertexArcs:complete.orbits,
+    vertexArcs:legacyOrbits(complete.orbits),
     identity:{
       fields:['spell-id', calculation.constructor.decodeIdentity(complete.identityBits).variant],
       bits:complete.identityBits, byteLength:(complete.identityBits.length - 16) / 8
@@ -54,7 +62,7 @@ function baselineNotation(complete, visible, spell, calculation) {
     complete:full,
     filtered:{
       ...full, layers:chords.map((group, index) => ({...full.layers[index], ...group})),
-      vertexArcs:orbits, ...counts
+      vertexArcs:legacyOrbits(orbits), ...counts
     }
   };
 }
@@ -656,11 +664,11 @@ async function smokeTest(page) {
   assert.equal(await page.locator('#notationMeta, #notationModeBadge').count(), 0);
   await page.locator('label[for="rankComplexity"]').click();
   assert.equal(await page.locator('#rankComplexity').isChecked(), false);
-  assert.match(await page.locator('#rankViewHint').textContent(), /All chords and orbits are visible/);
+  assert.match(await page.locator('#rankViewHint').textContent(), /All details in Vertices and Orbits are visible/);
   assert.notEqual(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), filteredPreview);
   await page.locator('label[for="rankComplexity"]').click();
   assert.equal(await page.locator('#rankComplexity').isChecked(), true);
-  assert.match(await page.locator('#rankViewHint').textContent(), /Turn off to show every chord and orbit/);
+  assert.match(await page.locator('#rankViewHint').textContent(), /Turn off to show all details in Vertices and Orbits/);
   assert.equal(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), filteredPreview);
 
   const beforeOrbitStyle = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
