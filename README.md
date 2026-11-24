@@ -1,8 +1,9 @@
 # Sigil
 
 Offline Pathfinder 2e spell-sigil editor built with TypeScript and Canvas 2D.
-Includes 1,400 spells, custom spell editing, and PNG, transparent PNG, and
-spell-card exports. No runtime dependencies or network connection are required.
+Includes 1,400 spells, custom spell editing, 41 themes (6 surfaces,
+4 traditions, and 31 traits), and PNG, transparent PNG, and spell-card
+exports. No runtime dependencies or network connection are required.
 
 Open [standalone.html](standalone.html) in a browser. See
 Explanation in the top bar for the notation, mathematics, and worked examples.
@@ -11,7 +12,7 @@ Its source is [explanation.qmd](docs/explanation.qmd)
 
 ## Gallery
 
-![Sigil workbench showing Cornucopia, a druid focus spell, on a green semicircular base](docs/gallery/workbench.webp)
+![Sigil workbench showing Scrying in the Constellations theme, with glowing vertices on a deep blue star chart](docs/gallery/workbench.webp)
 
 Fireball uses the Fire trait theme, while Cornucopia pairs the Primal theme
 with a semicircular base. Moonward and Tideglass are custom spells with
