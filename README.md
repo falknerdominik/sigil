@@ -63,6 +63,13 @@ The pixel baseline requires the controlled environment described in
 
 Source provenance is recorded in [`SPELL-SOURCES.md`](docs/SPELL-SOURCES.md) and [`CREDITS-AND-LICENSES.md`](docs/CREDITS-AND-LICENSES.md).
 
+## GitHub Pages
+
+Select **GitHub Actions** in **Settings > Pages > Build and deployment**.
+The [workflow](.github/workflows/pages.yml) runs `npm ci` and `npm run build`
+on pushes to `main` or manual runs, then publishes `index.html` and
+`standalone.html`. Deployment is restricted to `main`; no custom secrets are needed.
+
 **Licensing note:** Sigil's source code is included, but **no standalone software license has yet been selected for it**; publishing the source does not by itself grant open-source redistribution rights. Pathfinder materials and the original guide have separate rights. Review the source-specific notices before distributing the bundled spell texts.
 
 ## Copyright and attribution
