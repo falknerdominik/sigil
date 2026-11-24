@@ -33,9 +33,9 @@ Sigil with rank filtering turned off.
 Sigil's spell-card export pairs the sigil with its attributes, traits, and an
 editable description. Select either card to view it at full size.
 
-| Moonward · Divine | Tideglass · Tattoo |
+| Electric Arc · Cantrip · Blueprint | Freeze Time · Rank 10 · Occult |
 | --- | --- |
-| [![Moonward spell card with an angular gold sigil and a lunar ward description](docs/gallery/moonward-spell-card.webp)](docs/gallery/moonward-spell-card.webp) | [![Tideglass spell card with a charcoal sigil and a frozen seawater description](docs/gallery/tideglass-spell-card.webp)](docs/gallery/tideglass-spell-card.webp) |
+| [![Electric Arc cantrip card with an angular cyan sigil on a drafting grid](docs/gallery/electric-arc-spell-card.webp)](docs/gallery/electric-arc-spell-card.webp) | [![Freeze Time rank 10 spell card with a curved violet sigil on a dark ritual backdrop](docs/gallery/freeze-time-spell-card.webp)](docs/gallery/freeze-time-spell-card.webp) |
 
 ## Development and verification
 
