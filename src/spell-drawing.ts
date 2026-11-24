@@ -77,7 +77,14 @@ export class SpellDrawing {
     ctx: CanvasRenderingContext2D,
     trace: (path: PathContext) => void,
     seed = 0,
+    layer: 1 | 2 | 3 = 1,
   ) {
+    if (this.settings.inkOnlyLayers1And2 && layer === 3) {
+      ctx.beginPath();
+      trace(ctx);
+      ctx.stroke();
+      return;
+    }
     strokeInk(ctx, trace, this.settings, seed);
   }
 
@@ -628,6 +635,7 @@ export class SpellDrawing {
         (path) =>
           path.arc(point.x, point.y, orbitRadius, start, start + orbit.sweep),
         2000 + orbit.vertex * 17 + orbit.units,
+        2,
       );
     }
     ctx.restore();
@@ -765,11 +773,12 @@ export class SpellDrawing {
             path.lineTo(to.x, to.y);
           },
           4000 + index * 7,
+          3,
         );
         continue;
       }
       // Ink feathering softly affects filled / outlined ID symbols as well.
-      if (this.settings.handDrawnInk) {
+      if (this.settings.handDrawnInk && !this.settings.inkOnlyLayers1And2) {
         ctx.shadowColor = markerInk;
         ctx.shadowBlur =
           0.6 +

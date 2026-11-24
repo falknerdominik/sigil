@@ -119,7 +119,7 @@ async function renderBaseline(page) {
       {name:'plain-full', design:'plain', rankComplexity:false},
       {name:'constellations-filtered', design:'constellations', rankComplexity:true},
       {name:'blueprint-transformed', design:'blueprint', base:'quadratic', rotation:35, mirror:true, stretch:0.8},
-      {name:'fire-ink', design:'trait-fire', handDrawnInk:true, inkWobble:1, inkPressure:0.8, decorations:true, decorationSeed:123},
+      {name:'fire-ink', design:'trait-fire', handDrawnInk:true, inkOnlyLayers1And2:false, inkWobble:1, inkPressure:0.8, decorations:true, decorationSeed:123},
       {name:'tattoo-blackwork', design:'tattoo', dotStyle:'circle', vertexSize:0.5, vertexStroke:0.75}
     ];
     const result = {};
@@ -333,6 +333,79 @@ async function themeTest(page) {
   assert(results.tattoo.cardHeight > 0);
 }
 
+async function ornamentAndInkScopeTest(page) {
+  const result = await page.evaluate(() => {
+    const representation = window.eval('calculation.represent(currentSpell, false)');
+    const original = JSON.stringify(representation);
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 320;
+    const ctx = canvas.getContext('2d');
+    const render = (settings, visible = representation.visible, transparentBackground = false) => {
+      const drawing = new SigilDrawing.SpellDrawing(settings);
+      drawing.paintNotation(ctx, 400, 320, {...representation, visible}, {transparentBackground});
+      return canvas.toDataURL();
+    };
+    const themes = Object.keys(SigilConstants.THEME_PALETTES).map(design => {
+      const settings = {design, cornerOrnaments:false};
+      const decorated = render(settings);
+      const undecorated = render({...settings, backgroundOrnaments:false});
+      const base = new SigilDrawing.SpellDrawing(settings).baseTheme();
+      return {
+        design,
+        expectedChange:!['plain', 'tattoo'].includes(base),
+        changed:decorated !== undecorated,
+        transparentUnchanged:render(settings, undefined, true) ===
+          render({...settings, backgroundOrnaments:false}, undefined, true),
+        cornersIndependent:render({...settings, backgroundOrnaments:false, cornerOrnaments:true}) !== undecorated,
+        randomIndependent:render({...settings, backgroundOrnaments:false, decorations:true}) !== undecorated
+      };
+    });
+    const {complete, visible} = representation;
+    const layers = {
+      vertices:{...visible, orbits:[]},
+      orbits:{...visible, chords:visible.chords.map(group => ({...group, edges:[]}))},
+      fingerprint:{...visible, chords:visible.chords.map(group => ({...group, edges:[]})), orbits:[]}
+    };
+    const comparisons = [];
+    for (const [layer, layerVisible] of Object.entries(layers)) {
+      for (const shape of layer === 'fingerprint' ? ['line', 'dot', 'square', 'mixed'] : ['line']) {
+        const settings = {
+          design:'plain', identityTickShape:shape,
+          chordOpacity:layer === 'vertices' ? 1 : 0,
+          orbitOpacity:layer === 'orbits' ? 1 : 0,
+          identityMarkerOpacity:layer === 'fingerprint' ? 1 : 0,
+          handDrawnInk:true
+        };
+        const scoped = render(settings, layerVisible, true);
+        const crisp = render({...settings, handDrawnInk:false}, layerVisible, true);
+        const allInk = render({...settings, inkOnlyLayers1And2:false}, layerVisible, true);
+        comparisons.push({layer, shape, matchesCrisp:scoped === crisp, matchesInk:scoped === allInk});
+      }
+    }
+    const cardDrawing = new SigilDrawing.SpellDrawing({design:'arcane'});
+    const cardData = window.eval('readCardData()');
+    const cardBefore = SpellCard.render(cardDrawing, {complete, visible}, cardData).toDataURL();
+    cardDrawing.settings.backgroundOrnaments = false;
+    const cardAfter = SpellCard.render(cardDrawing, {complete, visible}, cardData).toDataURL();
+    return {themes, comparisons, cardChanged:cardBefore !== cardAfter,
+      notationUnchanged:JSON.stringify(representation) === original};
+  });
+  for (const theme of result.themes) {
+    assert.equal(theme.changed, theme.expectedChange, `${theme.design}: toggle built-in details, not material`);
+    assert(theme.transparentUnchanged, `${theme.design}: transparent export must ignore background ornaments`);
+    assert(theme.cornersIndependent, `${theme.design}: corner ornaments remain independent`);
+    assert(theme.randomIndependent, `${theme.design}: randomized decorations remain independent`);
+  }
+  for (const comparison of result.comparisons) {
+    assert.equal(comparison.matchesCrisp, comparison.layer === 'fingerprint',
+      `${comparison.layer}/${comparison.shape}: restrict ink to Layers 1 and 2 by default`);
+    if (comparison.layer !== 'fingerprint') assert(comparison.matchesInk, 'Vertices and orbits retain full ink treatment');
+  }
+  assert(result.cardChanged, 'Spell cards must honor the background ornament toggle');
+  assert(result.notationUnchanged, 'Appearance toggles must not mutate notation');
+}
+
 async function pngDownload(page, button) {
   const downloadPromise = page.waitForEvent('download');
   await page.locator(button).click();
@@ -427,11 +500,21 @@ async function navigationTest(browser) {
 
     await page.locator('#inkworkSection > summary').click();
     assert.equal(await page.locator('#inkWobble').isDisabled(), true);
+    assert.equal(await page.locator('#inkOnlyLayers1And2').isDisabled(), true);
+    assert.equal(await page.locator('#inkOnlyLayers1And2').isChecked(), true);
     assert.equal(await page.locator('#inkWobble').inputValue(), '0.5');
     assert.equal(await page.locator('#inkWobbleValue').textContent(), '0.5 px');
     assert.equal(await page.evaluate(() => window.eval('drawing.settings.inkWobble')), 0.5);
     await page.locator('label[for="handDrawnInk"]').click();
     assert.equal(await page.locator('#inkWobble').isEnabled(), true);
+    await page.locator('label[for="inkOnlyLayers1And2"]').click();
+    assert.equal(await page.evaluate(() => window.eval('drawing.settings.inkOnlyLayers1And2')), false);
+    await page.locator('label[for="handDrawnInk"]').click();
+    assert.equal(await page.locator('#inkOnlyLayers1And2').isDisabled(), true);
+    assert.equal(await page.locator('#inkOnlyLayers1And2').isChecked(), false);
+    await page.locator('label[for="handDrawnInk"]').click();
+    await page.locator('label[for="backgroundOrnaments"]').click();
+    assert.equal(await page.evaluate(() => window.eval('drawing.settings.backgroundOrnaments')), false);
     await page.locator('#inkWobble').fill('1.4');
     assert.equal(await page.locator('#rerollDecorations').isDisabled(), true);
     await page.locator('label[for="decorations"]').click();
@@ -571,6 +654,8 @@ async function smokeTest(page) {
   await page.locator('#inkworkSection > summary').click();
   const cornerOrnaments = page.locator('#cornerOrnaments');
   assert.equal(await cornerOrnaments.isChecked(), true);
+  assert.equal(await page.locator('#backgroundOrnaments').isChecked(), true);
+  assert.equal(await page.locator('#inkOnlyLayers1And2').isChecked(), true);
   const originalTheme = await page.locator('#designTheme').inputValue();
   await selectTheme(page, 'trait-fire');
   const decorated = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
@@ -989,6 +1074,7 @@ async function main() {
       };
       await drawingContractTest(page);
       await themeTest(page);
+      await ornamentAndInkScopeTest(page);
 
       let expected;
       let matchingRenderEnvironment = true;

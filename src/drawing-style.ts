@@ -31,6 +31,7 @@ export interface DrawingSettings {
   identityPointStrokeWidth: number;
   identityMarkerOpacity: number;
   handDrawnInk: boolean;
+  inkOnlyLayers1And2: boolean;
   inkWobble: number;
   inkPressure: number;
   inkFeather: number;
@@ -45,6 +46,7 @@ export interface DrawingSettings {
   guides: boolean;
   decorations: boolean;
   cornerOrnaments: boolean;
+  backgroundOrnaments: boolean;
   decorationSeed: number;
   labels: boolean;
   themeColors: ThemePalette | null;

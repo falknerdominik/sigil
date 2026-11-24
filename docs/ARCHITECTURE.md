@@ -189,6 +189,13 @@ default), independent of randomized decorations. It controls the fixed corner
 motifs in the preview, normal PNG and spell-card exports, leaving the background
 and encoding intact. Transparent PNG excludes the backdrop and its ornaments
 regardless of these toggles.
+The Background ornaments toggle (on by default) separately controls built-in
+engravings, frames, celestial curves and botanical margins. Theme gradients,
+grain, grids and ambient textures remain; corner and randomized ornaments
+retain their own switches. The same settings apply to previews and spell cards.
+Only Layers 1 and 2, on by default, restricts feather-and-ink treatment to
+vertex connections and orbit strokes. All Layer 3 marker shapes stay crisp.
+Its checked state is retained while Feather & ink strokes is disabled.
 Ten base themes supply distinct materials and marginal motifs; the 31 trait
 presets still inherit their base theme. Texture and randomized ornament are
 deterministic. Tattoo uses fine charcoal ink, nodes without opaque background

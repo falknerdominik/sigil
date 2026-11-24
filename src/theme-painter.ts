@@ -6,6 +6,7 @@ type ThemeSettings = Pick<
   | 'design'
   | 'themeColors'
   | 'cornerOrnaments'
+  | 'backgroundOrnaments'
   | 'decorations'
   | 'decorationSeed'
 >;
@@ -62,15 +63,23 @@ export function paintThemeBackdrop(
   radius: number,
 ) {
   const design = baseTheme(settings);
-  if (design === 'constellations') paintSky(ctx, width, height, center);
-  else if (design === 'blueprint') paintBlueprint(ctx, width, height);
+  const ornaments = settings.backgroundOrnaments;
+  if (design === 'constellations')
+    paintSky(ctx, width, height, center, ornaments);
+  else if (design === 'blueprint')
+    paintBlueprint(ctx, width, height, ornaments);
   else if (design === 'obsidian')
-    paintObsidian(ctx, width, height, center, radius);
-  else if (design === 'herbarium') paintHerbarium(ctx, width, height, center);
-  else if (design === 'arcane') paintArcane(ctx, width, height, center, radius);
-  else if (design === 'divine') paintDivine(ctx, width, height, center, radius);
-  else if (design === 'occult') paintOccult(ctx, width, height, center, radius);
-  else if (design === 'primal') paintPrimal(ctx, width, height, center);
+    paintObsidian(ctx, width, height, center, radius, ornaments);
+  else if (design === 'herbarium')
+    paintHerbarium(ctx, width, height, center, ornaments);
+  else if (design === 'arcane')
+    paintArcane(ctx, width, height, center, radius, ornaments);
+  else if (design === 'divine')
+    paintDivine(ctx, width, height, center, radius, ornaments);
+  else if (design === 'occult')
+    paintOccult(ctx, width, height, center, radius, ornaments);
+  else if (design === 'primal')
+    paintPrimal(ctx, width, height, center, ornaments);
   else if (design === 'tattoo') paintSkin(ctx, width, height);
   else paintPaper(ctx, width, height, center, radius);
   paintThemeAccents(settings, ctx, width, height, center, radius);
@@ -147,6 +156,7 @@ function paintSky(
   w: number,
   h: number,
   center: Point,
+  ornaments: boolean,
 ) {
   const backdrop = ctx.createLinearGradient(0, 0, w, h);
   backdrop.addColorStop(0, '#06111f');
@@ -191,6 +201,10 @@ function paintSky(
     ctx.fillStyle = `rgba(225,237,255,${(0.12 + intensity * 0.46).toFixed(3)})`;
     ctx.fill();
   }
+  if (!ornaments) {
+    ctx.restore();
+    return;
+  }
   ctx.strokeStyle = 'rgba(182,204,233,.16)';
   ctx.lineWidth = 0.7;
   ctx.setLineDash([2, 7]);
@@ -202,7 +216,12 @@ function paintSky(
 }
 
 /** Crisp astronomer's blueprint grid; only the rendering changes. */
-function paintBlueprint(ctx: CanvasRenderingContext2D, w: number, h: number) {
+function paintBlueprint(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  ornaments: boolean,
+) {
   const bg = ctx.createLinearGradient(0, 0, w, h);
   bg.addColorStop(0, '#071c29');
   bg.addColorStop(0.6, '#0c2d3e');
@@ -235,6 +254,10 @@ function paintBlueprint(ctx: CanvasRenderingContext2D, w: number, h: number) {
     ctx.lineTo(w, y + 0.5);
   }
   ctx.stroke();
+  if (!ornaments) {
+    ctx.restore();
+    return;
+  }
   ctx.strokeStyle = 'rgba(164,224,235,.34)';
   ctx.lineWidth = 1;
   ctx.strokeRect(17.5, 17.5, w - 35, h - 35);
@@ -255,6 +278,7 @@ function paintObsidian(
   h: number,
   center: Point,
   radius: number,
+  ornaments: boolean,
 ) {
   const ground = ctx.createRadialGradient(
     center.x,
@@ -283,6 +307,10 @@ function paintObsidian(
   ctx.fillRect(0, 0, w, h);
   ctx.save();
   paintGrain(ctx, w, h, 'rgba(205,179,145,.08)', 404);
+  if (!ornaments) {
+    ctx.restore();
+    return;
+  }
   const random = seededRandom(404);
   ctx.strokeStyle = 'rgba(206,161,104,.22)';
   ctx.lineWidth = 0.8;
@@ -305,6 +333,7 @@ function paintHerbarium(
   w: number,
   h: number,
   center: Point,
+  ornaments: boolean,
 ) {
   const ground = ctx.createRadialGradient(
     center.x,
@@ -327,6 +356,7 @@ function paintHerbarium(
       ctx.arc(x, y, 0.65, 0, Math.PI * 2);
       ctx.fill();
     }
+  if (!ornaments) return;
   ctx.save();
   ctx.strokeStyle = 'rgba(91,117,77,.25)';
   ctx.lineWidth = 0.8;
@@ -371,6 +401,7 @@ function paintArcane(
   h: number,
   center: Point,
   radius: number,
+  ornaments: boolean,
 ) {
   const ground = ctx.createRadialGradient(
     center.x,
@@ -399,6 +430,10 @@ function paintArcane(
   ctx.fillStyle = glimmer;
   ctx.fillRect(0, 0, w, h);
   // Background engraving only: very low opacity and separate from binary edges.
+  if (!ornaments) {
+    ctx.restore();
+    return;
+  }
   ctx.strokeStyle = 'rgba(170,162,244,.075)';
   ctx.lineWidth = 0.8;
   for (const scale of [1.2, 1.36]) {
@@ -437,6 +472,7 @@ function paintDivine(
   h: number,
   center: Point,
   radius: number,
+  ornaments: boolean,
 ) {
   const ground = ctx.createRadialGradient(
     center.x,
@@ -464,6 +500,7 @@ function paintDivine(
   halo.addColorStop(1, 'rgba(238,192,107,0)');
   ctx.fillStyle = halo;
   ctx.fillRect(0, 0, w, h);
+  if (!ornaments) return;
   ctx.save();
   ctx.strokeStyle = 'rgba(170,118,50,.12)';
   ctx.lineWidth = 1;
@@ -498,6 +535,7 @@ function paintOccult(
   h: number,
   center: Point,
   radius: number,
+  ornaments: boolean,
 ) {
   const ground = ctx.createLinearGradient(0, 0, w, h);
   ground.addColorStop(0, '#100d1e');
@@ -516,6 +554,10 @@ function paintOccult(
     fog.addColorStop(1, 'rgba(204,121,183,0)');
     ctx.fillStyle = fog;
     ctx.fillRect(0, 0, w, h);
+  }
+  if (!ornaments) {
+    ctx.restore();
+    return;
   }
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'rgba(220,172,209,.35)';
@@ -546,6 +588,7 @@ function paintPrimal(
   w: number,
   h: number,
   center: Point,
+  ornaments: boolean,
 ) {
   const ground = ctx.createRadialGradient(
     center.x,
@@ -571,6 +614,10 @@ function paintPrimal(
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
+  }
+  if (!ornaments) {
+    ctx.restore();
+    return;
   }
   ctx.strokeStyle = 'rgba(158,208,156,.20)';
   ctx.lineWidth = 0.8;
@@ -743,6 +790,10 @@ function paintThemeAccents(
     ctx.restore();
   }
   // Additional faint design-specific accents positioned behind the sigil.
+  if (!settings.backgroundOrnaments && theme !== 'constellations') {
+    ctx.restore();
+    return;
+  }
   if (theme === 'constellations') {
     const aura = ctx.createRadialGradient(
       center.x * 0.84,

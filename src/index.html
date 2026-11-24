@@ -310,10 +310,10 @@
 </div>
 <button class="btn-import palette-reset" id="resetThemeColors" type="button">Reset theme colors</button>
 </div>
-<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes. Your spell encoding stays identical.</p><div class="hand-ink-settings">
+<details class="field-group inkwork-group layer-panel" id="inkworkSection"><summary class="layer-panel-summary"><span class="group-label">INK &amp; ORNAMENT</span></summary><div class="layer-panel-body inkwork-body"><p class="field-help">Optional hand-drawn inkwork and artistic flourishes.</p><div class="hand-ink-settings">
 <label class="toggle-row" for="handDrawnInk"><span>Feather &amp; ink strokes</span><input id="handDrawnInk" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
-<p class="field-help">Thick at the start, fine at the end. Wobble and feathering add natural ink edges.</p>
 <div class="hand-ink-parameters" id="handInkParameters">
+<label class="toggle-row" for="inkOnlyLayers1And2"><span>Only Layers 1 and 2</span><input checked="" id="inkOnlyLayers1And2" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <div class="field slider-field">
 <div class="field-label"><label for="inkWobble">Stroke irregularity</label><span class="slider-value" id="inkWobbleValue">0.5 px</span></div>
 <input id="inkWobble" max="3" min="0" step="0.1" type="range" value="0.5"/>
@@ -329,6 +329,7 @@
 </div>
 </div><div class="decorations-settings">
 <label class="toggle-row" for="cornerOrnaments"><span>Corner ornaments</span><input checked="" id="cornerOrnaments" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
+<label class="toggle-row" for="backgroundOrnaments"><span>Background ornaments</span><input checked="" id="backgroundOrnaments" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <label class="toggle-row" for="decorations"><span>Randomized decorations</span><input id="decorations" type="checkbox"/><span aria-hidden="true" class="switch"></span></label>
 <div class="decorations-action">
 <span class="field-help" id="decorationDescription">Extra star clusters, light trails, and asterisms.</span>

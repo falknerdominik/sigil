@@ -622,7 +622,12 @@ function updateCanvasOptions() {
     `${Math.round(Number(input('inkPressure').value) * 100)}%`;
   $('inkFeatherValue').textContent =
     `${Math.round(Number(input('inkFeather').value) * 100)}%`;
-  for (const id of ['inkWobble', 'inkPressure', 'inkFeather'])
+  for (const id of [
+    'inkOnlyLayers1And2',
+    'inkWobble',
+    'inkPressure',
+    'inkFeather',
+  ])
     input(id).disabled = !input('handDrawnInk').checked;
   $('handInkParameters').classList.toggle(
     'is-off',
@@ -651,14 +656,17 @@ function updateCanvasOptions() {
     DESIGN_DESCRIPTIONS[select('designTheme').value];
   $('decorationDescription').textContent =
     DECORATION_DESCRIPTIONS[select('designTheme').value];
+  $('decorationDescription').hidden = !$('decorationDescription').textContent;
   button('rerollDecorations').disabled = !input('decorations').checked;
   Object.assign(drawing.settings, {
     design: select('designTheme').value,
     decorations: input('decorations').checked,
     cornerOrnaments: input('cornerOrnaments').checked,
+    backgroundOrnaments: input('backgroundOrnaments').checked,
     themeColors: { ...colorPreferences[currentDesign] },
     decorationSeed: designPreferences[currentDesign].decorationSeed,
     handDrawnInk: input('handDrawnInk').checked,
+    inkOnlyLayers1And2: input('inkOnlyLayers1And2').checked,
     inkWobble: Number(input('inkWobble').value),
     inkPressure: Number(input('inkPressure').value),
     inkFeather: Number(input('inkFeather').value),
