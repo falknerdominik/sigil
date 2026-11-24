@@ -1,0 +1,6 @@
+node_modules/
+src/generated/
+data/
+standalone.html
+_site/
+docs/HOW-IT-IS-CALCULATED.html

@@ -1075,18 +1075,15 @@ var SigilCalculation = (() => {
   // src/spell-math.ts
   var necklaceCache = /* @__PURE__ */ new Map();
   function isPrime(number) {
-    if (number < 2)
-      return false;
+    if (number < 2) return false;
     for (let k = 2; k * k <= number; k++) {
-      if (number % k === 0)
-        return false;
+      if (number % k === 0) return false;
     }
     return true;
   }
   function nextPrime(number) {
     let candidate = Math.max(3, Math.ceil(number));
-    while (!isPrime(candidate))
-      candidate++;
+    while (!isPrime(candidate)) candidate++;
     return candidate;
   }
   function rotate(bits, amount) {
@@ -1098,8 +1095,7 @@ var SigilCalculation = (() => {
     let smallest = bits;
     for (let shift = 1; shift < bits.length; shift++) {
       const rotated = rotate(bits, shift);
-      if (rotated < smallest)
-        smallest = rotated;
+      if (rotated < smallest) smallest = rotated;
     }
     return smallest;
   }
@@ -1107,8 +1103,7 @@ var SigilCalculation = (() => {
     if (!Number.isInteger(n) || n < 3 || n > 37)
       throw new RangeError("Supported polygon sizes are 3..37 nodes.");
     const cached = necklaceCache.get(n);
-    if (cached)
-      return cached.slice();
+    if (cached) return cached.slice();
     const seen = /* @__PURE__ */ new Set();
     if (n <= 17) {
       for (let number = 1; number < 2 ** n - 1; number++) {
@@ -1136,9 +1131,7 @@ var SigilCalculation = (() => {
     if (n > 17) {
       const spread = (bits) => {
         const hits = [];
-        for (let i = 0; i < bits.length; i++)
-          if (bits[i] === "1")
-            hits.push(i);
+        for (let i = 0; i < bits.length; i++) if (bits[i] === "1") hits.push(i);
         let score = 0;
         for (let j = 0; j < hits.length; j++) {
           const gap = (hits[(j + 1) % hits.length] - hits[j] + bits.length) % bits.length;
@@ -1146,7 +1139,9 @@ var SigilCalculation = (() => {
         }
         return score;
       };
-      return uniqueNecklaces(n).sort((a, b) => spread(a) - spread(b) || a.localeCompare(b));
+      return uniqueNecklaces(n).sort(
+        (a, b) => spread(a) - spread(b) || a.localeCompare(b)
+      );
     }
     const preferredWeight = Math.max(3, Math.round(n * 0.36));
     return uniqueNecklaces(n).sort((a, b) => {
@@ -1197,22 +1192,29 @@ var SigilCalculation = (() => {
       if (attributes.length > limit)
         throw new Error("Not enough distinct chord families.");
       this.dictionary = preferredDictionary(this.vertexCount);
-      this.chordAttributes = this.prepareAttributes(attributes).map((attribute, index) => ({
-        ...attribute,
-        k: index + 1
-      }));
+      this.chordAttributes = this.prepareAttributes(attributes).map(
+        (attribute, index) => ({
+          ...attribute,
+          k: index + 1
+        })
+      );
       this.setOrbitAttributes(this.orbitAttributes);
     }
     prepareAttributes(attributes, offset = 0) {
       return attributes.map((attribute, index) => {
-        const meaningful = attribute.options.filter((option) => option.value !== "none");
+        const meaningful = attribute.options.filter(
+          (option) => option.value !== "none"
+        );
         if (meaningful.length > this.dictionary.length) {
           throw new Error("Too many values for attribute " + attribute.id);
         }
         const lookup = /* @__PURE__ */ new Map();
         meaningful.forEach((option, valueIndex) => {
           const orientation = ((offset + index) * 11 + valueIndex * 7 + 3) % this.vertexCount;
-          lookup.set(String(option.value), rotate(this.dictionary[valueIndex], orientation));
+          lookup.set(
+            String(option.value),
+            rotate(this.dictionary[valueIndex], orientation)
+          );
         });
         lookup.set("none", "0".repeat(this.vertexCount));
         return { ...attribute, lookup };
@@ -1223,7 +1225,10 @@ var SigilCalculation = (() => {
         throw new TypeError("Secondary attributes must be an array.");
       if (attributes.length > 8)
         throw new RangeError("At most eight orbit attributes are supported.");
-      this.orbitAttributes = this.prepareAttributes(attributes, this.chordAttributes.length).map((attribute, index) => ({
+      this.orbitAttributes = this.prepareAttributes(
+        attributes,
+        this.chordAttributes.length
+      ).map((attribute, index) => ({
         ...attribute,
         sectionUnits: 2 ** index
       }));
@@ -1235,15 +1240,16 @@ var SigilCalculation = (() => {
         throw new Error("Unknown " + attribute.id + " value: " + selected);
       const vertices = [];
       for (let i = 0; i < this.vertexCount; i++)
-        if (bits[i] === "1")
-          vertices.push(i);
+        if (bits[i] === "1") vertices.push(i);
       return vertices;
     }
     static encodeIdentity(spell) {
       const fields = [IDENTITY_TAG, String(spell.variant || "")];
       const bytes = new TextEncoder().encode(JSON.stringify(fields));
       if (bytes.length > MAX_IDENTITY_BYTES) {
-        throw new RangeError(`Spell ID is too long for a legible Layer 3 ring (${MAX_IDENTITY_BYTES} UTF-8 bytes maximum). Use a shorter ID.`);
+        throw new RangeError(
+          `Spell ID is too long for a legible Layer 3 ring (${MAX_IDENTITY_BYTES} UTF-8 bytes maximum). Use a shorter ID.`
+        );
       }
       return bytes.length.toString(2).padStart(16, "0") + Array.from(bytes, (byte) => byte.toString(2).padStart(8, "0")).join("");
     }
@@ -1254,23 +1260,29 @@ var SigilCalculation = (() => {
       const byteLength = Number.parseInt(bits.slice(0, 16), 2);
       if (bits.length !== 16 + byteLength * 8)
         throw new Error("Invalid identity length.");
-      const bytes = Uint8Array.from({ length: byteLength }, (_, i) => Number.parseInt(bits.slice(16 + i * 8, 24 + i * 8), 2));
-      const fields = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+      const bytes = Uint8Array.from(
+        { length: byteLength },
+        (_, i) => Number.parseInt(bits.slice(16 + i * 8, 24 + i * 8), 2)
+      );
+      const fields = JSON.parse(
+        new TextDecoder("utf-8", { fatal: true }).decode(bytes)
+      );
       if (!Array.isArray(fields) || fields.length !== 2 || fields[0] !== IDENTITY_TAG || fields.some((field) => typeof field !== "string")) {
         throw new Error("Invalid spell ID payload.");
       }
       return { variant: fields[1] };
     }
     static combineOrbits(vertexCount, attributes) {
-      if (!attributes.length)
-        return [];
+      if (!attributes.length) return [];
       const units = Array(vertexCount).fill(0);
       for (const attribute of attributes) {
         for (const vertexIndex of attribute.vertices)
           units[vertexIndex] += attribute.sectionUnits;
       }
       const anglePerUnit = 2 * Math.PI / (2 ** attributes.length - 1);
-      return units.flatMap((total, vertex) => total ? [{ vertex, units: total, sweep: total * anglePerUnit }] : []);
+      return units.flatMap(
+        (total, vertex) => total ? [{ vertex, units: total, sweep: total * anglePerUnit }] : []
+      );
     }
     static decodeOrbitSections(units, attributes) {
       const maximum = 2 ** attributes.length;
@@ -1285,7 +1297,10 @@ var SigilCalculation = (() => {
         label: attribute.label,
         color: attribute.color,
         k: attribute.k,
-        edges: this.selectedVertices(attribute, spell).map((i) => [i, (i + attribute.k) % this.vertexCount])
+        edges: this.selectedVertices(attribute, spell).map((i) => [
+          i,
+          (i + attribute.k) % this.vertexCount
+        ])
       }));
       const orbitAttributes = this.orbitAttributes.map((attribute) => ({
         sectionUnits: attribute.sectionUnits,
@@ -1300,34 +1315,33 @@ var SigilCalculation = (() => {
     }
     represent(spell, rankComplexity = true) {
       const complete = this.encode(spell);
-      const visible = _SpellCalculation.applyRankComplexity(complete, spell, rankComplexity);
+      const visible = _SpellCalculation.applyRankComplexity(
+        complete,
+        spell,
+        rankComplexity
+      );
       return { complete, visible };
     }
     static rankRevealFraction(rankValue) {
       const value = String(rankValue ?? "").toLowerCase().trim();
-      if (value === "cantrip")
-        return 0.2;
+      if (value === "cantrip") return 0.2;
       const rank = Number.parseInt(value, 10);
-      if (!Number.isFinite(rank))
-        return 1;
-      if (rank <= 3)
-        return 0.4;
-      if (rank <= 6)
-        return 0.6;
-      if (rank <= 8)
-        return 0.8;
+      if (!Number.isFinite(rank)) return 1;
+      if (rank <= 3) return 0.4;
+      if (rank <= 6) return 0.6;
+      if (rank <= 8) return 0.8;
       return 1;
     }
     static detailDrawOrder(encoded) {
-      const edgePools = encoded.chords.flatMap((group, chordIndex) => group.id === "rank" ? [] : [group.edges.map((edge) => ({ kind: "edge", chordIndex, edge }))]);
+      const edgePools = encoded.chords.flatMap(
+        (group, chordIndex) => group.id === "rank" ? [] : [group.edges.map((edge) => ({ kind: "edge", chordIndex, edge }))]
+      );
       const orbitPool = encoded.orbits.slice().sort((a, b) => a.vertex - b.vertex).map((orbit) => ({ kind: "orbit", orbit }));
       const pools = edgePools.length ? [edgePools[0], orbitPool, ...edgePools.slice(1)] : [orbitPool];
       const order = [];
       const largest = Math.max(0, ...pools.map((pool) => pool.length));
       for (let depth = 0; depth < largest; depth++) {
-        for (const pool of pools)
-          if (pool[depth])
-            order.push(pool[depth]);
+        for (const pool of pools) if (pool[depth]) order.push(pool[depth]);
       }
       return order;
     }
@@ -1336,16 +1350,20 @@ var SigilCalculation = (() => {
       const rankEdges = rankIndex >= 0 ? encoded.chords[rankIndex].edges.length : 0;
       const detail = _SpellCalculation.detailDrawOrder(encoded);
       const revealFraction = enabled ? _SpellCalculation.rankRevealFraction(spell.rank) : 1;
-      const optionalCount = Math.min(detail.length, Math.ceil(detail.length * revealFraction));
-      const chords = encoded.chords.map((group) => ({ ...group, edges: [] }));
+      const optionalCount = Math.min(
+        detail.length,
+        Math.ceil(detail.length * revealFraction)
+      );
+      const chords = encoded.chords.map((group) => ({
+        ...group,
+        edges: []
+      }));
       if (rankIndex >= 0)
         chords[rankIndex].edges = encoded.chords[rankIndex].edges.slice();
       const orbits = [];
       for (const item of detail.slice(0, optionalCount)) {
-        if (item.kind === "edge")
-          chords[item.chordIndex].edges.push(item.edge);
-        else
-          orbits.push(item.orbit);
+        if (item.kind === "edge") chords[item.chordIndex].edges.push(item.edge);
+        else orbits.push(item.orbit);
       }
       return {
         chords,
@@ -1431,42 +1449,219 @@ var SigilDrawing = (() => {
     labels: false,
     themeColors: null
   };
-  var TRAIT_THEMES = /* @__PURE__ */ (() => Object.fromEntries([
-    ["none", "plain", "#e7e3d9", "#5c6664", "#8a8574", "Neutral parchment."],
-    ["Healing", "divine", "#eff3df", "#307b68", "#7bb59c", "Soft green and restorative light."],
-    ["Mental", "occult", "#231f3c", "#c0abf1", "#edd8ff", "Violet ink and quiet ripples."],
-    ["Illusion", "occult", "#281b3b", "#ec9af9", "#b4e6f8", "Prismatic veils."],
-    ["Fire", "obsidian", "#341c18", "#ffaf6a", "#ffe2ab", "Ember ink on charred stone."],
-    ["Cold", "blueprint", "#102b44", "#a7eaff", "#d4f8ff", "Frost and blue glass."],
-    ["Electricity", "arcane", "#1e2440", "#fce67a", "#b0e5ff", "Charged gold traces."],
-    ["Acid", "primal", "#192e19", "#b4ec65", "#dffa9c", "Caustic green ink."],
-    ["Poison", "herbarium", "#e1e9d5", "#506e40", "#82a85c", "Toxic botanical stains."],
-    ["Water", "primal", "#0e3543", "#78dfdd", "#b8f6ee", "Sea-blue currents."],
-    ["Air", "constellations", "#173449", "#b8e5eb", "#effcfa", "Pale air on deep blue."],
-    ["Earth", "obsidian", "#30291e", "#dcb987", "#f3dcab", "Stone and ochre."],
-    ["Plant", "herbarium", "#e2efdb", "#478056", "#8cb98b", "Living leaf green."],
-    ["Wood", "herbarium", "#efe6d8", "#906d43", "#baa078", "Bark and warm sap."],
-    ["Metal", "obsidian", "#202a33", "#bbd2e0", "#f0f9ff", "Steel engraving."],
-    ["Light", "divine", "#fff5db", "#b8872f", "#d3ac6b", "Golden light."],
-    ["Darkness", "occult", "#171326", "#aa96cf", "#d4c6ec", "Velvet shadows."],
-    ["Polymorph", "arcane", "#20283a", "#7ee5bc", "#dbb8f9", "Changing teal and violet."],
-    ["Teleportation", "arcane", "#142a43", "#8bbdff", "#d5e6ff", "Blue spatial folds."],
-    ["Summon", "occult", "#30263b", "#f1c596", "#f4e2ce", "Ritual amber."],
-    ["Force", "blueprint", "#12243e", "#82b6ff", "#deeaff", "Dense cobalt lines."],
-    ["Spirit", "divine", "#f4eaf4", "#9569a4", "#c3a0ca", "Soft spirit lilac."],
-    ["Vitality", "divine", "#fbebdf", "#bc6775", "#e4a3a2", "Warm rose-gold energy."],
-    ["Void", "occult", "#141b25", "#98a9b5", "#d4dae0", "Ash and emptiness."],
-    ["Incapacitation", "obsidian", "#302020", "#e38e7a", "#ffbbab", "Dark crimson restraint."],
-    ["Emotion", "occult", "#392034", "#ffa1b8", "#ffcfda", "Warm rose and magenta."],
-    ["Detection", "blueprint", "#15343b", "#9cd5a5", "#d7fae0", "Fine green tracery."],
-    ["Shadow", "occult", "#1d1e2d", "#8c9ebd", "#c2c8de", "Dusky blue-grey."],
-    ["Sonic", "blueprint", "#1f2045", "#c4b2ff", "#e6dcff", "Violet resonance."],
-    ["Attack", "obsidian", "#301b1e", "#f08b86", "#ffccac", "Hot red etching."],
-    ["Other", "plain", "#eae5db", "#745d76", "#aa92a8", "Mauve parchment."]
-  ].map(([name, base, background, lines, vertices, description], i) => [name, { base, background, lines, vertices, description, seed: 1101 + i * 137 }])))();
+  var TRAIT_THEMES = /* @__PURE__ */ (() => Object.fromEntries(
+    [
+      ["none", "plain", "#e7e3d9", "#5c6664", "#8a8574", "Neutral parchment."],
+      [
+        "Healing",
+        "divine",
+        "#eff3df",
+        "#307b68",
+        "#7bb59c",
+        "Soft green and restorative light."
+      ],
+      [
+        "Mental",
+        "occult",
+        "#231f3c",
+        "#c0abf1",
+        "#edd8ff",
+        "Violet ink and quiet ripples."
+      ],
+      [
+        "Illusion",
+        "occult",
+        "#281b3b",
+        "#ec9af9",
+        "#b4e6f8",
+        "Prismatic veils."
+      ],
+      [
+        "Fire",
+        "obsidian",
+        "#341c18",
+        "#ffaf6a",
+        "#ffe2ab",
+        "Ember ink on charred stone."
+      ],
+      [
+        "Cold",
+        "blueprint",
+        "#102b44",
+        "#a7eaff",
+        "#d4f8ff",
+        "Frost and blue glass."
+      ],
+      [
+        "Electricity",
+        "arcane",
+        "#1e2440",
+        "#fce67a",
+        "#b0e5ff",
+        "Charged gold traces."
+      ],
+      ["Acid", "primal", "#192e19", "#b4ec65", "#dffa9c", "Caustic green ink."],
+      [
+        "Poison",
+        "herbarium",
+        "#e1e9d5",
+        "#506e40",
+        "#82a85c",
+        "Toxic botanical stains."
+      ],
+      [
+        "Water",
+        "primal",
+        "#0e3543",
+        "#78dfdd",
+        "#b8f6ee",
+        "Sea-blue currents."
+      ],
+      [
+        "Air",
+        "constellations",
+        "#173449",
+        "#b8e5eb",
+        "#effcfa",
+        "Pale air on deep blue."
+      ],
+      [
+        "Earth",
+        "obsidian",
+        "#30291e",
+        "#dcb987",
+        "#f3dcab",
+        "Stone and ochre."
+      ],
+      [
+        "Plant",
+        "herbarium",
+        "#e2efdb",
+        "#478056",
+        "#8cb98b",
+        "Living leaf green."
+      ],
+      [
+        "Wood",
+        "herbarium",
+        "#efe6d8",
+        "#906d43",
+        "#baa078",
+        "Bark and warm sap."
+      ],
+      [
+        "Metal",
+        "obsidian",
+        "#202a33",
+        "#bbd2e0",
+        "#f0f9ff",
+        "Steel engraving."
+      ],
+      ["Light", "divine", "#fff5db", "#b8872f", "#d3ac6b", "Golden light."],
+      [
+        "Darkness",
+        "occult",
+        "#171326",
+        "#aa96cf",
+        "#d4c6ec",
+        "Velvet shadows."
+      ],
+      [
+        "Polymorph",
+        "arcane",
+        "#20283a",
+        "#7ee5bc",
+        "#dbb8f9",
+        "Changing teal and violet."
+      ],
+      [
+        "Teleportation",
+        "arcane",
+        "#142a43",
+        "#8bbdff",
+        "#d5e6ff",
+        "Blue spatial folds."
+      ],
+      ["Summon", "occult", "#30263b", "#f1c596", "#f4e2ce", "Ritual amber."],
+      [
+        "Force",
+        "blueprint",
+        "#12243e",
+        "#82b6ff",
+        "#deeaff",
+        "Dense cobalt lines."
+      ],
+      [
+        "Spirit",
+        "divine",
+        "#f4eaf4",
+        "#9569a4",
+        "#c3a0ca",
+        "Soft spirit lilac."
+      ],
+      [
+        "Vitality",
+        "divine",
+        "#fbebdf",
+        "#bc6775",
+        "#e4a3a2",
+        "Warm rose-gold energy."
+      ],
+      ["Void", "occult", "#141b25", "#98a9b5", "#d4dae0", "Ash and emptiness."],
+      [
+        "Incapacitation",
+        "obsidian",
+        "#302020",
+        "#e38e7a",
+        "#ffbbab",
+        "Dark crimson restraint."
+      ],
+      [
+        "Emotion",
+        "occult",
+        "#392034",
+        "#ffa1b8",
+        "#ffcfda",
+        "Warm rose and magenta."
+      ],
+      [
+        "Detection",
+        "blueprint",
+        "#15343b",
+        "#9cd5a5",
+        "#d7fae0",
+        "Fine green tracery."
+      ],
+      ["Shadow", "occult", "#1d1e2d", "#8c9ebd", "#c2c8de", "Dusky blue-grey."],
+      [
+        "Sonic",
+        "blueprint",
+        "#1f2045",
+        "#c4b2ff",
+        "#e6dcff",
+        "Violet resonance."
+      ],
+      [
+        "Attack",
+        "obsidian",
+        "#301b1e",
+        "#f08b86",
+        "#ffccac",
+        "Hot red etching."
+      ],
+      ["Other", "plain", "#eae5db", "#745d76", "#aa92a8", "Mauve parchment."]
+    ].map(([name, base, background, lines, vertices, description], i) => [
+      name,
+      { base, background, lines, vertices, description, seed: 1101 + i * 137 }
+    ])
+  ))();
   var THEME_PALETTES = /* @__PURE__ */ (() => ({
     plain: { background: "#f4eedf", lines: "#735a40", vertices: "#857052" },
-    constellations: { background: "#0e1c35", lines: "#e4f4ff", vertices: "#f4faff" },
+    constellations: {
+      background: "#0e1c35",
+      lines: "#e4f4ff",
+      vertices: "#f4faff"
+    },
     blueprint: { background: "#0c2d3e", lines: "#a6e5f3", vertices: "#a5e6ef" },
     obsidian: { background: "#1e2023", lines: "#e3c48a", vertices: "#f1ca89" },
     herbarium: { background: "#eaf0e2", lines: "#566c53", vertices: "#4c6652" },
@@ -1475,7 +1670,16 @@ var SigilDrawing = (() => {
     occult: { background: "#2a172d", lines: "#e4a9d1", vertices: "#e6b1d5" },
     primal: { background: "#12372e", lines: "#b3e4ae", vertices: "#b3dba5" },
     tattoo: { background: "#d8ad92", lines: "#252426", vertices: "#252426" },
-    ...Object.fromEntries(Object.entries(TRAIT_THEMES).map(([name, preset]) => [`trait-${name.toLowerCase()}`, { background: preset.background, lines: preset.lines, vertices: preset.vertices }]))
+    ...Object.fromEntries(
+      Object.entries(TRAIT_THEMES).map(([name, preset]) => [
+        `trait-${name.toLowerCase()}`,
+        {
+          background: preset.background,
+          lines: preset.lines,
+          vertices: preset.vertices
+        }
+      ])
+    )
   }))();
 
   // src/spell-drawing.ts
@@ -1491,7 +1695,9 @@ var SigilDrawing = (() => {
     baseTheme() {
       const theme = this.settings.design;
       if (theme.startsWith("trait-")) {
-        const name = Object.keys(_SpellDrawing.traitThemes).find((key) => "trait-" + key.toLowerCase() === theme);
+        const name = Object.keys(_SpellDrawing.traitThemes).find(
+          (key) => "trait-" + key.toLowerCase() === theme
+        );
         return name ? _SpellDrawing.traitThemes[name].base : "plain";
       }
       return theme;
@@ -1509,11 +1715,10 @@ var SigilDrawing = (() => {
     }
     /** Recolor the theme's painted background without removing its texture,
      *  stars, ornaments, vignette or fine detail. No pixels change at defaults. */
-    recolorBackground(ctx, w, h) {
+    recolorBackground(ctx) {
       const base = _SpellDrawing.themePalettes[this.baseTheme()] || _SpellDrawing.themePalettes.plain;
       const chosen = this.themeColor("background");
-      if (chosen.toLowerCase() === base.background.toLowerCase())
-        return;
+      if (chosen.toLowerCase() === base.background.toLowerCase()) return;
       const original = _SpellDrawing.rgb(base.background), target = _SpellDrawing.rgb(chosen);
       const offsets = target.map((v, i) => v - original[i]);
       const image = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -1527,7 +1732,9 @@ var SigilDrawing = (() => {
     paintNotation(ctx, width, height, representation, options = {}) {
       const { complete: encoded, visible } = representation;
       if (!encoded || !visible || !Number.isInteger(encoded.vertexCount) || encoded.vertexCount < 1 || encoded.chords.length !== visible.chords.length) {
-        throw new Error("Complete and visible notation must have matching chord groups.");
+        throw new Error(
+          "Complete and visible notation must have matching chord groups."
+        );
       }
       for (let i = 0; i < encoded.chords.length; i++) {
         const full = encoded.chords[i], shown = visible.chords[i];
@@ -1561,8 +1768,7 @@ var SigilDrawing = (() => {
       }
       if (this.settings.guides)
         this.paintGuides(ctx, center, radius, points, basePath);
-      if (!options.transparentBackground)
-        this.recolorBackground(ctx, width, height);
+      if (!options.transparentBackground) this.recolorBackground(ctx);
       const palettes = {
         blueprint: ["#a6e5f3", "#6bc2dd", "#d3f3f4", "#88bcd5", "#97d6ca"],
         obsidian: ["#e3c48a", "#c69269", "#f0d7a4", "#a88962", "#dcb277"],
@@ -1578,13 +1784,20 @@ var SigilDrawing = (() => {
       const hasCustomInk = customInk.toLowerCase() !== defaultInk?.toLowerCase();
       visible.chords.forEach((group) => {
         ctx.save();
-        ctx.strokeStyle = String(hasCustomInk ? customInk : family ? family[(group.k - 1) % family.length] : customInk);
+        ctx.strokeStyle = String(
+          hasCustomInk ? customInk : family ? family[(group.k - 1) % family.length] : customInk
+        );
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.lineWidth = design === "tattoo" ? Math.max(0.9, Math.min(1.6, radius / 150)) : design === "constellations" ? Math.max(0.85, Math.min(1.3, radius / 175)) : design === "blueprint" ? 1.5 : design === "obsidian" ? 1.7 : design === "herbarium" ? 1.75 : design === "arcane" ? 1.65 : design === "divine" ? 1.7 : design === "occult" ? 1.45 : design === "primal" ? 1.65 : Math.max(1.8, Math.min(2.7, radius / 92));
         ctx.globalAlpha = design === "tattoo" ? 0.92 : design === "constellations" ? 0.55 : design === "blueprint" ? 0.73 : design === "obsidian" ? 0.71 : design === "herbarium" ? 0.67 : design === "arcane" ? 0.73 : design === "divine" ? 0.74 : design === "occult" ? 0.61 : design === "primal" ? 0.7 : 0.8;
         ctx.globalAlpha *= this.drawingChords.length > 8 ? 0.77 : 1;
-        ctx.globalAlpha *= _SpellDrawing.styleNumber(this.settings.chordOpacity, 1, 0, 1);
+        ctx.globalAlpha *= _SpellDrawing.styleNumber(
+          this.settings.chordOpacity,
+          1,
+          0,
+          1
+        );
         if (design === "constellations") {
           ctx.shadowColor = "rgba(167,208,252,.44)";
           ctx.shadowBlur = 4;
@@ -1604,10 +1817,19 @@ var SigilDrawing = (() => {
           ctx.shadowColor = "rgba(116,205,156,.23)";
           ctx.shadowBlur = 3;
         }
-        if (hasCustomInk)
-          ctx.shadowColor = customInk;
+        if (hasCustomInk) ctx.shadowColor = customInk;
         for (const [a, b] of group.edges) {
-          this.strokeInk(ctx, (path) => this.traceConnection(path, points[a], points[b], center, a + group.k), group.k * 71 + a * 13 + b);
+          this.strokeInk(
+            ctx,
+            (path) => this.traceConnection(
+              path,
+              points[a],
+              points[b],
+              center,
+              a + group.k
+            ),
+            group.k * 71 + a * 13 + b
+          );
         }
         ctx.restore();
       });
@@ -1619,29 +1841,23 @@ var SigilDrawing = (() => {
      * Used by both the editor and the full-bleed spell-card export. */
     paintThemeBackdrop(ctx, width, height, center, radius) {
       const design = this.baseTheme();
-      if (design === "constellations")
-        this.paintSky(ctx, width, height, center, radius);
-      else if (design === "blueprint")
-        this.paintBlueprint(ctx, width, height, center, radius);
+      if (design === "constellations") this.paintSky(ctx, width, height, center);
+      else if (design === "blueprint") this.paintBlueprint(ctx, width, height);
       else if (design === "obsidian")
         this.paintObsidian(ctx, width, height, center, radius);
       else if (design === "herbarium")
-        this.paintHerbarium(ctx, width, height, center, radius);
+        this.paintHerbarium(ctx, width, height, center);
       else if (design === "arcane")
         this.paintArcane(ctx, width, height, center, radius);
       else if (design === "divine")
         this.paintDivine(ctx, width, height, center, radius);
       else if (design === "occult")
         this.paintOccult(ctx, width, height, center, radius);
-      else if (design === "primal")
-        this.paintPrimal(ctx, width, height, center, radius);
-      else if (design === "tattoo")
-        this.paintSkin(ctx, width, height);
-      else
-        this.paintPaper(ctx, width, height, center, radius);
+      else if (design === "primal") this.paintPrimal(ctx, width, height, center);
+      else if (design === "tattoo") this.paintSkin(ctx, width, height);
+      else this.paintPaper(ctx, width, height, center, radius);
       this.paintThemeAccents(ctx, width, height, center, radius);
-      if (this.settings.decorations)
-        this.paintDecorations(ctx, width, height);
+      if (this.settings.decorations) this.paintDecorations(ctx, width, height);
     }
     /**
      * Base curves from section 2.3.3 of the guide. Values are local coordinates;
@@ -1664,7 +1880,10 @@ var SigilDrawing = (() => {
         case "semicircle":
           return { x: -Math.cos(Math.PI * t), y: -Math.sin(Math.PI * t) };
         case "quarter":
-          return { x: Math.sin(Math.PI * t / 2), y: Math.cos(Math.PI * t / 2) };
+          return {
+            x: Math.sin(Math.PI * t / 2),
+            y: Math.cos(Math.PI * t / 2)
+          };
         case "quadratic":
           return { x, y: 1.35 * amplitude * (1 - x * x) };
         case "cubic":
@@ -1681,7 +1900,10 @@ var SigilDrawing = (() => {
         throw new RangeError("A function base requires at least two vertices.");
       }
       const steps = 600;
-      const guidePath = Array.from({ length: steps + 1 }, (_, i) => _SpellDrawing.functionBasePoint(base, i / steps, bend));
+      const guidePath = Array.from(
+        { length: steps + 1 },
+        (_, i) => _SpellDrawing.functionBasePoint(base, i / steps, bend)
+      );
       const cumulative = [0];
       for (let i = 1; i < guidePath.length; i++) {
         const p = guidePath[i - 1], q = guidePath[i];
@@ -1692,10 +1914,12 @@ var SigilDrawing = (() => {
       let segment = 1;
       for (let i = 0; i < count; i++) {
         const distance = total * i / (count - 1);
-        while (segment < steps && cumulative[segment] < distance)
-          segment++;
+        while (segment < steps && cumulative[segment] < distance) segment++;
         const start = cumulative[segment - 1], end = cumulative[segment];
-        const portion = Math.max(0, Math.min(1, (distance - start) / Math.max(1e-12, end - start)));
+        const portion = Math.max(
+          0,
+          Math.min(1, (distance - start) / Math.max(1e-12, end - start))
+        );
         const p = guidePath[segment - 1], q = guidePath[segment];
         vertices.push({
           x: p.x + (q.x - p.x) * portion,
@@ -1715,7 +1939,9 @@ var SigilDrawing = (() => {
       const path = closed ? [...corners, corners[0]] : corners;
       const cumulative = [0];
       for (let i = 1; i < path.length; i++)
-        cumulative.push(cumulative[i - 1] + Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y));
+        cumulative.push(
+          cumulative[i - 1] + Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y)
+        );
       const total = cumulative[cumulative.length - 1];
       const vertices = [];
       let segment = 1;
@@ -1737,8 +1963,14 @@ var SigilDrawing = (() => {
      */
     getGeometry(width, height, identityBits = "", chords = []) {
       const center = { x: width / 2, y: height / 2 };
-      const degrees = Math.max(-180, Math.min(180, Number(this.settings.rotation) || 0));
-      const stretch = Math.max(0.6, Math.min(1.35, Number(this.settings.stretch) || 1));
+      const degrees = Math.max(
+        -180,
+        Math.min(180, Number(this.settings.rotation) || 0)
+      );
+      const stretch = Math.max(
+        0.6,
+        Math.min(1.35, Number(this.settings.stretch) || 1)
+      );
       const mirror = this.settings.mirror ? -1 : 1;
       const angle = degrees * Math.PI / 180;
       const cos = Math.cos(angle), sin = Math.sin(angle);
@@ -1765,13 +1997,29 @@ var SigilDrawing = (() => {
           vertices = corners;
         }
       } else {
-        const smooth = _SpellDrawing.sampleFunctionBase(base, n, this.settings.baseBend);
-        const sampled = faceted ? _SpellDrawing.samplePolyline(_SpellDrawing.sampleFunctionBase(base, sides + 1, this.settings.baseBend).vertices, n, false) : smooth;
+        const smooth = _SpellDrawing.sampleFunctionBase(
+          base,
+          n,
+          this.settings.baseBend
+        );
+        const sampled = faceted ? _SpellDrawing.samplePolyline(
+          _SpellDrawing.sampleFunctionBase(
+            base,
+            sides + 1,
+            this.settings.baseBend
+          ).vertices,
+          n,
+          false
+        ) : smooth;
         const path = sampled.guidePath;
         const xs = path.map((p) => p.x), ys = path.map((p) => p.y);
         const midX = (Math.min(...xs) + Math.max(...xs)) / 2;
         const midY = (Math.min(...ys) + Math.max(...ys)) / 2;
-        const halfExtent = Math.max((Math.max(...xs) - Math.min(...xs)) / 2, (Math.max(...ys) - Math.min(...ys)) / 2, 1e-3);
+        const halfExtent = Math.max(
+          (Math.max(...xs) - Math.min(...xs)) / 2,
+          (Math.max(...ys) - Math.min(...ys)) / 2,
+          1e-3
+        );
         const normalize = (p) => ({
           x: (p.x - midX) / halfExtent,
           y: (p.y - midY) / halfExtent
@@ -1780,7 +2028,10 @@ var SigilDrawing = (() => {
         basePath = path.map(normalize);
       }
       const referenceRadius = Math.min(width, height) * 0.39;
-      const slotsPerRing = Math.max(48, Math.floor(2 * Math.PI * referenceRadius * 1.21 / 7));
+      const slotsPerRing = Math.max(
+        48,
+        Math.floor(2 * Math.PI * referenceRadius * 1.21 / 7)
+      );
       const ringCount = Math.ceil(identityBits.length / slotsPerRing);
       const relativeGap = 0.044;
       const relativeTick = 0.033;
@@ -1789,7 +2040,12 @@ var SigilDrawing = (() => {
       let offset = 0;
       for (let ring = 0; ring < ringCount; ring++) {
         const count = Math.min(slotsPerRing, identityBits.length - offset);
-        const track = this.identityTrack(basePath || vertices, count, 0.21 + ring * relativeGap, base === "polygon");
+        const track = this.identityTrack(
+          basePath || vertices,
+          count,
+          0.21 + ring * relativeGap,
+          base === "polygon"
+        );
         for (let i = 0; i < count; i++) {
           const { position, normal } = track[i];
           const from = transform(position);
@@ -1818,22 +2074,40 @@ var SigilDrawing = (() => {
             for (const a of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
               const distance = positive(anticlockwise ? start - a : a - start);
               if (distance <= sweep + 1e-10) {
-                allBounds.push({ x: x + r * Math.cos(a), y: y + r * Math.sin(a) });
+                allBounds.push({
+                  x: x + r * Math.cos(a),
+                  y: y + r * Math.sin(a)
+                });
               }
             }
           }
         };
         for (const group of chords) {
           for (const [a, b] of group.edges) {
-            this.traceConnection(recorder, projectedVertices[a], projectedVertices[b], { x: 0, y: 0 }, a + group.k);
+            this.traceConnection(
+              recorder,
+              projectedVertices[a],
+              projectedVertices[b],
+              { x: 0, y: 0 },
+              a + group.k
+            );
           }
         }
       }
       const maxX = Math.max(1e-3, ...allBounds.map((p) => Math.abs(p.x)));
       const maxY = Math.max(1e-3, ...allBounds.map((p) => Math.abs(p.y)));
       const padding = Math.max(27, Math.min(42, Math.min(width, height) * 0.058));
-      const scale = Math.max(0.01, Math.min(Math.max(1, width / 2 - padding) / maxX, Math.max(1, height / 2 - padding) / maxY));
-      const place = (p) => ({ x: center.x + p.x * scale, y: center.y + p.y * scale });
+      const scale = Math.max(
+        0.01,
+        Math.min(
+          Math.max(1, width / 2 - padding) / maxX,
+          Math.max(1, height / 2 - padding) / maxY
+        )
+      );
+      const place = (p) => ({
+        x: center.x + p.x * scale,
+        y: center.y + p.y * scale
+      });
       return {
         center,
         radius: scale,
@@ -1844,7 +2118,11 @@ var SigilDrawing = (() => {
           from: place(tick.from),
           to: place(tick.to)
         })),
-        identityLayout: { slotsPerRing, ringCount, bitCount: identityBits.length }
+        identityLayout: {
+          slotsPerRing,
+          ringCount,
+          bitCount: identityBits.length
+        }
       };
     }
     /**
@@ -1865,12 +2143,14 @@ var SigilDrawing = (() => {
         const length = Math.hypot(x - last.x, y - last.y);
         const steps = Math.max(1, Math.ceil(length / step));
         for (let i = 1; i <= steps; i++)
-          points.push({ x: last.x + (x - last.x) * i / steps, y: last.y + (y - last.y) * i / steps });
+          points.push({
+            x: last.x + (x - last.x) * i / steps,
+            y: last.y + (y - last.y) * i / steps
+          });
       };
       const record = {
         moveTo(x, y) {
-          if (points.length)
-            paths.push(points);
+          if (points.length) paths.push(points);
           points = [{ x, y }];
         },
         lineTo(x, y) {
@@ -1891,8 +2171,7 @@ var SigilDrawing = (() => {
         }
       };
       trace(record);
-      if (points.length)
-        paths.push(points);
+      if (points.length) paths.push(points);
       return paths;
     }
     /**
@@ -1915,22 +2194,22 @@ var SigilDrawing = (() => {
      * position within the FULL stroke, not a new 0-100% taper per dash.
      */
     static splitInkDashes(points, pattern = [], offset = 0) {
-      const total = points.slice(1).reduce((length, point, i) => length + Math.hypot(point.x - points[i].x, point.y - points[i].y), 0);
-      if (!total || points.length < 2)
-        return [];
+      const total = points.slice(1).reduce(
+        (length, point, i) => length + Math.hypot(point.x - points[i].x, point.y - points[i].y),
+        0
+      );
+      if (!total || points.length < 2) return [];
       let travelled = 0;
       const measured = points.map((p, i) => {
         if (i)
           travelled += Math.hypot(p.x - points[i - 1].x, p.y - points[i - 1].y);
         return { x: p.x, y: p.y, t: travelled / total };
       });
-      if (!pattern?.length)
-        return [measured];
+      if (!pattern?.length) return [measured];
       const raw = [...pattern].map((v) => Math.max(0, Number(v) || 0));
       const dashes = raw.length % 2 ? [...raw, ...raw] : raw;
       const period = dashes.reduce((sum, v) => sum + v, 0);
-      if (period < 1e-8)
-        return [measured];
+      if (period < 1e-8) return [measured];
       let phase = (offset % period + period) % period;
       let dashIndex = 0;
       while (dashIndex < dashes.length - 1 && phase >= dashes[dashIndex]) {
@@ -1940,26 +2219,22 @@ var SigilDrawing = (() => {
       let active = [];
       const pieces = [];
       const flush = () => {
-        if (active.length > 1)
-          pieces.push(active);
+        if (active.length > 1) pieces.push(active);
         active = [];
       };
       const advance = () => {
-        if (dashIndex % 2 === 0)
-          flush();
+        if (dashIndex % 2 === 0) flush();
         do {
           dashIndex = (dashIndex + 1) % dashes.length;
         } while (dashes[dashIndex] <= 1e-8);
         remaining = dashes[dashIndex];
       };
-      if (remaining <= 1e-8)
-        advance();
+      if (remaining <= 1e-8) advance();
       let distance = 0;
       for (let i = 1; i < measured.length; i++) {
         const a = measured[i - 1], b = measured[i];
         const length = Math.hypot(b.x - a.x, b.y - a.y);
-        if (!length)
-          continue;
+        if (!length) continue;
         let travelledOnSegment = 0;
         while (travelledOnSegment < length - 1e-8) {
           const step = Math.min(length - travelledOnSegment, remaining);
@@ -1969,14 +2244,12 @@ var SigilDrawing = (() => {
             t: (distance + d) / total
           });
           if (dashIndex % 2 === 0 && step > 1e-8) {
-            if (!active.length)
-              active.push(pointAt(travelledOnSegment));
+            if (!active.length) active.push(pointAt(travelledOnSegment));
             active.push(pointAt(travelledOnSegment + step));
           }
           travelledOnSegment += step;
           remaining -= step;
-          if (remaining <= 1e-8)
-            advance();
+          if (remaining <= 1e-8) advance();
         }
         distance += length;
       }
@@ -1985,8 +2258,7 @@ var SigilDrawing = (() => {
     }
     /** Draw a continuously tapered, round-ended ink shape in a single fill. */
     static fillInkRibbon(ctx, points, baseWidth, pressure, widthFactor = 1) {
-      if (points.length < 2)
-        return;
+      if (points.length < 2) return;
       const sides = points.map((point, i) => {
         const previous = points[Math.max(0, i - 1)];
         const next = points[Math.min(points.length - 1, i + 1)];
@@ -2023,8 +2295,18 @@ var SigilDrawing = (() => {
         return;
       }
       const wobble = _SpellDrawing.styleNumber(this.settings.inkWobble, 1, 0, 3);
-      const pressure = _SpellDrawing.styleNumber(this.settings.inkPressure, 0.35, 0, 2.5);
-      const feather = _SpellDrawing.styleNumber(this.settings.inkFeather, 0.3, 0, 1);
+      const pressure = _SpellDrawing.styleNumber(
+        this.settings.inkPressure,
+        0.35,
+        0,
+        2.5
+      );
+      const feather = _SpellDrawing.styleNumber(
+        this.settings.inkFeather,
+        0.3,
+        0,
+        1
+      );
       const flattened = _SpellDrawing.flattenInkPath(trace);
       ctx.save();
       const originalWidth = ctx.lineWidth;
@@ -2033,8 +2315,7 @@ var SigilDrawing = (() => {
       ctx.fillStyle = ctx.strokeStyle;
       for (let pathIndex = 0; pathIndex < flattened.length; pathIndex++) {
         const input = flattened[pathIndex];
-        if (input.length < 2)
-          continue;
+        if (input.length < 2) continue;
         const s = seed * 0.617 + pathIndex * 17.31;
         const points = input.map((p, i) => {
           const before = input[Math.max(0, i - 1)], after = input[Math.min(input.length - 1, i + 1)];
@@ -2042,16 +2323,29 @@ var SigilDrawing = (() => {
           const d = Math.hypot(dx, dy) || 1;
           const taper = Math.min(1, i / 2, (input.length - 1 - i) / 2);
           const drift = Math.sin(i * 0.72 + s) * 0.63 + Math.cos(i * 0.26 + s * 1.8) * 0.37;
-          return { x: p.x - dy / d * wobble * taper * drift, y: p.y + dx / d * wobble * taper * drift };
+          return {
+            x: p.x - dy / d * wobble * taper * drift,
+            y: p.y + dx / d * wobble * taper * drift
+          };
         });
-        const pieces = _SpellDrawing.splitInkDashes(points, pattern, ctx.lineDashOffset || 0);
+        const pieces = _SpellDrawing.splitInkDashes(
+          points,
+          pattern,
+          ctx.lineDashOffset || 0
+        );
         if (feather > 0) {
           ctx.save();
           ctx.globalAlpha = originalOpacity * (0.12 + 0.12 * feather);
           ctx.shadowColor = String(ctx.strokeStyle);
           ctx.shadowBlur = 1 + feather * 3.8;
           for (const piece of pieces) {
-            _SpellDrawing.fillInkRibbon(ctx, piece, originalWidth, pressure, 1 + feather * 1.6);
+            _SpellDrawing.fillInkRibbon(
+              ctx,
+              piece,
+              originalWidth,
+              pressure,
+              1 + feather * 1.6
+            );
           }
           ctx.restore();
         }
@@ -2071,8 +2365,7 @@ var SigilDrawing = (() => {
     }
     /** Draw one orbit at every active vertex. */
     paintOrbits(ctx, center, points, radius, orbits) {
-      if (!orbits.length)
-        return;
+      if (!orbits.length) return;
       const design = this.baseTheme();
       const customInk = this.themeColor("lines");
       const defaultInk = _SpellDrawing.themePalettes[design]?.lines;
@@ -2092,10 +2385,20 @@ var SigilDrawing = (() => {
       ctx.strokeStyle = ink;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.lineWidth = Math.max(0.5, Math.min(3, Number(this.settings.orbitWidth) || 1.25));
-      ctx.setLineDash(_SpellDrawing.linePattern(this.settings.orbitLineStyle, ctx.lineWidth));
+      ctx.lineWidth = Math.max(
+        0.5,
+        Math.min(3, Number(this.settings.orbitWidth) || 1.25)
+      );
+      ctx.setLineDash(
+        _SpellDrawing.linePattern(this.settings.orbitLineStyle, ctx.lineWidth)
+      );
       ctx.globalAlpha = design === "tattoo" ? 0.92 : design === "constellations" ? 0.56 : design === "blueprint" ? 0.83 : 0.76;
-      ctx.globalAlpha *= _SpellDrawing.styleNumber(this.settings.orbitOpacity, 1, 0, 1);
+      ctx.globalAlpha *= _SpellDrawing.styleNumber(
+        this.settings.orbitOpacity,
+        1,
+        0,
+        1
+      );
       if (design === "constellations") {
         ctx.shadowColor = hasCustomInk ? customInk : "rgba(167,208,252,.34)";
         ctx.shadowBlur = 3;
@@ -2107,13 +2410,21 @@ var SigilDrawing = (() => {
         const point = points[orbit.vertex];
         const outwardAngle = Math.atan2(point.y - center.y, point.x - center.x);
         const start = outwardAngle - Math.PI / 2;
-        this.strokeInk(ctx, (path) => path.arc(point.x, point.y, orbitRadius, start, start + orbit.sweep), 2e3 + orbit.vertex * 17 + orbit.units);
+        this.strokeInk(
+          ctx,
+          (path) => path.arc(point.x, point.y, orbitRadius, start, start + orbit.sweep),
+          2e3 + orbit.vertex * 17 + orbit.units
+        );
       }
       ctx.restore();
     }
     identityTrack(guidePath, count, offset = 0.21, closed = false) {
       const sampleCount = count === 1 ? closed ? 3 : 2 : count === 2 && closed ? 4 : count;
-      const sampled = _SpellDrawing.samplePolyline(guidePath, sampleCount, closed).vertices;
+      const sampled = _SpellDrawing.samplePolyline(
+        guidePath,
+        sampleCount,
+        closed
+      ).vertices;
       const indices = count === 1 ? [0] : count === 2 && closed ? [0, 2] : sampled.map((_, i) => i);
       return indices.map((index) => {
         const position = sampled[index];
@@ -2123,11 +2434,20 @@ var SigilDrawing = (() => {
         const after = closed || index < sampled.length - 1 ? next : position;
         const tangent = { x: after.x - before.x, y: after.y - before.y };
         const tangentLength = Math.hypot(tangent.x, tangent.y) || 1;
-        const left = { x: -tangent.y / tangentLength, y: tangent.x / tangentLength };
+        const left = {
+          x: -tangent.y / tangentLength,
+          y: tangent.x / tangentLength
+        };
         const right = { x: -left.x, y: -left.y };
         const outward = (position.x + left.x * offset) ** 2 + (position.y + left.y * offset) ** 2 >= (position.x + right.x * offset) ** 2 + (position.y + right.y * offset) ** 2 ? left : right;
-        const trackPosition = { x: position.x + outward.x * offset, y: position.y + outward.y * offset };
-        return { position: trackPosition, normal: { x: -outward.x, y: -outward.y } };
+        const trackPosition = {
+          x: position.x + outward.x * offset,
+          y: position.y + outward.y * offset
+        };
+        return {
+          position: trackPosition,
+          normal: { x: -outward.x, y: -outward.y }
+        };
       });
     }
     /**
@@ -2135,8 +2455,7 @@ var SigilDrawing = (() => {
      * getGeometry(), so their orientation, squeeze, and base-curve offset match the main sigil.
      */
     static identityMarkerShape(style, index) {
-      if (style === "mixed")
-        return ["line", "dot", "square"][index % 3];
+      if (style === "mixed") return ["line", "dot", "square"][index % 3];
       return ["line", "dot", "square"].includes(style) ? style : "line";
     }
     /** Limit editable Canvas dimensions to the same ranges as the form. */
@@ -2154,11 +2473,36 @@ var SigilDrawing = (() => {
       const ink = this.themeColor("lines");
       const defaultInk = _SpellDrawing.themePalettes[design]?.lines;
       const overridden = ink.toLowerCase() !== defaultInk?.toLowerCase();
-      const lineWidth = _SpellDrawing.styleNumber(this.settings.identityTickWidth, DRAWING_DEFAULTS.identityTickWidth, 0.5, 3);
-      const dotSize = _SpellDrawing.styleNumber(this.settings.identityDotSize, 3.5, 1, 10);
-      const squareSize = _SpellDrawing.styleNumber(this.settings.identitySquareSize, 4.5, 1, 12);
-      const pointStrokeWidth = _SpellDrawing.styleNumber(this.settings.identityPointStrokeWidth, 1, 0.5, 3);
-      const markerOpacity = _SpellDrawing.styleNumber(this.settings.identityMarkerOpacity, DRAWING_DEFAULTS.identityMarkerOpacity, 0, 1);
+      const lineWidth = _SpellDrawing.styleNumber(
+        this.settings.identityTickWidth,
+        DRAWING_DEFAULTS.identityTickWidth,
+        0.5,
+        3
+      );
+      const dotSize = _SpellDrawing.styleNumber(
+        this.settings.identityDotSize,
+        3.5,
+        1,
+        10
+      );
+      const squareSize = _SpellDrawing.styleNumber(
+        this.settings.identitySquareSize,
+        4.5,
+        1,
+        12
+      );
+      const pointStrokeWidth = _SpellDrawing.styleNumber(
+        this.settings.identityPointStrokeWidth,
+        1,
+        0.5,
+        3
+      );
+      const markerOpacity = _SpellDrawing.styleNumber(
+        this.settings.identityMarkerOpacity,
+        DRAWING_DEFAULTS.identityMarkerOpacity,
+        0,
+        1
+      );
       const shapeSetting = this.settings.identityTickShape || "line";
       const inks = {
         plain: "rgba(102,88,67,.62)",
@@ -2180,14 +2524,20 @@ var SigilDrawing = (() => {
       ctx.lineWidth = lineWidth;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.setLineDash(_SpellDrawing.linePattern(this.settings.identityTickLineStyle, lineWidth));
+      ctx.setLineDash(
+        _SpellDrawing.linePattern(this.settings.identityTickLineStyle, lineWidth)
+      );
       for (const { from, to, index = 0 } of ticks) {
         const shape = _SpellDrawing.identityMarkerShape(shapeSetting, index);
         if (shape === "line") {
-          this.strokeInk(ctx, (path) => {
-            path.moveTo(from.x, from.y);
-            path.lineTo(to.x, to.y);
-          }, 4e3 + index * 7);
+          this.strokeInk(
+            ctx,
+            (path) => {
+              path.moveTo(from.x, from.y);
+              path.lineTo(to.x, to.y);
+            },
+            4e3 + index * 7
+          );
           continue;
         }
         if (this.settings.handDrawnInk) {
@@ -2202,19 +2552,27 @@ var SigilDrawing = (() => {
         if (shape === "dot") {
           ctx.beginPath();
           ctx.arc(midX, midY, dotSize / 2, 0, 2 * Math.PI);
-          if (this.settings.identityDotFill === "outline")
-            ctx.stroke();
-          else
-            ctx.fill();
+          if (this.settings.identityDotFill === "outline") ctx.stroke();
+          else ctx.fill();
         } else {
           const orientation = this.settings.identitySquareOrientation;
           const angle = orientation === "upright" ? 0 : orientation === "diamond" ? Math.PI / 4 : Math.atan2(to.y - from.y, to.x - from.x) + Math.PI / 4;
           ctx.translate(midX, midY);
           ctx.rotate(angle);
           if (this.settings.identitySquareFill === "outline") {
-            ctx.strokeRect(-squareSize / 2, -squareSize / 2, squareSize, squareSize);
+            ctx.strokeRect(
+              -squareSize / 2,
+              -squareSize / 2,
+              squareSize,
+              squareSize
+            );
           } else {
-            ctx.fillRect(-squareSize / 2, -squareSize / 2, squareSize, squareSize);
+            ctx.fillRect(
+              -squareSize / 2,
+              -squareSize / 2,
+              squareSize,
+              squareSize
+            );
           }
         }
         ctx.restore();
@@ -2244,7 +2602,14 @@ var SigilDrawing = (() => {
       this.paintGrain(ctx, w, h, "rgba(87,48,37,.10)", 1010);
     }
     paintPaper(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(center.x, center.y, radius * 0.12, center.x, center.y, Math.max(w, h) * 0.82);
+      const ground = ctx.createRadialGradient(
+        center.x,
+        center.y,
+        radius * 0.12,
+        center.x,
+        center.y,
+        Math.max(w, h) * 0.82
+      );
       ground.addColorStop(0, "#fcf9ef");
       ground.addColorStop(1, "#f0e9d8");
       ctx.fillStyle = ground;
@@ -2262,14 +2627,21 @@ var SigilDrawing = (() => {
       ctx.restore();
     }
     /** Stable star field: no random flicker when a control changes. */
-    paintSky(ctx, w, h, center, radius) {
+    paintSky(ctx, w, h, center) {
       const backdrop = ctx.createLinearGradient(0, 0, w, h);
       backdrop.addColorStop(0, "#06111f");
       backdrop.addColorStop(0.54, "#0e1c35");
       backdrop.addColorStop(1, "#050b18");
       ctx.fillStyle = backdrop;
       ctx.fillRect(0, 0, w, h);
-      const haze = ctx.createRadialGradient(center.x * 0.92, center.y * 0.87, 18, center.x * 0.92, center.y * 0.87, Math.max(w, h) * 0.67);
+      const haze = ctx.createRadialGradient(
+        center.x * 0.92,
+        center.y * 0.87,
+        18,
+        center.x * 0.92,
+        center.y * 0.87,
+        Math.max(w, h) * 0.67
+      );
       haze.addColorStop(0, "rgba(62,102,169,.32)");
       haze.addColorStop(1, "rgba(10,25,56,0)");
       ctx.fillStyle = haze;
@@ -2305,7 +2677,7 @@ var SigilDrawing = (() => {
       ctx.restore();
     }
     /** Crisp astronomer's blueprint grid; only the rendering changes. */
-    paintBlueprint(ctx, w, h, center, radius) {
+    paintBlueprint(ctx, w, h) {
       const bg = ctx.createLinearGradient(0, 0, w, h);
       bg.addColorStop(0, "#071c29");
       bg.addColorStop(0.6, "#0c2d3e");
@@ -2352,13 +2724,27 @@ var SigilDrawing = (() => {
     }
     /** A warm black stone tablet with delicate, restrained copper engraving. */
     paintObsidian(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(center.x, center.y, radius * 0.12, center.x, center.y, Math.max(w, h) * 0.81);
+      const ground = ctx.createRadialGradient(
+        center.x,
+        center.y,
+        radius * 0.12,
+        center.x,
+        center.y,
+        Math.max(w, h) * 0.81
+      );
       ground.addColorStop(0, "#2b2928");
       ground.addColorStop(0.53, "#1e2023");
       ground.addColorStop(1, "#101519");
       ctx.fillStyle = ground;
       ctx.fillRect(0, 0, w, h);
-      const light = ctx.createRadialGradient(w * 0.54, h * 0.37, 1, w * 0.54, h * 0.37, w * 0.6);
+      const light = ctx.createRadialGradient(
+        w * 0.54,
+        h * 0.37,
+        1,
+        w * 0.54,
+        h * 0.37,
+        w * 0.6
+      );
       light.addColorStop(0, "rgba(176,123,66,.10)");
       light.addColorStop(1, "rgba(176,123,66,0)");
       ctx.fillStyle = light;
@@ -2381,8 +2767,15 @@ var SigilDrawing = (() => {
       ctx.restore();
     }
     /** Botanical journal paper with quiet green ink and an archival frame. */
-    paintHerbarium(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(center.x, center.y, 12, center.x, center.y, Math.max(w, h) * 0.84);
+    paintHerbarium(ctx, w, h, center) {
+      const ground = ctx.createRadialGradient(
+        center.x,
+        center.y,
+        12,
+        center.x,
+        center.y,
+        Math.max(w, h) * 0.84
+      );
       ground.addColorStop(0, "#f6f5e8");
       ground.addColorStop(0.7, "#eaf0e2");
       ground.addColorStop(1, "#dae4d2");
@@ -2418,7 +2811,15 @@ var SigilDrawing = (() => {
         ctx.stroke();
         for (let i = 0; i < 7; i++) {
           ctx.beginPath();
-          ctx.ellipse(x + side * (i % 2 ? 10 : -10), h * (0.22 + i * 0.085), 12, 3.5, side * 0.65, 0, Math.PI * 2);
+          ctx.ellipse(
+            x + side * (i % 2 ? 10 : -10),
+            h * (0.22 + i * 0.085),
+            12,
+            3.5,
+            side * 0.65,
+            0,
+            Math.PI * 2
+          );
           ctx.stroke();
         }
       }
@@ -2426,14 +2827,28 @@ var SigilDrawing = (() => {
     }
     /** Arcane: a night-blue aether field with faint magic-circle engravings. */
     paintArcane(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(center.x, center.y * 0.88, 10, center.x, center.y, Math.max(w, h) * 0.81);
+      const ground = ctx.createRadialGradient(
+        center.x,
+        center.y * 0.88,
+        10,
+        center.x,
+        center.y,
+        Math.max(w, h) * 0.81
+      );
       ground.addColorStop(0, "#273865");
       ground.addColorStop(0.57, "#171c43");
       ground.addColorStop(1, "#090e29");
       ctx.fillStyle = ground;
       ctx.fillRect(0, 0, w, h);
       ctx.save();
-      const glimmer = ctx.createRadialGradient(center.x * 0.77, center.y * 0.78, 5, center.x * 0.77, center.y * 0.78, radius * 1.9);
+      const glimmer = ctx.createRadialGradient(
+        center.x * 0.77,
+        center.y * 0.78,
+        5,
+        center.x * 0.77,
+        center.y * 0.78,
+        radius * 1.9
+      );
       glimmer.addColorStop(0, "rgba(110,88,217,.17)");
       glimmer.addColorStop(1, "rgba(80,64,210,0)");
       ctx.fillStyle = glimmer;
@@ -2448,8 +2863,14 @@ var SigilDrawing = (() => {
       for (let i = 0; i < 32; i++) {
         const a = 2 * Math.PI * i / 32, inner = radius * 1.225, outer = radius * 1.25;
         ctx.beginPath();
-        ctx.moveTo(center.x + inner * Math.cos(a), center.y + inner * Math.sin(a));
-        ctx.lineTo(center.x + outer * Math.cos(a), center.y + outer * Math.sin(a));
+        ctx.moveTo(
+          center.x + inner * Math.cos(a),
+          center.y + inner * Math.sin(a)
+        );
+        ctx.lineTo(
+          center.x + outer * Math.cos(a),
+          center.y + outer * Math.sin(a)
+        );
         ctx.stroke();
       }
       ctx.strokeStyle = "rgba(168,157,243,.19)";
@@ -2468,13 +2889,27 @@ var SigilDrawing = (() => {
     }
     /** Divine: sunlit ivory, a distant gold halo and a restrained sacred border. */
     paintDivine(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(center.x, center.y, radius * 0.1, center.x, center.y, Math.max(w, h) * 0.83);
+      const ground = ctx.createRadialGradient(
+        center.x,
+        center.y,
+        radius * 0.1,
+        center.x,
+        center.y,
+        Math.max(w, h) * 0.83
+      );
       ground.addColorStop(0, "#fffdf4");
       ground.addColorStop(0.58, "#f9f1dc");
       ground.addColorStop(1, "#e8d6b0");
       ctx.fillStyle = ground;
       ctx.fillRect(0, 0, w, h);
-      const halo = ctx.createRadialGradient(center.x, center.y, radius * 0.66, center.x, center.y, radius * 1.54);
+      const halo = ctx.createRadialGradient(
+        center.x,
+        center.y,
+        radius * 0.66,
+        center.x,
+        center.y,
+        radius * 1.54
+      );
       halo.addColorStop(0, "rgba(244,197,106,0)");
       halo.addColorStop(0.72, "rgba(238,192,107,.12)");
       halo.addColorStop(1, "rgba(238,192,107,0)");
@@ -2493,8 +2928,14 @@ var SigilDrawing = (() => {
         const angle = i * Math.PI / 24;
         const inner = radius * 1.3, outer = radius * (i % 4 === 0 ? 1.65 : 1.48);
         ctx.beginPath();
-        ctx.moveTo(center.x + inner * Math.cos(angle), center.y + inner * Math.sin(angle));
-        ctx.lineTo(center.x + outer * Math.cos(angle), center.y + outer * Math.sin(angle));
+        ctx.moveTo(
+          center.x + inner * Math.cos(angle),
+          center.y + inner * Math.sin(angle)
+        );
+        ctx.lineTo(
+          center.x + outer * Math.cos(angle),
+          center.y + outer * Math.sin(angle)
+        );
         ctx.stroke();
       }
       ctx.restore();
@@ -2525,14 +2966,30 @@ var SigilDrawing = (() => {
         const x = w * (0.35 + i * 0.05), y = h * 0.065, r = Math.min(w, h) * 9e-3;
         ctx.beginPath();
         ctx.arc(x, y, r, -Math.PI / 2, Math.PI / 2);
-        ctx.ellipse(x, y, Math.max(0.1, r * Math.abs(i - 3) / 3), r, 0, Math.PI / 2, -Math.PI / 2, i < 3);
+        ctx.ellipse(
+          x,
+          y,
+          Math.max(0.1, r * Math.abs(i - 3) / 3),
+          r,
+          0,
+          Math.PI / 2,
+          -Math.PI / 2,
+          i < 3
+        );
         ctx.stroke();
       }
       ctx.restore();
     }
     /** Primal: shaded woodland green with gentle luminous lichen and leaf flecks. */
-    paintPrimal(ctx, w, h, center, radius) {
-      const ground = ctx.createRadialGradient(center.x, center.y * 0.86, 16, center.x, center.y, Math.max(w, h) * 0.84);
+    paintPrimal(ctx, w, h, center) {
+      const ground = ctx.createRadialGradient(
+        center.x,
+        center.y * 0.86,
+        16,
+        center.x,
+        center.y,
+        Math.max(w, h) * 0.84
+      );
       ground.addColorStop(0, "#254b3d");
       ground.addColorStop(0.62, "#12372e");
       ground.addColorStop(1, "#091c19");
@@ -2556,15 +3013,32 @@ var SigilDrawing = (() => {
         const x = side === 1 ? w * 0.06 : w * 0.94;
         ctx.beginPath();
         ctx.moveTo(x, h * 0.12);
-        ctx.bezierCurveTo(x + side * w * 0.08, h * 0.35, x - side * w * 0.025, h * 0.65, x, h * 0.9);
+        ctx.bezierCurveTo(
+          x + side * w * 0.08,
+          h * 0.35,
+          x - side * w * 0.025,
+          h * 0.65,
+          x,
+          h * 0.9
+        );
         ctx.stroke();
         for (let i = 0; i < 14; i++) {
           const y = h * (0.17 + i * 0.047), length = Math.sin(i / 14 * Math.PI) * w * 0.06;
           ctx.beginPath();
           ctx.moveTo(x, y);
-          ctx.quadraticCurveTo(x + side * length * 0.5, y - length * 0.7, x + side * length, y - length * 0.4);
+          ctx.quadraticCurveTo(
+            x + side * length * 0.5,
+            y - length * 0.7,
+            x + side * length,
+            y - length * 0.4
+          );
           ctx.moveTo(x, y);
-          ctx.quadraticCurveTo(x - side * length * 0.4, y - length * 0.5, x - side * length * 0.6, y - length * 0.3);
+          ctx.quadraticCurveTo(
+            x - side * length * 0.4,
+            y - length * 0.5,
+            x - side * length * 0.6,
+            y - length * 0.3
+          );
           ctx.stroke();
         }
       }
@@ -2600,18 +3074,36 @@ var SigilDrawing = (() => {
         primal: ["rgba(156,216,165,.32)", "rgba(84,153,113,.12)"],
         tattoo: ["rgba(37,36,38,.28)", "rgba(37,36,38,.06)"]
       };
-      const palette = palettes[theme] || ["rgba(120,100,70,.22)", "rgba(130,110,80,.08)"];
+      const palette = palettes[theme] || [
+        "rgba(120,100,70,.22)",
+        "rgba(130,110,80,.08)"
+      ];
       const unit = Math.min(w / 900, h / 650, 1.5), pad = 42 * unit;
       ctx.save();
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      const vignette = ctx.createRadialGradient(center.x, center.y, radius * 0.56, center.x, center.y, Math.max(w, h) * 0.76);
+      const vignette = ctx.createRadialGradient(
+        center.x,
+        center.y,
+        radius * 0.56,
+        center.x,
+        center.y,
+        Math.max(w, h) * 0.76
+      );
       vignette.addColorStop(0, "rgba(0,0,0,0)");
-      vignette.addColorStop(1, ["plain", "herbarium", "divine", "tattoo"].includes(theme) ? "rgba(129,105,69,.050)" : "rgba(0,0,0,.20)");
+      vignette.addColorStop(
+        1,
+        ["plain", "herbarium", "divine", "tattoo"].includes(theme) ? "rgba(129,105,69,.050)" : "rgba(0,0,0,.20)"
+      );
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, w, h);
       ctx.lineWidth = Math.max(0.6, unit * 0.9);
-      const corners = this.settings.cornerOrnaments ? [[pad, pad], [w - pad, pad], [pad, h - pad], [w - pad, h - pad]] : [];
+      const corners = this.settings.cornerOrnaments ? [
+        [pad, pad],
+        [w - pad, pad],
+        [pad, h - pad],
+        [w - pad, h - pad]
+      ] : [];
       for (const [cx, cy] of corners) {
         const r = 9 * unit;
         ctx.save();
@@ -2669,7 +3161,14 @@ var SigilDrawing = (() => {
         ctx.restore();
       }
       if (theme === "constellations") {
-        const aura = ctx.createRadialGradient(center.x * 0.84, center.y * 0.74, 5, center.x * 0.84, center.y * 0.74, radius * 1.43);
+        const aura = ctx.createRadialGradient(
+          center.x * 0.84,
+          center.y * 0.74,
+          5,
+          center.x * 0.84,
+          center.y * 0.74,
+          radius * 1.43
+        );
         aura.addColorStop(0, "rgba(67,137,216,.08)");
         aura.addColorStop(0.65, "rgba(32,91,173,.045)");
         aura.addColorStop(1, "rgba(32,91,173,0)");
@@ -2701,7 +3200,14 @@ var SigilDrawing = (() => {
         for (const x of [27, w - 27]) {
           ctx.beginPath();
           ctx.moveTo(x, h * 0.25);
-          ctx.bezierCurveTo(x + (x < w / 2 ? 7 : -7), h * 0.42, x - (x < w / 2 ? 7 : -7), h * 0.6, x, h * 0.78);
+          ctx.bezierCurveTo(
+            x + (x < w / 2 ? 7 : -7),
+            h * 0.42,
+            x - (x < w / 2 ? 7 : -7),
+            h * 0.6,
+            x,
+            h * 0.78
+          );
           ctx.stroke();
         }
       } else if (theme === "occult") {
@@ -2767,7 +3273,13 @@ var SigilDrawing = (() => {
           ctx.stroke();
           for (let i = 0; i < 12; i++) {
             ctx.beginPath();
-            ctx.arc(x + (random() - 0.5) * r * 4, y + (random() - 0.5) * r * 4, 0.55 * unit, 0, pi2);
+            ctx.arc(
+              x + (random() - 0.5) * r * 4,
+              y + (random() - 0.5) * r * 4,
+              0.55 * unit,
+              0,
+              pi2
+            );
             ctx.fill();
           }
         }
@@ -2797,7 +3309,14 @@ var SigilDrawing = (() => {
           ctx.globalAlpha = 1;
           ctx.beginPath();
           ctx.moveTo(x, y);
-          ctx.bezierCurveTo(x + direction * 26 * unit, y - 18 * unit, x + direction * 36 * unit, y + 10 * unit, x + direction * 11 * unit, y + 18 * unit);
+          ctx.bezierCurveTo(
+            x + direction * 26 * unit,
+            y - 18 * unit,
+            x + direction * 36 * unit,
+            y + 10 * unit,
+            x + direction * 11 * unit,
+            y + 18 * unit
+          );
           ctx.stroke();
         }
       } else if (design === "constellations") {
@@ -2813,10 +3332,19 @@ var SigilDrawing = (() => {
           ctx.strokeStyle = "#b0cdeb";
           ctx.lineWidth = 0.65 * unit;
           ctx.beginPath();
-          stars.forEach((p, j) => j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+          stars.forEach(
+            (p, j) => j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)
+          );
           ctx.stroke();
           for (const p of stars) {
-            const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 12 * unit);
+            const halo = ctx.createRadialGradient(
+              p.x,
+              p.y,
+              0,
+              p.x,
+              p.y,
+              12 * unit
+            );
             halo.addColorStop(0, "rgba(198,227,255,.30)");
             halo.addColorStop(1, "rgba(198,227,255,0)");
             ctx.globalAlpha = 1;
@@ -2893,7 +3421,13 @@ var SigilDrawing = (() => {
           ctx.strokeStyle = "rgba(213,166,110,.30)";
           ctx.lineWidth = 0.8 * unit;
           ctx.beginPath();
-          ctx.arc(x, y, (6 + random() * 6) * unit, random() * pi2, random() * pi2 + Math.PI * 1.15);
+          ctx.arc(
+            x,
+            y,
+            (6 + random() * 6) * unit,
+            random() * pi2,
+            random() * pi2 + Math.PI * 1.15
+          );
           ctx.stroke();
         }
       } else if (design === "arcane") {
@@ -2974,7 +3508,14 @@ var SigilDrawing = (() => {
           ctx.strokeStyle = "rgba(224,143,206,.42)";
           ctx.beginPath();
           ctx.moveTo(x, y);
-          ctx.bezierCurveTo(x + 15 * d * unit, y - 8 * unit, x + 30 * d * unit, y + 9 * unit, x + 16 * d * unit, y + 18 * unit);
+          ctx.bezierCurveTo(
+            x + 15 * d * unit,
+            y - 8 * unit,
+            x + 30 * d * unit,
+            y + 9 * unit,
+            x + 16 * d * unit,
+            y + 18 * unit
+          );
           ctx.stroke();
         }
       } else if (design === "primal") {
@@ -2986,7 +3527,14 @@ var SigilDrawing = (() => {
           ctx.strokeStyle = "rgba(160,217,165,.57)";
           ctx.beginPath();
           ctx.moveTo(x, y0);
-          ctx.bezierCurveTo(x + 23 * dir * unit, y0 + h * 0.14, x - 18 * dir * unit, y1 - h * 0.14, x, y1);
+          ctx.bezierCurveTo(
+            x + 23 * dir * unit,
+            y0 + h * 0.14,
+            x - 18 * dir * unit,
+            y1 - h * 0.14,
+            x,
+            y1
+          );
           ctx.stroke();
           for (let j = 0; j < 9; j++) {
             const t = (j + 0.6) / 10;
@@ -2997,7 +3545,15 @@ var SigilDrawing = (() => {
             ctx.strokeStyle = "rgba(153,213,153,.48)";
             ctx.lineWidth = 0.7 * unit;
             ctx.beginPath();
-            ctx.ellipse(xx + sign * len * 0.55, yy, len * 0.64, len * 0.23, sign * 0.55, 0, pi2);
+            ctx.ellipse(
+              xx + sign * len * 0.55,
+              yy,
+              len * 0.64,
+              len * 0.23,
+              sign * 0.55,
+              0,
+              pi2
+            );
             ctx.fill();
             ctx.stroke();
           }
@@ -3023,7 +3579,14 @@ var SigilDrawing = (() => {
           ctx.lineWidth = 1.05 * unit;
           ctx.beginPath();
           ctx.moveTo(x, y0);
-          ctx.bezierCurveTo(x + bend, y0 + h * 0.2, x - bend * 0.5, y1 - h * 0.18, x, y1);
+          ctx.bezierCurveTo(
+            x + bend,
+            y0 + h * 0.2,
+            x - bend * 0.5,
+            y1 - h * 0.18,
+            x,
+            y1
+          );
           ctx.stroke();
           for (let j = 0; j < 7; j++) {
             const t = (j + 0.5) / 8;
@@ -3035,7 +3598,15 @@ var SigilDrawing = (() => {
             ctx.strokeStyle = "rgba(69,110,72,.44)";
             ctx.globalAlpha = 0.72;
             ctx.beginPath();
-            ctx.ellipse(xx + dir * len * 0.55, yy - 3 * unit, len * 0.7, 2.8 * unit, dir * (0.38 + random() * 0.35), 0, pi2);
+            ctx.ellipse(
+              xx + dir * len * 0.55,
+              yy - 3 * unit,
+              len * 0.7,
+              2.8 * unit,
+              dir * (0.38 + random() * 0.35),
+              0,
+              pi2
+            );
             ctx.fill();
             ctx.stroke();
           }
@@ -3050,7 +3621,15 @@ var SigilDrawing = (() => {
           for (let j = 0; j < 5; j++) {
             const a = pi2 * j / 5;
             ctx.beginPath();
-            ctx.ellipse(cx + Math.cos(a) * r, cy + Math.sin(a) * r, r * 0.68, r * 0.42, a, 0, pi2);
+            ctx.ellipse(
+              cx + Math.cos(a) * r,
+              cy + Math.sin(a) * r,
+              r * 0.68,
+              r * 0.42,
+              a,
+              0,
+              pi2
+            );
             ctx.fill();
             ctx.stroke();
           }
@@ -3085,7 +3664,9 @@ var SigilDrawing = (() => {
         ctx.strokeStyle = design === "constellations" ? "rgba(185,214,247,.23)" : design === "blueprint" ? "rgba(129,209,223,.3)" : design === "obsidian" ? "rgba(216,170,107,.27)" : design === "herbarium" ? "rgba(86,113,71,.29)" : design === "arcane" ? "rgba(192,181,255,.28)" : design === "divine" ? "rgba(163,116,48,.28)" : design === "occult" ? "rgba(222,157,202,.26)" : design === "primal" ? "rgba(168,213,170,.29)" : "rgba(104,82,51,.36)";
         ctx.lineWidth = 1.1;
         ctx.beginPath();
-        basePath.forEach((point, i) => i ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y));
+        basePath.forEach(
+          (point, i) => i ? ctx.lineTo(point.x, point.y) : ctx.moveTo(point.x, point.y)
+        );
         ctx.stroke();
       }
       ctx.setLineDash([]);
@@ -3100,14 +3681,16 @@ var SigilDrawing = (() => {
       }
       const dx = q.x - p.x, dy = q.y - p.y;
       const length = Math.hypot(dx, dy);
-      if (length < 1e-9)
-        return;
+      if (length < 1e-9) return;
       const middle = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
       const normal = { x: -dy / length, y: dx / length };
       const dot = normal.x * (spellCenter.x - middle.x) + normal.y * (spellCenter.y - middle.y);
       const inward = dot >= 0 ? 1 : -1;
       const side = this.settings.arcSide === "outward" ? -inward : this.settings.arcSide === "alternate" && edgeIndex % 2 ? -inward : inward;
-      const sagitta = this.settings.style === "centered" ? length / 2 : length * Math.min(0.47, Math.max(0.05, Number(this.settings.curvature) || 0.22));
+      const sagitta = this.settings.style === "centered" ? length / 2 : length * Math.min(
+        0.47,
+        Math.max(0.05, Number(this.settings.curvature) || 0.22)
+      );
       const circleRadius = length * length / (8 * sagitta) + sagitta / 2;
       const offset = sagitta - circleRadius;
       const circle = {
@@ -3120,7 +3703,10 @@ var SigilDrawing = (() => {
       };
       const a0 = Math.atan2(p.y - circle.y, p.x - circle.x);
       const a1 = Math.atan2(q.y - circle.y, q.x - circle.x);
-      const aMiddle = Math.atan2(midpointOnArc.y - circle.y, midpointOnArc.x - circle.x);
+      const aMiddle = Math.atan2(
+        midpointOnArc.y - circle.y,
+        midpointOnArc.x - circle.x
+      );
       const modTau = (angle) => (angle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
       const positiveSweep = modTau(a1 - a0);
       const midpointSweep = modTau(aMiddle - a0);
@@ -3150,7 +3736,9 @@ var SigilDrawing = (() => {
           [-r, -b],
           [-b, -b]
         ];
-        arms.forEach(([dx, dy], i) => i ? ctx.lineTo(x + dx, y + dy) : ctx.moveTo(x + dx, y + dy));
+        arms.forEach(
+          ([dx, dy], i) => i ? ctx.lineTo(x + dx, y + dy) : ctx.moveTo(x + dx, y + dy)
+        );
         ctx.closePath();
         return;
       }
@@ -3160,10 +3748,8 @@ var SigilDrawing = (() => {
         const a = start + i * 2 * Math.PI / vertices;
         const rr = style === "star" && i % 2 ? r * 0.45 : r;
         const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
-        if (i === 0)
-          ctx.moveTo(px, py);
-        else
-          ctx.lineTo(px, py);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
       }
       ctx.closePath();
     }
@@ -3179,35 +3765,77 @@ var SigilDrawing = (() => {
         "hexagon",
         "cross"
       ].includes(this.settings.dotStyle) ? this.settings.dotStyle : "circle";
-      const scale = Math.max(0.5, Math.min(2.5, Number(this.settings.vertexSize) || 1));
+      const scale = Math.max(
+        0.5,
+        Math.min(2.5, Number(this.settings.vertexSize) || 1)
+      );
       const base = Math.max(3.6, Math.min(5.4, radius / 50));
       const nodeRadius = (base + 1.8) * (style === "circle" || style === "empty" ? 1 : 1.35) * scale * Math.max(0.67, Math.sqrt(11 / this.drawingVertexCount));
-      const mean = points.reduce((acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }), { x: 0, y: 0 });
+      const mean = points.reduce(
+        (acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }),
+        { x: 0, y: 0 }
+      );
       mean.x /= points.length;
       mean.y /= points.length;
       ctx.save();
       const design = this.baseTheme();
       const vertexColor = this.themeColor("vertices");
       const customVertices = vertexColor.toLowerCase() !== _SpellDrawing.themePalettes[design]?.vertices.toLowerCase();
-      const vertexStroke = Math.max(0.5, Math.min(5, Number(this.settings.vertexStroke) || 1.5));
+      const vertexStroke = Math.max(
+        0.5,
+        Math.min(5, Number(this.settings.vertexStroke) || 1.5)
+      );
       const traditionMarkers = {
-        arcane: { fill: "#1c2048", outline: "#cdc5ff", core: "#efe9ff", glow: "rgba(157,147,255,.62)" },
-        divine: { fill: "#fff8e8", outline: "#b08747", core: "#bb8739", glow: "rgba(234,177,69,.34)" },
-        occult: { fill: "#25172e", outline: "#e6b1d5", core: "#f5daef", glow: "rgba(218,139,198,.46)" },
-        primal: { fill: "#17372c", outline: "#b3dba5", core: "#e2efc2", glow: "rgba(154,215,151,.34)" }
+        arcane: {
+          fill: "#1c2048",
+          outline: "#cdc5ff",
+          core: "#efe9ff",
+          glow: "rgba(157,147,255,.62)"
+        },
+        divine: {
+          fill: "#fff8e8",
+          outline: "#b08747",
+          core: "#bb8739",
+          glow: "rgba(234,177,69,.34)"
+        },
+        occult: {
+          fill: "#25172e",
+          outline: "#e6b1d5",
+          core: "#f5daef",
+          glow: "rgba(218,139,198,.46)"
+        },
+        primal: {
+          fill: "#17372c",
+          outline: "#b3dba5",
+          core: "#e2efc2",
+          glow: "rgba(154,215,151,.34)"
+        }
       };
       const labelMode = this.settings.vertexLabels !== "none" ? this.settings.vertexLabels : this.settings.labels ? "numbers" : "none";
       points.forEach((point, i) => {
         if (style !== "none") {
           if (design === "tattoo") {
-            _SpellDrawing.traceNode(ctx, point.x, point.y, nodeRadius * 0.65, style);
+            _SpellDrawing.traceNode(
+              ctx,
+              point.x,
+              point.y,
+              nodeRadius * 0.65,
+              style
+            );
             ctx.strokeStyle = vertexColor;
             ctx.fillStyle = vertexColor;
             ctx.lineWidth = vertexStroke;
             if (style !== "empty") ctx.fill();
             ctx.stroke();
           } else if (design === "constellations") {
-            const halo = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, nodeRadius * 3.4);
+            const halo = ctx.createRadialGradient(
+              point.x,
+              point.y,
+              0,
+              point.x,
+              point.y,
+              nodeRadius * 3.4
+            );
             halo.addColorStop(0, "rgba(207,234,255,.43)");
             halo.addColorStop(0.35, "rgba(125,181,240,.13)");
             halo.addColorStop(1, "rgba(100,155,223,0)");
@@ -3216,19 +3844,30 @@ var SigilDrawing = (() => {
             ctx.arc(point.x, point.y, nodeRadius * 3.4, 0, 2 * Math.PI);
             ctx.fill();
             ctx.save();
-            _SpellDrawing.traceNode(ctx, point.x, point.y, nodeRadius * 0.8, style);
+            _SpellDrawing.traceNode(
+              ctx,
+              point.x,
+              point.y,
+              nodeRadius * 0.8,
+              style
+            );
             ctx.fillStyle = style === "empty" ? "#101e34" : "#f4faff";
             ctx.shadowColor = "rgba(198,229,255,.95)";
             ctx.shadowBlur = 10;
             ctx.fill();
             ctx.strokeStyle = "rgba(239,248,255,.97)";
             ctx.lineWidth = vertexStroke;
-            if (customVertices)
-              ctx.strokeStyle = vertexColor;
+            if (customVertices) ctx.strokeStyle = vertexColor;
             ctx.stroke();
             if (style !== "empty") {
               ctx.beginPath();
-              ctx.arc(point.x, point.y, Math.max(0.6, 0.72 * scale), 0, 2 * Math.PI);
+              ctx.arc(
+                point.x,
+                point.y,
+                Math.max(0.6, 0.72 * scale),
+                0,
+                2 * Math.PI
+              );
               ctx.fillStyle = customVertices ? vertexColor : "#ffffff";
               ctx.fill();
             }
@@ -3239,44 +3878,71 @@ var SigilDrawing = (() => {
             ctx.fill();
             ctx.strokeStyle = "#a5e6ef";
             ctx.lineWidth = vertexStroke;
-            if (customVertices)
-              ctx.strokeStyle = vertexColor;
+            if (customVertices) ctx.strokeStyle = vertexColor;
             ctx.stroke();
             if (style !== "empty") {
               ctx.beginPath();
-              ctx.arc(point.x, point.y, Math.max(0.8, 1.05 * scale), 0, 2 * Math.PI);
+              ctx.arc(
+                point.x,
+                point.y,
+                Math.max(0.8, 1.05 * scale),
+                0,
+                2 * Math.PI
+              );
               ctx.fillStyle = customVertices ? vertexColor : "#b5f2f5";
               ctx.fill();
             }
           } else if (design === "obsidian") {
-            _SpellDrawing.traceNode(ctx, point.x, point.y, nodeRadius * 0.93, style);
+            _SpellDrawing.traceNode(
+              ctx,
+              point.x,
+              point.y,
+              nodeRadius * 0.93,
+              style
+            );
             ctx.fillStyle = "#1c1f23";
             ctx.fill();
             ctx.strokeStyle = "#f1ca89";
             ctx.shadowColor = "rgba(240,186,112,.34)";
             ctx.shadowBlur = 6;
             ctx.lineWidth = vertexStroke;
-            if (customVertices)
-              ctx.strokeStyle = vertexColor;
+            if (customVertices) ctx.strokeStyle = vertexColor;
             ctx.stroke();
             if (style !== "empty") {
               ctx.beginPath();
-              ctx.arc(point.x, point.y, Math.max(0.65, 0.85 * scale), 0, Math.PI * 2);
+              ctx.arc(
+                point.x,
+                point.y,
+                Math.max(0.65, 0.85 * scale),
+                0,
+                Math.PI * 2
+              );
               ctx.fillStyle = customVertices ? vertexColor : "#e8c085";
               ctx.fill();
             }
           } else if (design === "herbarium") {
-            _SpellDrawing.traceNode(ctx, point.x, point.y, nodeRadius * 0.95, style);
+            _SpellDrawing.traceNode(
+              ctx,
+              point.x,
+              point.y,
+              nodeRadius * 0.95,
+              style
+            );
             ctx.fillStyle = "#ecf1e4";
             ctx.fill();
             ctx.strokeStyle = "#4c6652";
             ctx.lineWidth = vertexStroke;
-            if (customVertices)
-              ctx.strokeStyle = vertexColor;
+            if (customVertices) ctx.strokeStyle = vertexColor;
             ctx.stroke();
             if (style !== "empty") {
               ctx.beginPath();
-              ctx.arc(point.x, point.y, Math.max(0.75, 0.9 * scale), 0, Math.PI * 2);
+              ctx.arc(
+                point.x,
+                point.y,
+                Math.max(0.75, 0.9 * scale),
+                0,
+                Math.PI * 2
+              );
               ctx.fillStyle = customVertices ? vertexColor : "#7d8c61";
               ctx.fill();
             }
@@ -3284,7 +3950,14 @@ var SigilDrawing = (() => {
             const palette = traditionMarkers[design];
             const r = nodeRadius * (design === "arcane" ? 0.83 : design === "occult" ? 0.82 : 0.9);
             if (design !== "divine") {
-              const light = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, r * 2.8);
+              const light = ctx.createRadialGradient(
+                point.x,
+                point.y,
+                0,
+                point.x,
+                point.y,
+                r * 2.8
+              );
               light.addColorStop(0, palette.glow);
               light.addColorStop(1, "rgba(0,0,0,0)");
               ctx.fillStyle = light;
@@ -3300,12 +3973,17 @@ var SigilDrawing = (() => {
             ctx.lineWidth = vertexStroke;
             ctx.shadowColor = palette.glow;
             ctx.shadowBlur = design === "divine" ? 3 : 7;
-            if (customVertices)
-              ctx.strokeStyle = vertexColor;
+            if (customVertices) ctx.strokeStyle = vertexColor;
             ctx.stroke();
             if (style !== "empty") {
               ctx.beginPath();
-              ctx.arc(point.x, point.y, Math.max(0.65, 0.9 * scale), 0, Math.PI * 2);
+              ctx.arc(
+                point.x,
+                point.y,
+                Math.max(0.65, 0.9 * scale),
+                0,
+                Math.PI * 2
+              );
               ctx.fillStyle = customVertices ? vertexColor : palette.core;
               ctx.fill();
             }
@@ -3316,12 +3994,17 @@ var SigilDrawing = (() => {
             ctx.fill();
             ctx.strokeStyle = "rgba(91,74,49,.85)";
             ctx.lineWidth = vertexStroke;
-            if (customVertices)
-              ctx.strokeStyle = vertexColor;
+            if (customVertices) ctx.strokeStyle = vertexColor;
             ctx.stroke();
             if (style !== "empty") {
               ctx.beginPath();
-              ctx.arc(point.x, point.y, Math.max(0.8, 1.05 * scale), 0, Math.PI * 2);
+              ctx.arc(
+                point.x,
+                point.y,
+                Math.max(0.8, 1.05 * scale),
+                0,
+                Math.PI * 2
+              );
               ctx.fillStyle = customVertices ? vertexColor : "#857052";
               ctx.fill();
             }
@@ -3335,7 +4018,11 @@ var SigilDrawing = (() => {
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           const offset = style === "none" ? 15 : nodeRadius + 15;
-          ctx.fillText(String(i + 1).padStart(2, "0"), point.x + vx / length * offset, point.y + vy / length * offset);
+          ctx.fillText(
+            String(i + 1).padStart(2, "0"),
+            point.x + vx / length * offset,
+            point.y + vy / length * offset
+          );
         }
       });
       ctx.restore();
@@ -3349,7 +4036,10 @@ var SigilDrawing = (() => {
      * distance), not by owning a vertex. Remaining vertices stay unlabelled.
      */
     paintAttributeVertexLabels(ctx, points, width, height) {
-      const mean = points.reduce((a, p) => ({ x: a.x + p.x, y: a.y + p.y }), { x: 0, y: 0 });
+      const mean = points.reduce((a, p) => ({ x: a.x + p.x, y: a.y + p.y }), {
+        x: 0,
+        y: 0
+      });
       mean.x /= points.length;
       mean.y /= points.length;
       const isPolygon = (this.settings.base || "polygon") === "polygon";
@@ -3358,7 +4048,9 @@ var SigilDrawing = (() => {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       this.drawingChords.forEach((attribute, attributeIndex) => {
-        const index = Math.round(attributeIndex * points.length / this.drawingChords.length) % points.length;
+        const index = Math.round(
+          attributeIndex * points.length / this.drawingChords.length
+        ) % points.length;
         const point = points[index];
         let nx = point.x - mean.x, ny = point.y - mean.y;
         if (!isPolygon) {
@@ -3380,7 +4072,10 @@ var SigilDrawing = (() => {
         const labelOffset = (isPolygon ? 32 : 36) + (this.settings.dotStyle === "none" ? 0 : Math.max(0, Number(this.settings.vertexSize || 1) - 1) * 8);
         const idealX = point.x + nx / length * labelOffset;
         const idealY = point.y + ny / length * labelOffset;
-        const x = Math.min(width - margin - textWidth / 2 - pad, Math.max(margin + textWidth / 2 + pad, idealX));
+        const x = Math.min(
+          width - margin - textWidth / 2 - pad,
+          Math.max(margin + textWidth / 2 + pad, idealX)
+        );
         const y = Math.min(height - 72, Math.max(72, idealY));
         ctx.fillStyle = this.baseTheme() === "tattoo" ? this.themeColor("background") : this.baseTheme() === "constellations" ? "rgba(9,23,43,.82)" : this.baseTheme() === "blueprint" ? "rgba(7,34,48,.9)" : this.baseTheme() === "obsidian" ? "rgba(25,26,28,.91)" : this.baseTheme() === "herbarium" ? "rgba(235,241,227,.91)" : this.baseTheme() === "arcane" ? "rgba(17,22,52,.88)" : this.baseTheme() === "divine" ? "rgba(252,244,227,.94)" : this.baseTheme() === "occult" ? "rgba(28,17,36,.91)" : this.baseTheme() === "primal" ? "rgba(11,37,29,.91)" : "rgba(249,245,234,.88)";
         ctx.fillRect(x - textWidth / 2 - pad, y - 9, textWidth + 2 * pad, 18);
@@ -3423,8 +4118,24 @@ var SigilCatalog = (() => {
 
   // src/constants.ts
   var TRADITIONS = ["Arcane", "Divine", "Occult", "Primal"];
-  var CAST_ACTIONS = ["1 action", "2 actions", "3 actions", "Reaction", "Free action", "1 minute", "10 minutes", "Other"];
-  var CAST_TRAITS = ["none", "Concentrate", "Manipulate", "Both", "Legacy components", "Other"];
+  var CAST_ACTIONS = [
+    "1 action",
+    "2 actions",
+    "3 actions",
+    "Reaction",
+    "Free action",
+    "1 minute",
+    "10 minutes",
+    "Other"
+  ];
+  var CAST_TRAITS = [
+    "none",
+    "Concentrate",
+    "Manipulate",
+    "Both",
+    "Legacy components",
+    "Other"
+  ];
   var PRIMARY_TRAITS = [
     "Healing",
     "Mental",
@@ -3502,13 +4213,10 @@ var SigilCatalog = (() => {
   }
   var SpellCatalog = class _SpellCatalog {
     static rows(payload) {
-      if (typeof payload === "string")
-        payload = JSON.parse(payload);
-      if (Array.isArray(payload))
-        return payload;
+      if (typeof payload === "string") payload = JSON.parse(payload);
+      if (Array.isArray(payload)) return payload;
       const root = asRecord(payload);
-      if (!root)
-        throw new Error("spell.json must contain a list of spells.");
+      if (!root) throw new Error("spell.json must contain a list of spells.");
       const containers = [
         root.spells,
         root.spell,
@@ -3522,31 +4230,39 @@ var SigilCatalog = (() => {
         Array.isArray(root.data) ? root.data : null
       ];
       for (const container of containers) {
-        if (Array.isArray(container))
-          return container;
+        if (Array.isArray(container)) return container;
         if (container && typeof container === "object")
-          return Object.entries(container).map(([key, value]) => value && typeof value === "object" ? { __objectKey: key, ...value } : value);
+          return Object.entries(container).map(
+            ([key, value]) => value && typeof value === "object" ? { __objectKey: key, ...value } : value
+          );
       }
       if (root.name && (root.type === "spell" || root.rank !== void 0 || root.level !== void 0)) {
         return [root];
       }
-      const values = Object.entries(root).filter(([key]) => !["description", "meta", "version", "source"].includes(key));
-      if (values.length && values.every(([, value]) => value && typeof value === "object" && !Array.isArray(value))) {
+      const values = Object.entries(root).filter(
+        ([key]) => !["description", "meta", "version", "source"].includes(key)
+      );
+      if (values.length && values.every(
+        ([, value]) => value && typeof value === "object" && !Array.isArray(value)
+      )) {
         return values.map(([key, value]) => {
           const record = asRecord(value);
-          if (!record)
-            throw new Error("Expected keyed spell records.");
+          if (!record) throw new Error("Expected keyed spell records.");
           return { __objectKey: key, ...record };
         });
       }
-      throw new Error("Expected a JSON array or a spells/entries/items list (keyed spell maps also work).");
+      throw new Error(
+        "Expected a JSON array or a spells/entries/items list (keyed spell maps also work)."
+      );
     }
     static text(value) {
       if (typeof value === "string" || typeof value === "number")
         return String(value).trim();
       const record = asRecord(value);
       if (record)
-        return _SpellCatalog.text(record.value ?? record.label ?? record.name ?? "");
+        return _SpellCatalog.text(
+          record.value ?? record.label ?? record.name ?? ""
+        );
       return "";
     }
     static list(value) {
@@ -3556,30 +4272,35 @@ var SigilCatalog = (() => {
       return text ? text.split(/[,;/]/).map((x) => x.trim()).filter(Boolean) : [];
     }
     static edition(value) {
-      if (typeof value === "boolean")
-        return value ? "remaster" : "legacy";
+      if (typeof value === "boolean") return value ? "remaster" : "legacy";
       const x = _SpellCatalog.text(value).toLowerCase();
-      if (/legacy|pre.remaster|original/.test(x))
-        return "legacy";
-      if (/remaster|player core|2023|2024/.test(x))
-        return "remaster";
+      if (/legacy|pre.remaster|original/.test(x)) return "legacy";
+      if (/remaster|player core|2023|2024/.test(x)) return "remaster";
       return "both";
     }
     static rank(row, sys, traits) {
-      const category = _SpellCatalog.text(row.category ?? sys.category ?? row.type).toLowerCase();
+      const category = _SpellCatalog.text(
+        row.category ?? sys.category ?? row.type
+      ).toLowerCase();
       if (traits.includes("cantrip") || /cantrip/.test(category) || row.isCantrip === true)
         return "cantrip";
-      let rank = _SpellCatalog.text(row.rank ?? row.spellRank ?? row.level ?? sys.level ?? row.heightenedLevel);
-      if (/cantrip/.test(rank.toLowerCase()))
-        return "cantrip";
+      const rank = _SpellCatalog.text(
+        row.rank ?? row.spellRank ?? row.level ?? sys.level ?? row.heightenedLevel
+      );
+      if (/cantrip/.test(rank.toLowerCase())) return "cantrip";
       const match = rank.match(/(?:rank|level)?\s*(10|[1-9])\b/i);
       return match ? match[1] : "1";
     }
     static tradition(row, sys) {
-      const list = _SpellCatalog.list(row.traditions ?? row.tradition ?? field(sys.traits, "traditions") ?? sys.traditions).flatMap((value) => value.split(/\s*\+\s*/));
-      const valid = [...new Set(list.map((t) => t[0]?.toUpperCase() + t.slice(1).toLowerCase()).filter((t) => TRADITIONS.includes(t)))].sort((a, b) => TRADITIONS.indexOf(a) - TRADITIONS.indexOf(b));
-      if (valid.length)
-        return valid.join("+");
+      const list = _SpellCatalog.list(
+        row.traditions ?? row.tradition ?? field(sys.traits, "traditions") ?? sys.traditions
+      ).flatMap((value) => value.split(/\s*\+\s*/));
+      const valid = [
+        ...new Set(
+          list.map((t) => t[0]?.toUpperCase() + t.slice(1).toLowerCase()).filter((t) => TRADITIONS.includes(t))
+        )
+      ].sort((a, b) => TRADITIONS.indexOf(a) - TRADITIONS.indexOf(b));
+      if (valid.length) return valid.join("+");
       return list.some((t) => t.toLowerCase() === "multiple") ? "multiple" : "none";
     }
     static damage(row, sys, traits, edition) {
@@ -3591,41 +4312,42 @@ var SigilCatalog = (() => {
       const add = (val) => {
         const key = _SpellCatalog.text(val).toLowerCase().replace(/\s+damage$/, "");
         const item = DAMAGE_CATEGORIES[key];
-        if (item)
-          values.push(item);
+        if (item) values.push(item);
       };
       if (Array.isArray(damage))
         damage.forEach((d) => {
-          if (d === null)
-            throw new TypeError("Invalid damage entry.");
-          add(typeof d === "object" ? field(d, "type") ?? field(d, "damageType") : d);
+          if (d === null) throw new TypeError("Invalid damage entry.");
+          add(
+            typeof d === "object" ? field(d, "type") ?? field(d, "damageType") : d
+          );
         });
       else if (asRecord(damage)) {
         const record = asRecord(damage);
-        if (!record)
-          throw new Error("Invalid damage record.");
-        if (record.type || record.value)
-          add(record.type ?? record.value);
+        if (!record) throw new Error("Invalid damage record.");
+        if (record.type || record.value) add(record.type ?? record.value);
         else
           Object.values(record).forEach((d) => {
             if (Array.isArray(d))
               d.forEach((x) => {
-                if (x === null)
-                  throw new TypeError("Invalid damage entry.");
+                if (x === null) throw new TypeError("Invalid damage entry.");
                 add(field(x, "type") ?? x);
               });
             else
-              add(field(d, "type") ?? field(d, "damageType") ?? field(field(d, "damage"), "type"));
+              add(
+                field(d, "type") ?? field(d, "damageType") ?? field(field(d, "damage"), "type")
+              );
           });
-      } else
-        _SpellCatalog.list(damage).forEach(add);
-      if (!values.length)
-        traits.forEach(add);
-      const distinct = [...new Set(values.map((v) => edition === "remaster" ? REMASTER_DAMAGE_CATEGORIES[v] || v : v))];
-      if (distinct.length > 1)
-        return "multiple";
-      if (distinct.length === 1)
-        return distinct[0];
+      } else _SpellCatalog.list(damage).forEach(add);
+      if (!values.length) traits.forEach(add);
+      const distinct = [
+        ...new Set(
+          values.map(
+            (v) => edition === "remaster" ? REMASTER_DAMAGE_CATEGORIES[v] || v : v
+          )
+        )
+      ];
+      if (distinct.length > 1) return "multiple";
+      if (distinct.length === 1) return distinct[0];
       return "none";
     }
     static area(row, sys) {
@@ -3633,171 +4355,149 @@ var SigilCatalog = (() => {
       let value = _SpellCatalog.text(area);
       if (area && typeof area === "object" && !Array.isArray(area)) {
         const record = asRecord(area);
-        if (!record)
-          throw new Error("Invalid area record.");
+        if (!record) throw new Error("Invalid area record.");
         value = _SpellCatalog.text(record.type || record.shape || record.value);
       }
       const s = value.toLowerCase();
-      if (!s || /^(none|no|n\/a|—|-)$/.test(s))
-        return "none";
-      if (/burst/.test(s))
-        return "Burst";
-      if (/cone/.test(s))
-        return "Cone";
-      if (/cylinder/.test(s))
-        return "Cylinder";
-      if (/emanation/.test(s))
-        return "Emanation";
-      if (/line/.test(s))
-        return "Line";
-      if (/wall/.test(s))
-        return "Wall";
-      if (/variable|varies|multiple|various/.test(s))
-        return "multiple";
+      if (!s || /^(none|no|n\/a|—|-)$/.test(s)) return "none";
+      if (/burst/.test(s)) return "Burst";
+      if (/cone/.test(s)) return "Cone";
+      if (/cylinder/.test(s)) return "Cylinder";
+      if (/emanation/.test(s)) return "Emanation";
+      if (/line/.test(s)) return "Line";
+      if (/wall/.test(s)) return "Wall";
+      if (/variable|varies|multiple|various/.test(s)) return "multiple";
       return "other";
     }
     static range(row, sys) {
       const value = _SpellCatalog.text(row.range ?? sys.range);
       const s = value.toLowerCase();
-      if (!s || s === "\u2014" || s === "-" || s === "none")
-        return "none";
-      if (/touch/.test(s))
-        return "Touch";
-      if (/^self$|^personal$|^you$/.test(s))
-        return "Self";
-      if (/unlimited|anywhere/.test(s))
-        return "Unlimited";
+      if (!s || s === "\u2014" || s === "-" || s === "none") return "none";
+      if (/touch/.test(s)) return "Touch";
+      if (/^self$|^personal$|^you$/.test(s)) return "Self";
+      if (/unlimited|anywhere/.test(s)) return "Unlimited";
       const mile = s.match(/\b(\d+)\s*mi(?:le|les)?\b/);
-      if (mile)
-        return mile[1] === "1" ? "1 mile" : "other";
+      if (mile) return mile[1] === "1" ? "1 mile" : "other";
       const ft = s.match(/\b(\d+(?:\.\d+)?)\s*(?:-?foot|-?feet|ft\.?)/);
-      if (ft)
-        return `${Number(ft[1])} feet`;
+      if (ft) return `${Number(ft[1])} feet`;
       if (/varies|variable|special|see text|determined/.test(s))
         return "variable";
       return "other";
     }
     /** Expanded PF2e spell metadata: discrete categories, no inferred mechanics. */
     static spellType(row, sys, traits) {
-      const kind = _SpellCatalog.text(row.type ?? row.category ?? sys.category ?? sys.type).toLowerCase();
+      const kind = _SpellCatalog.text(
+        row.type ?? row.category ?? sys.category ?? sys.type
+      ).toLowerCase();
       if (kind.includes("cantrip") || traits.includes("cantrip"))
         return "Cantrip";
-      if (kind.includes("focus") || traits.includes("focus"))
-        return "Focus";
-      if (kind.includes("ritual") || traits.includes("ritual"))
-        return "Ritual";
+      if (kind.includes("focus") || traits.includes("focus")) return "Focus";
+      if (kind.includes("ritual") || traits.includes("ritual")) return "Ritual";
       return "Spell";
     }
     static castActions(row, sys) {
       const direct = _SpellCatalog.text(row.castActions).toLowerCase();
-      const selected = CAST_ACTIONS.find((value) => value.toLowerCase() === direct);
-      if (selected)
-        return selected;
-      const action = _SpellCatalog.text(row.action ?? row.actions ?? field(sys.time, "value") ?? sys.action).toLowerCase();
+      const selected = CAST_ACTIONS.find(
+        (value) => value.toLowerCase() === direct
+      );
+      if (selected) return selected;
+      const action = _SpellCatalog.text(
+        row.action ?? row.actions ?? field(sys.time, "value") ?? sys.action
+      ).toLowerCase();
       const cast = _SpellCatalog.text(row.cast ?? sys.time ?? "").toLowerCase();
-      if (/reaction/.test(action))
-        return "Reaction";
-      if (/free/.test(action))
-        return "Free action";
+      if (/reaction/.test(action)) return "Reaction";
+      if (/free/.test(action)) return "Free action";
       if (/^[123]$/.test(action))
         return `${action} action${action === "1" ? "" : "s"}`;
-      if (/^(1|one) action/.test(action))
-        return "1 action";
-      if (/^(2|two) action/.test(action))
-        return "2 actions";
-      if (/^(3|three) action/.test(action))
-        return "3 actions";
-      if (/10\s*minutes?/.test(action + " " + cast))
-        return "10 minutes";
-      if (/\b1\s*minute\b/.test(action + " " + cast))
-        return "1 minute";
+      if (/^(1|one) action/.test(action)) return "1 action";
+      if (/^(2|two) action/.test(action)) return "2 actions";
+      if (/^(3|three) action/.test(action)) return "3 actions";
+      if (/10\s*minutes?/.test(action + " " + cast)) return "10 minutes";
+      if (/\b1\s*minute\b/.test(action + " " + cast)) return "1 minute";
       return "Other";
     }
     static defenseType(row, sys) {
-      const text = _SpellCatalog.text(row.defense ?? row["saving throw"] ?? row.savingThrow ?? field(field(sys.defense, "save"), "statistic") ?? field(sys.save, "value")).toLowerCase();
-      const hits = ["ac", "fortitude", "reflex", "will"].filter((t) => new RegExp("\\b" + t + "\\b").test(text));
-      if (hits.length > 1)
-        return "Multiple";
+      const text = _SpellCatalog.text(
+        row.defense ?? row["saving throw"] ?? row.savingThrow ?? field(field(sys.defense, "save"), "statistic") ?? field(sys.save, "value")
+      ).toLowerCase();
+      const hits = ["ac", "fortitude", "reflex", "will"].filter(
+        (t) => new RegExp("\\b" + t + "\\b").test(text)
+      );
+      if (hits.length > 1) return "Multiple";
       return { ac: "AC", fortitude: "Fortitude", reflex: "Reflex", will: "Will" }[hits[0]] || (!text ? "none" : "Other");
     }
     static durationGroup(row, sys) {
-      const text = _SpellCatalog.text(row.duration ?? field(sys.duration, "value") ?? sys.duration).toLowerCase();
+      const text = _SpellCatalog.text(
+        row.duration ?? field(sys.duration, "value") ?? sys.duration
+      ).toLowerCase();
       if (!text || text === "instantaneous" || text === "instant")
         return "Instant";
-      if (/sustain/.test(text))
-        return "Sustained";
-      if (/daily preparation/.test(text))
-        return "Until preparations";
-      if (/\b(?:1|one)\s*round\b|next turn/.test(text))
-        return "1 round";
-      if (/\b(?:1|one)\s*minute\b/.test(text))
-        return "1 minute";
-      if (/10\s*minutes?/.test(text))
-        return "10 minutes";
-      if (/\bhours?\b/.test(text))
-        return "1 hour";
-      if (/\b(?:days?|weeks?|months?|years?)\b/.test(text))
-        return "1 day+";
-      if (/varies|variable|depends|see text/.test(text))
-        return "Variable";
+      if (/sustain/.test(text)) return "Sustained";
+      if (/daily preparation/.test(text)) return "Until preparations";
+      if (/\b(?:1|one)\s*round\b|next turn/.test(text)) return "1 round";
+      if (/\b(?:1|one)\s*minute\b/.test(text)) return "1 minute";
+      if (/10\s*minutes?/.test(text)) return "10 minutes";
+      if (/\bhours?\b/.test(text)) return "1 hour";
+      if (/\b(?:days?|weeks?|months?|years?)\b/.test(text)) return "1 day+";
+      if (/varies|variable|depends|see text/.test(text)) return "Variable";
       return "Other";
     }
     static targetGroup(row, sys) {
-      const text = _SpellCatalog.text(row.targets ?? row.target ?? field(sys.target, "value") ?? sys.target).toLowerCase();
-      if (!text)
-        return row.area || sys.area ? "Area" : "none";
-      if (/^(you|self|yourself)$/.test(text))
-        return "Self";
-      if (/\b(?:willing|ally|allies|friendly)\b/.test(text))
-        return "Ally";
-      if (/\b(?:objects?|items?|weapon|surface)\b/.test(text))
-        return "Object";
-      if (/\b(?:two|three|four|multiple|up to [2-9]|\d+ or \d+|all creatures|every creature)\b/.test(text))
+      const text = _SpellCatalog.text(
+        row.targets ?? row.target ?? field(sys.target, "value") ?? sys.target
+      ).toLowerCase();
+      if (!text) return row.area || sys.area ? "Area" : "none";
+      if (/^(you|self|yourself)$/.test(text)) return "Self";
+      if (/\b(?:willing|ally|allies|friendly)\b/.test(text)) return "Ally";
+      if (/\b(?:objects?|items?|weapon|surface)\b/.test(text)) return "Object";
+      if (/\b(?:two|three|four|multiple|up to [2-9]|\d+ or \d+|all creatures|every creature)\b/.test(
+        text
+      ))
         return "Multiple creatures";
-      if (/\b(?:a|one|1|the triggering)\s+(?:living\s+|undead\s+|willing\s+)?creature\b/.test(text))
+      if (/\b(?:a|one|1|the triggering)\s+(?:living\s+|undead\s+|willing\s+)?creature\b/.test(
+        text
+      ))
         return "One creature";
       return "Special";
     }
     static rarityType(row, traits) {
       const t = _SpellCatalog.text(row.rarity).toLowerCase();
-      if (traits.includes("unique") || t === "unique")
-        return "Unique";
-      if (traits.includes("rare") || t === "rare")
-        return "Rare";
-      if (traits.includes("uncommon") || t === "uncommon")
-        return "Uncommon";
+      if (traits.includes("unique") || t === "unique") return "Unique";
+      if (traits.includes("rare") || t === "rare") return "Rare";
+      if (traits.includes("uncommon") || t === "uncommon") return "Uncommon";
       return "Common";
     }
     static primaryTrait(traits, row = {}) {
       const direct = _SpellCatalog.text(row.effectTrait).toLowerCase();
-      if (direct === "none")
-        return "none";
-      if (direct === "other")
-        return "Other";
+      if (direct === "none") return "none";
+      if (direct === "other") return "Other";
       if (PRIMARY_TRAIT_PRIORITIES.includes(direct))
         return direct[0].toUpperCase() + direct.slice(1);
-      const match = PRIMARY_TRAIT_PRIORITIES.find((t) => traits.includes(t) || t === "summon" && traits.some((x) => x.startsWith("summon")));
+      const match = PRIMARY_TRAIT_PRIORITIES.find(
+        (t) => traits.includes(t) || t === "summon" && traits.some((x) => x.startsWith("summon"))
+      );
       return match ? match[0].toUpperCase() + match.slice(1) : "none";
     }
     static castingTraits(traits, row) {
       const direct = _SpellCatalog.text(row.castTraits).toLowerCase();
-      const selected = CAST_TRAITS.find((value) => value.toLowerCase() === direct);
-      if (selected)
-        return selected;
+      const selected = CAST_TRAITS.find(
+        (value) => value.toLowerCase() === direct
+      );
+      if (selected) return selected;
       const concentrate = traits.includes("concentrate"), manipulate = traits.includes("manipulate");
-      if (concentrate && manipulate)
-        return "Both";
-      if (concentrate)
-        return "Concentrate";
-      if (manipulate)
-        return "Manipulate";
-      const components = _SpellCatalog.list(row.components ?? row.cast).map((x) => x.toLowerCase());
+      if (concentrate && manipulate) return "Both";
+      if (concentrate) return "Concentrate";
+      if (manipulate) return "Manipulate";
+      const components = _SpellCatalog.list(row.components ?? row.cast).map(
+        (x) => x.toLowerCase()
+      );
       return components.some((x) => ["verbal", "somatic", "material"].includes(x)) ? "Legacy components" : "none";
     }
     static heightening(row, sys, spellType) {
-      const text = _SpellCatalog.text(row.description ?? field(sys.description, "value") ?? sys.description);
-      if (spellType === "Cantrip")
-        return "Automatic cantrip";
+      const text = _SpellCatalog.text(
+        row.description ?? field(sys.description, "value") ?? sys.description
+      );
+      if (spellType === "Cantrip") return "Automatic cantrip";
       const plus = text.match(/Heightened\s*\(\s*\+(\d+)\s*\)/i);
       if (plus)
         return ["1", "2", "3"].includes(plus[1]) ? `+${plus[1]}` : "Other";
@@ -3809,7 +4509,10 @@ var SigilCatalog = (() => {
     static fingerprint(text) {
       let hash = 0xcbf29ce484222325n;
       for (let i = 0; i < text.length; i++) {
-        hash = BigInt.asUintN(64, (hash ^ BigInt(text.charCodeAt(i))) * 0x100000001b3n);
+        hash = BigInt.asUintN(
+          64,
+          (hash ^ BigInt(text.charCodeAt(i))) * 0x100000001b3n
+        );
       }
       return hash.toString(36);
     }
@@ -3819,8 +4522,7 @@ var SigilCatalog = (() => {
         const chars = [];
         let length = 0;
         for (const char of base) {
-          if (length + char.length + suffix.length > MAX_VARIANT_LENGTH)
-            break;
+          if (length + char.length + suffix.length > MAX_VARIANT_LENGTH) break;
           chars.push(char);
           length += char.length;
         }
@@ -3846,8 +4548,7 @@ var SigilCatalog = (() => {
       for (const record of records) {
         let variant = record.base;
         const count = counts.get(record.base);
-        if (count === void 0)
-          throw new Error("Missing catalogue ID count.");
+        if (count === void 0) throw new Error("Missing catalogue ID count.");
         if (count > 1) {
           const suffix = `-${_SpellCatalog.fingerprint(record.key)}`;
           const seed = fit(record.base, suffix);
@@ -3867,7 +4568,9 @@ var SigilCatalog = (() => {
     static parse(payload) {
       const rows = _SpellCatalog.rows(payload);
       if (rows.length > MAX_CATALOGUE_SIZE)
-        throw new Error(`The spell library is limited to ${MAX_CATALOGUE_SIZE.toLocaleString("en-US")} entries.`);
+        throw new Error(
+          `The spell library is limited to ${MAX_CATALOGUE_SIZE.toLocaleString("en-US")} entries.`
+        );
       const entries = [];
       let skipped = 0;
       for (const rawRow of rows) {
@@ -3879,19 +4582,38 @@ var SigilCatalog = (() => {
         const sys = asRecord(row.system ?? field(row.data, "system")) ?? {};
         const name = _SpellCatalog.text(row.name ?? sys.name);
         const kind = _SpellCatalog.text(row.type).toLowerCase();
-        if (!name || kind && !["spell", "cantrip", "focus", "focus spell", "ritual", "heightened", ""].includes(kind) && !row.nethysUrl && !sys.level) {
+        if (!name || kind && ![
+          "spell",
+          "cantrip",
+          "focus",
+          "focus spell",
+          "ritual",
+          "heightened",
+          ""
+        ].includes(kind) && !row.nethysUrl && !sys.level) {
           skipped++;
           continue;
         }
-        const traits = _SpellCatalog.list(field(row.traits, "value") ?? row.traits ?? field(sys.traits, "value") ?? sys.traits).map((t) => t.toLowerCase());
-        let edition = _SpellCatalog.edition(row.edition ?? row.ruleset ?? row.version ?? row.remaster ?? row.source ?? field(sys.publication, "title"));
+        const traits = _SpellCatalog.list(
+          field(row.traits, "value") ?? row.traits ?? field(sys.traits, "value") ?? sys.traits
+        ).map((t) => t.toLowerCase());
+        let edition = _SpellCatalog.edition(
+          row.edition ?? row.ruleset ?? row.version ?? row.remaster ?? row.source ?? field(sys.publication, "title")
+        );
         if (edition === "both" && Object.prototype.hasOwnProperty.call(row, "legacy content"))
           edition = "legacy";
-        let identifier = [row.variant, row.sourceId, row.uuid, row._id, row.id, row.slug, row.__objectKey].map((value) => _SpellCatalog.text(value)).find(Boolean) || "";
+        let identifier = [
+          row.variant,
+          row.sourceId,
+          row.uuid,
+          row._id,
+          row.id,
+          row.slug,
+          row.__objectKey
+        ].map((value) => _SpellCatalog.text(value)).find(Boolean) || "";
         if (!identifier && row.nethysUrl) {
           const match = String(row.nethysUrl).match(/[?&]ID=(\d+)/i);
-          if (match)
-            identifier = `aon-${match[1]}`;
+          if (match) identifier = `aon-${match[1]}`;
         }
         const damage = _SpellCatalog.damage(row, sys, traits, edition);
         const spellType = _SpellCatalog.spellType(row, sys, traits);
@@ -3913,18 +4635,28 @@ var SigilCatalog = (() => {
           effectTrait: _SpellCatalog.primaryTrait(traits, row),
           castTraits: _SpellCatalog.castingTraits(traits, row),
           heightening: _SpellCatalog.heightening(row, sys, spellType),
-          source: _SpellCatalog.text(row.source ?? field(sys.publication, "title") ?? field(sys.source, "value")),
+          source: _SpellCatalog.text(
+            row.source ?? field(sys.publication, "title") ?? field(sys.source, "value")
+          ),
           category: _SpellCatalog.text(row.category ?? row.type),
           traits,
-          traditions: _SpellCatalog.list(row.traditions ?? row.tradition ?? field(sys.traits, "traditions")),
-          rawAction: _SpellCatalog.text(row.action ?? row.actions ?? field(sys.time, "value") ?? sys.action),
-          description: _SpellCatalog.text(row.description ?? field(sys.description, "value") ?? sys.description)
+          traditions: _SpellCatalog.list(
+            row.traditions ?? row.tradition ?? field(sys.traits, "traditions")
+          ),
+          rawAction: _SpellCatalog.text(
+            row.action ?? row.actions ?? field(sys.time, "value") ?? sys.action
+          ),
+          description: _SpellCatalog.text(
+            row.description ?? field(sys.description, "value") ?? sys.description
+          )
         });
       }
       if (!entries.length)
         throw new Error("No valid spells found. Each entry needs a name.");
       _SpellCatalog.assignIdentifiers(entries);
-      if (!entries.every((entry) => typeof entry.id === "string")) {
+      if (!entries.every(
+        (entry) => typeof entry.id === "string"
+      )) {
         throw new Error("Failed to assign catalogue IDs.");
       }
       return { entries, skipped, total: rows.length };
@@ -3982,12 +4714,21 @@ var SpellCard = (() => {
   // src/spell-card.ts
   var readonlyWidth = CARD_WIDTH;
   function cleanDescription(value) {
-    return String(value || "").replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/(?:p|div|li|h[1-6])\s*>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&(?:amp|lt|gt|quot|apos|nbsp);/gi, (entity) => ({ "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'", "&nbsp;": " " })[entity.toLowerCase()] || entity).replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*|__/g, "").replace(/(?<!\w)\*(?=\w)|(?<=\w)\*(?!\w)/g, "").replace(/^\s*#{1,6}\s*/gm, "").replace(/\r\n?/g, "\n").replace(/[ \t]+\n/g, "\n").trim();
+    return String(value || "").replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/(?:p|div|li|h[1-6])\s*>/gi, "\n").replace(/<[^>]+>/g, "").replace(
+      /&(?:amp|lt|gt|quot|apos|nbsp);/gi,
+      (entity) => ({
+        "&amp;": "&",
+        "&lt;": "<",
+        "&gt;": ">",
+        "&quot;": '"',
+        "&apos;": "'",
+        "&nbsp;": " "
+      })[entity.toLowerCase()] || entity
+    ).replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*|__/g, "").replace(/(?<!\w)\*(?=\w)|(?<=\w)\*(?!\w)/g, "").replace(/^\s*#{1,6}\s*/gm, "").replace(/\r\n?/g, "\n").replace(/[ \t]+\n/g, "\n").trim();
   }
   function wrapText(ctx, text, maxWidth) {
     const words = String(text).trim().split(/\s+/).filter(Boolean);
-    if (!words.length)
-      return [];
+    if (!words.length) return [];
     const lines = [];
     let line = "";
     for (const word of words) {
@@ -4008,51 +4749,51 @@ var SpellCard = (() => {
         line += char;
       }
     }
-    if (line)
-      lines.push(line);
+    if (line) lines.push(line);
     return lines;
   }
   function actionsLabel(value, rawAction = "") {
     const text = String(value || "").trim();
-    if (/^[123] actions?$/.test(text))
-      return text.toUpperCase();
-    if (text === "Reaction")
-      return "REACTION";
-    if (text === "Free action")
-      return "FREE ACTION";
-    if (text === "1 minute" || text === "10 minutes")
-      return text.toUpperCase();
+    if (/^[123] actions?$/.test(text)) return text.toUpperCase();
+    if (text === "Reaction") return "REACTION";
+    if (text === "Free action") return "FREE ACTION";
+    if (text === "1 minute" || text === "10 minutes") return text.toUpperCase();
     const raw = String(rawAction || "").trim();
-    if (/^[123]$/.test(raw))
-      return `${raw} ACTION${raw === "1" ? "" : "S"}`;
+    if (/^[123]$/.test(raw)) return `${raw} ACTION${raw === "1" ? "" : "S"}`;
     if (/^(reaction|free action|free)$/i.test(raw))
       return /reaction/i.test(raw) ? "REACTION" : "FREE ACTION";
-    if (raw)
-      return `CAST: ${raw.toUpperCase().slice(0, 48)}`;
+    if (raw) return `CAST: ${raw.toUpperCase().slice(0, 48)}`;
     return "CASTING TIME NOT LISTED";
   }
   function attributeValues(spell) {
     const clean = (value) => {
       const text = String(value ?? "").trim();
-      if (!text || /^(none|not listed)$/i.test(text))
-        return "None";
+      if (!text || /^(none|not listed)$/i.test(text)) return "None";
       return text.replace(/\+/g, " + ");
     };
     return [
-      { label: "Rank", value: spell.rank === "cantrip" ? "Cantrip" : clean(spell.rank) },
+      {
+        label: "Rank",
+        value: spell.rank === "cantrip" ? "Cantrip" : clean(spell.rank)
+      },
       { label: "Tradition", value: clean(spell.tradition) },
       { label: "Range", value: clean(spell.range) },
       { label: "Duration", value: clean(spell.duration) },
       { label: "Primary trait", value: clean(spell.effectTrait) },
       { label: "Damage", value: clean(spell.damage) },
       { label: "Area", value: clean(spell.area) },
-      { label: "Casting time", value: actionsLabel(spell.actions ?? spell.castActions, spell.rawAction).replace(/^CASTING TIME NOT LISTED$/, "Not listed").toLowerCase() },
+      {
+        label: "Casting time",
+        value: actionsLabel(spell.actions ?? spell.castActions, spell.rawAction).replace(/^CASTING TIME NOT LISTED$/, "Not listed").toLowerCase()
+      },
       { label: "Casting traits", value: clean(spell.castTraits) }
     ];
   }
   function rgb(hex) {
     const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#242a31";
-    return [1, 3, 5].map((index) => Number.parseInt(value.slice(index, index + 2), 16));
+    return [1, 3, 5].map(
+      (index) => Number.parseInt(value.slice(index, index + 2), 16)
+    );
   }
   function rgba(hex, opacity) {
     const [r, g, b] = rgb(hex);
@@ -4063,7 +4804,9 @@ var SpellCard = (() => {
     const accent = drawing.themeColor("lines");
     const vertex = drawing.themeColor("vertices");
     const [r, g, b] = rgb(background).map((c) => c / 255);
-    const linear = [r, g, b].map((c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const linear = [r, g, b].map(
+      (c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    );
     const light = linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722 > 0.38;
     return {
       background,
@@ -4081,14 +4824,14 @@ var SpellCard = (() => {
     const pad = 74;
     const inner = width - 2 * pad;
     const name = String(spell.name || "Untitled spell").trim();
-    let nameSize = 67, titleLines = [];
+    let nameSize = 67;
+    let titleLines;
     do {
       ctx.font = `normal ${nameSize}px Georgia, 'Times New Roman', serif`;
       titleLines = wrapText(ctx, name, inner);
-      if (titleLines.length <= 2 || nameSize <= 34)
-        break;
+      if (titleLines.length <= 2 || nameSize <= 34) break;
       nameSize -= 3;
-    } while (true);
+    } while (titleLines.length > 2 && nameSize >= 34);
     const titleBaseline = 119;
     const titleStep = nameSize + 11;
     const titleBottom = titleBaseline + (titleLines.length - 1) * titleStep;
@@ -4108,23 +4851,41 @@ var SpellCard = (() => {
       const chipWidth = Math.min(inner, requested);
       const wrapValue = requested > inner;
       const valueLines = wrapValue ? wrapText(ctx, value, Math.max(50, chipWidth - labelWidth - 50)) : [value];
-      const chipHeight = Math.max(45, wrapValue ? 30 + 25 * valueLines.length : 45);
+      const chipHeight = Math.max(
+        45,
+        wrapValue ? 30 + 25 * valueLines.length : 45
+      );
       if (x > pad && x + chipWidth > width - pad) {
         x = pad;
         y += rowHeight + rowGap;
         rowHeight = 0;
       }
-      attributeChips.push({ label, value, valueLines, x, y, width: chipWidth, height: chipHeight });
+      attributeChips.push({
+        label,
+        value,
+        valueLines,
+        x,
+        y,
+        width: chipWidth,
+        height: chipHeight
+      });
       x += chipWidth + gap;
       rowHeight = Math.max(rowHeight, chipHeight);
     }
     y += rowHeight + 19;
     const traitChips = [];
-    const traitTokens = [...new Set((spell.traits || []).map((value) => String(value).trim().toUpperCase()).filter(Boolean))];
+    const traitTokens = [
+      ...new Set(
+        (spell.traits || []).map((value) => String(value).trim().toUpperCase()).filter(Boolean)
+      )
+    ];
     x = pad;
     ctx.font = "600 15px Arial, Helvetica, sans-serif";
     for (const text of traitTokens) {
-      const chipWidth = Math.min(inner, Math.ceil(ctx.measureText(text).width + 30));
+      const chipWidth = Math.min(
+        inner,
+        Math.ceil(ctx.measureText(text).width + 30)
+      );
       if (x > pad && x + chipWidth > width - pad) {
         x = pad;
         y += 38;
@@ -4132,8 +4893,7 @@ var SpellCard = (() => {
       traitChips.push({ text, x, y, width: chipWidth, height: 30 });
       x += chipWidth + 9;
     }
-    if (traitChips.length)
-      y += 39;
+    if (traitChips.length) y += 39;
     const dividerY = y + 8;
     let descriptionY = dividerY + 48;
     const description = cleanDescription(spell.description) || "No description provided.";
@@ -4193,34 +4953,52 @@ var SpellCard = (() => {
     const image = document.createElement("canvas");
     image.width = width;
     let ctx = image.getContext("2d");
-    if (!ctx)
-      throw new Error("Spell card export needs Canvas 2D.");
+    if (!ctx) throw new Error("Spell card export needs Canvas 2D.");
     const plan = layout(ctx, spell, width);
     image.height = plan.height;
     ctx = image.getContext("2d");
-    if (!ctx)
-      throw new Error("Spell card export needs Canvas 2D.");
+    if (!ctx) throw new Error("Spell card export needs Canvas 2D.");
     const colors = palette(drawing);
     const center = { x: width / 2, y: plan.height / 2 };
-    drawing.paintThemeBackdrop(ctx, width, plan.height, center, Math.min(width, plan.height) * 0.39);
-    drawing.recolorBackground(ctx, width, plan.height);
+    drawing.paintThemeBackdrop(
+      ctx,
+      width,
+      plan.height,
+      center,
+      Math.min(width, plan.height) * 0.39
+    );
+    drawing.recolorBackground(ctx);
     ctx.fillStyle = colors.ink;
     ctx.textBaseline = "alphabetic";
     ctx.font = `normal ${plan.nameSize}px Georgia, 'Times New Roman', serif`;
     for (let i = 0; i < plan.titleLines.length; i++)
-      ctx.fillText(plan.titleLines[i], plan.pad, plan.titleBaseline + i * plan.titleStep);
+      ctx.fillText(
+        plan.titleLines[i],
+        plan.pad,
+        plan.titleBaseline + i * plan.titleStep
+      );
     ctx.fillStyle = colors.rule;
     ctx.fillRect(plan.pad, plan.artY - 20, plan.inner, 1.4);
     const art = document.createElement("canvas");
     art.width = plan.inner;
     art.height = plan.artHeight;
     const artCtx = art.getContext("2d");
-    if (!artCtx)
-      throw new Error("Unable to render spell sigil on card.");
-    drawing.paintNotation(artCtx, art.width, art.height, representation, { transparentBackground: true });
+    if (!artCtx) throw new Error("Unable to render spell sigil on card.");
+    drawing.paintNotation(artCtx, art.width, art.height, representation, {
+      transparentBackground: true
+    });
     ctx.drawImage(art, plan.pad, plan.artY);
     for (const chip of plan.attributeChips) {
-      roundRect(ctx, chip.x, chip.y, chip.width, chip.height, 10, colors.chipFill, colors.chipBorder);
+      roundRect(
+        ctx,
+        chip.x,
+        chip.y,
+        chip.width,
+        chip.height,
+        10,
+        colors.chipFill,
+        colors.chipBorder
+      );
       ctx.textBaseline = "middle";
       ctx.fillStyle = colors.accent;
       ctx.font = "700 13px Arial, Helvetica, sans-serif";
@@ -4234,11 +5012,26 @@ var SpellCard = (() => {
       if (chip.valueLines.length === 1) {
         ctx.fillText(chip.value, baseX, chip.y + chip.height / 2);
       } else {
-        chip.valueLines.forEach((line, i) => ctx.fillText(line, baseX, chip.y + (chip.height - (chip.valueLines.length - 1) * 23) / 2 + i * 23));
+        chip.valueLines.forEach(
+          (line, i) => ctx.fillText(
+            line,
+            baseX,
+            chip.y + (chip.height - (chip.valueLines.length - 1) * 23) / 2 + i * 23
+          )
+        );
       }
     }
     for (const chip of plan.traitChips) {
-      roundRect(ctx, chip.x, chip.y, chip.width, chip.height, 15, colors.chipFill, colors.chipBorder);
+      roundRect(
+        ctx,
+        chip.x,
+        chip.y,
+        chip.width,
+        chip.height,
+        15,
+        colors.chipFill,
+        colors.chipBorder
+      );
       ctx.fillStyle = colors.muted;
       ctx.font = "600 15px Arial, Helvetica, sans-serif";
       ctx.textBaseline = "middle";
@@ -4254,7 +5047,11 @@ var SpellCard = (() => {
     ctx.fillStyle = colors.muted;
     ctx.font = "14px Arial, Helvetica, sans-serif";
     ctx.textBaseline = "alphabetic";
-    ctx.fillText("Pathfinder spell material \xA9 Paizo Inc. \xB7 Unofficial \xB7 paizo.com/licenses/communityuse", plan.pad, plan.height - 29);
+    ctx.fillText(
+      "Pathfinder spell material \xA9 Paizo Inc. \xB7 Unofficial \xB7 paizo.com/licenses/communityuse",
+      plan.pad,
+      plan.height - 29
+    );
     return image;
   }
   return __toCommonJS(spell_card_exports);
@@ -4309,8 +5106,24 @@ var SigilConstants = (() => {
     UI_MODE_STORAGE: () => UI_MODE_STORAGE
   });
   const TRADITIONS = ["Arcane", "Divine", "Occult", "Primal"];
-  const CAST_ACTIONS = ["1 action", "2 actions", "3 actions", "Reaction", "Free action", "1 minute", "10 minutes", "Other"];
-  const CAST_TRAITS = ["none", "Concentrate", "Manipulate", "Both", "Legacy components", "Other"];
+  const CAST_ACTIONS = [
+    "1 action",
+    "2 actions",
+    "3 actions",
+    "Reaction",
+    "Free action",
+    "1 minute",
+    "10 minutes",
+    "Other"
+  ];
+  const CAST_TRAITS = [
+    "none",
+    "Concentrate",
+    "Manipulate",
+    "Both",
+    "Legacy components",
+    "Other"
+  ];
   const PRIMARY_TRAITS = [
     "Healing",
     "Mental",
@@ -4395,7 +5208,10 @@ var SigilConstants = (() => {
       color: "#67584b",
       options: choices([
         ["cantrip", "Cantrip (auto-heightens)"],
-        ...Array.from({ length: 10 }, (_, i) => [String(i + 1), `Rank ${i + 1}`])
+        ...Array.from({ length: 10 }, (_, i) => [
+          String(i + 1),
+          `Rank ${i + 1}`
+        ])
       ])
     },
     {
@@ -4488,30 +5304,61 @@ var SigilConstants = (() => {
         { value: "other", label: "Other" }
       ]
     },
-    { id: "castActions", label: "Casting time", color: "#8791a0", options: makeChoices(CAST_ACTIONS) },
-    { id: "duration", label: "Duration", color: "#779398", options: makeChoices([
-      "Instant",
-      "1 round",
-      "1 minute",
-      "10 minutes",
-      "1 hour",
-      "1 day+",
-      "Sustained",
-      "Until preparations",
-      "Variable",
-      "Other"
-    ]) },
-    { id: "effectTrait", label: "Primary trait", color: "#769b88", options: [
-      { value: "none", label: "No selected trait" },
-      ...makeChoices(PRIMARY_TRAITS)
-    ] },
-    { id: "castTraits", label: "Casting traits", color: "#8794a4", options: [
-      { value: "none", label: "None / unspecified" },
-      ...makeChoices(CAST_TRAITS.slice(1))
-    ] }
+    {
+      id: "castActions",
+      label: "Casting time",
+      color: "#8791a0",
+      options: makeChoices(CAST_ACTIONS)
+    },
+    {
+      id: "duration",
+      label: "Duration",
+      color: "#779398",
+      options: makeChoices([
+        "Instant",
+        "1 round",
+        "1 minute",
+        "10 minutes",
+        "1 hour",
+        "1 day+",
+        "Sustained",
+        "Until preparations",
+        "Variable",
+        "Other"
+      ])
+    },
+    {
+      id: "effectTrait",
+      label: "Primary trait",
+      color: "#769b88",
+      options: [
+        { value: "none", label: "No selected trait" },
+        ...makeChoices(PRIMARY_TRAITS)
+      ]
+    },
+    {
+      id: "castTraits",
+      label: "Casting traits",
+      color: "#8794a4",
+      options: [
+        { value: "none", label: "None / unspecified" },
+        ...makeChoices(CAST_TRAITS.slice(1))
+      ]
+    }
   ])();
-  const CHORD_ATTRIBUTE_IDS = ["rank", "tradition", "range", "duration", "effectTrait"];
-  const ORBIT_ATTRIBUTE_IDS = ["damage", "area", "castActions", "castTraits"];
+  const CHORD_ATTRIBUTE_IDS = [
+    "rank",
+    "tradition",
+    "range",
+    "duration",
+    "effectTrait"
+  ];
+  const ORBIT_ATTRIBUTE_IDS = [
+    "damage",
+    "area",
+    "castActions",
+    "castTraits"
+  ];
   const IDENTITY_TAG = "spell-id";
   const MAX_IDENTITY_BYTES = 192;
   const MAX_VARIANT_LENGTH = 70;
@@ -4524,7 +5371,11 @@ var SigilConstants = (() => {
     lines: "colorLines",
     vertices: "colorVertices"
   };
-  const COLOR_KEYS = ["background", "lines", "vertices"];
+  const COLOR_KEYS = [
+    "background",
+    "lines",
+    "vertices"
+  ];
   const DRAWING_CONTROLS = [
     "baseShape",
     "polygonSides",
@@ -4602,42 +5453,219 @@ var SigilConstants = (() => {
     labels: false,
     themeColors: null
   };
-  const TRAIT_THEMES = /* @__PURE__ */ (() => Object.fromEntries([
-    ["none", "plain", "#e7e3d9", "#5c6664", "#8a8574", "Neutral parchment."],
-    ["Healing", "divine", "#eff3df", "#307b68", "#7bb59c", "Soft green and restorative light."],
-    ["Mental", "occult", "#231f3c", "#c0abf1", "#edd8ff", "Violet ink and quiet ripples."],
-    ["Illusion", "occult", "#281b3b", "#ec9af9", "#b4e6f8", "Prismatic veils."],
-    ["Fire", "obsidian", "#341c18", "#ffaf6a", "#ffe2ab", "Ember ink on charred stone."],
-    ["Cold", "blueprint", "#102b44", "#a7eaff", "#d4f8ff", "Frost and blue glass."],
-    ["Electricity", "arcane", "#1e2440", "#fce67a", "#b0e5ff", "Charged gold traces."],
-    ["Acid", "primal", "#192e19", "#b4ec65", "#dffa9c", "Caustic green ink."],
-    ["Poison", "herbarium", "#e1e9d5", "#506e40", "#82a85c", "Toxic botanical stains."],
-    ["Water", "primal", "#0e3543", "#78dfdd", "#b8f6ee", "Sea-blue currents."],
-    ["Air", "constellations", "#173449", "#b8e5eb", "#effcfa", "Pale air on deep blue."],
-    ["Earth", "obsidian", "#30291e", "#dcb987", "#f3dcab", "Stone and ochre."],
-    ["Plant", "herbarium", "#e2efdb", "#478056", "#8cb98b", "Living leaf green."],
-    ["Wood", "herbarium", "#efe6d8", "#906d43", "#baa078", "Bark and warm sap."],
-    ["Metal", "obsidian", "#202a33", "#bbd2e0", "#f0f9ff", "Steel engraving."],
-    ["Light", "divine", "#fff5db", "#b8872f", "#d3ac6b", "Golden light."],
-    ["Darkness", "occult", "#171326", "#aa96cf", "#d4c6ec", "Velvet shadows."],
-    ["Polymorph", "arcane", "#20283a", "#7ee5bc", "#dbb8f9", "Changing teal and violet."],
-    ["Teleportation", "arcane", "#142a43", "#8bbdff", "#d5e6ff", "Blue spatial folds."],
-    ["Summon", "occult", "#30263b", "#f1c596", "#f4e2ce", "Ritual amber."],
-    ["Force", "blueprint", "#12243e", "#82b6ff", "#deeaff", "Dense cobalt lines."],
-    ["Spirit", "divine", "#f4eaf4", "#9569a4", "#c3a0ca", "Soft spirit lilac."],
-    ["Vitality", "divine", "#fbebdf", "#bc6775", "#e4a3a2", "Warm rose-gold energy."],
-    ["Void", "occult", "#141b25", "#98a9b5", "#d4dae0", "Ash and emptiness."],
-    ["Incapacitation", "obsidian", "#302020", "#e38e7a", "#ffbbab", "Dark crimson restraint."],
-    ["Emotion", "occult", "#392034", "#ffa1b8", "#ffcfda", "Warm rose and magenta."],
-    ["Detection", "blueprint", "#15343b", "#9cd5a5", "#d7fae0", "Fine green tracery."],
-    ["Shadow", "occult", "#1d1e2d", "#8c9ebd", "#c2c8de", "Dusky blue-grey."],
-    ["Sonic", "blueprint", "#1f2045", "#c4b2ff", "#e6dcff", "Violet resonance."],
-    ["Attack", "obsidian", "#301b1e", "#f08b86", "#ffccac", "Hot red etching."],
-    ["Other", "plain", "#eae5db", "#745d76", "#aa92a8", "Mauve parchment."]
-  ].map(([name, base, background, lines, vertices, description], i) => [name, { base, background, lines, vertices, description, seed: 1101 + i * 137 }])))();
+  const TRAIT_THEMES = /* @__PURE__ */ (() => Object.fromEntries(
+    [
+      ["none", "plain", "#e7e3d9", "#5c6664", "#8a8574", "Neutral parchment."],
+      [
+        "Healing",
+        "divine",
+        "#eff3df",
+        "#307b68",
+        "#7bb59c",
+        "Soft green and restorative light."
+      ],
+      [
+        "Mental",
+        "occult",
+        "#231f3c",
+        "#c0abf1",
+        "#edd8ff",
+        "Violet ink and quiet ripples."
+      ],
+      [
+        "Illusion",
+        "occult",
+        "#281b3b",
+        "#ec9af9",
+        "#b4e6f8",
+        "Prismatic veils."
+      ],
+      [
+        "Fire",
+        "obsidian",
+        "#341c18",
+        "#ffaf6a",
+        "#ffe2ab",
+        "Ember ink on charred stone."
+      ],
+      [
+        "Cold",
+        "blueprint",
+        "#102b44",
+        "#a7eaff",
+        "#d4f8ff",
+        "Frost and blue glass."
+      ],
+      [
+        "Electricity",
+        "arcane",
+        "#1e2440",
+        "#fce67a",
+        "#b0e5ff",
+        "Charged gold traces."
+      ],
+      ["Acid", "primal", "#192e19", "#b4ec65", "#dffa9c", "Caustic green ink."],
+      [
+        "Poison",
+        "herbarium",
+        "#e1e9d5",
+        "#506e40",
+        "#82a85c",
+        "Toxic botanical stains."
+      ],
+      [
+        "Water",
+        "primal",
+        "#0e3543",
+        "#78dfdd",
+        "#b8f6ee",
+        "Sea-blue currents."
+      ],
+      [
+        "Air",
+        "constellations",
+        "#173449",
+        "#b8e5eb",
+        "#effcfa",
+        "Pale air on deep blue."
+      ],
+      [
+        "Earth",
+        "obsidian",
+        "#30291e",
+        "#dcb987",
+        "#f3dcab",
+        "Stone and ochre."
+      ],
+      [
+        "Plant",
+        "herbarium",
+        "#e2efdb",
+        "#478056",
+        "#8cb98b",
+        "Living leaf green."
+      ],
+      [
+        "Wood",
+        "herbarium",
+        "#efe6d8",
+        "#906d43",
+        "#baa078",
+        "Bark and warm sap."
+      ],
+      [
+        "Metal",
+        "obsidian",
+        "#202a33",
+        "#bbd2e0",
+        "#f0f9ff",
+        "Steel engraving."
+      ],
+      ["Light", "divine", "#fff5db", "#b8872f", "#d3ac6b", "Golden light."],
+      [
+        "Darkness",
+        "occult",
+        "#171326",
+        "#aa96cf",
+        "#d4c6ec",
+        "Velvet shadows."
+      ],
+      [
+        "Polymorph",
+        "arcane",
+        "#20283a",
+        "#7ee5bc",
+        "#dbb8f9",
+        "Changing teal and violet."
+      ],
+      [
+        "Teleportation",
+        "arcane",
+        "#142a43",
+        "#8bbdff",
+        "#d5e6ff",
+        "Blue spatial folds."
+      ],
+      ["Summon", "occult", "#30263b", "#f1c596", "#f4e2ce", "Ritual amber."],
+      [
+        "Force",
+        "blueprint",
+        "#12243e",
+        "#82b6ff",
+        "#deeaff",
+        "Dense cobalt lines."
+      ],
+      [
+        "Spirit",
+        "divine",
+        "#f4eaf4",
+        "#9569a4",
+        "#c3a0ca",
+        "Soft spirit lilac."
+      ],
+      [
+        "Vitality",
+        "divine",
+        "#fbebdf",
+        "#bc6775",
+        "#e4a3a2",
+        "Warm rose-gold energy."
+      ],
+      ["Void", "occult", "#141b25", "#98a9b5", "#d4dae0", "Ash and emptiness."],
+      [
+        "Incapacitation",
+        "obsidian",
+        "#302020",
+        "#e38e7a",
+        "#ffbbab",
+        "Dark crimson restraint."
+      ],
+      [
+        "Emotion",
+        "occult",
+        "#392034",
+        "#ffa1b8",
+        "#ffcfda",
+        "Warm rose and magenta."
+      ],
+      [
+        "Detection",
+        "blueprint",
+        "#15343b",
+        "#9cd5a5",
+        "#d7fae0",
+        "Fine green tracery."
+      ],
+      ["Shadow", "occult", "#1d1e2d", "#8c9ebd", "#c2c8de", "Dusky blue-grey."],
+      [
+        "Sonic",
+        "blueprint",
+        "#1f2045",
+        "#c4b2ff",
+        "#e6dcff",
+        "Violet resonance."
+      ],
+      [
+        "Attack",
+        "obsidian",
+        "#301b1e",
+        "#f08b86",
+        "#ffccac",
+        "Hot red etching."
+      ],
+      ["Other", "plain", "#eae5db", "#745d76", "#aa92a8", "Mauve parchment."]
+    ].map(([name, base, background, lines, vertices, description], i) => [
+      name,
+      { base, background, lines, vertices, description, seed: 1101 + i * 137 }
+    ])
+  ))();
   const THEME_PALETTES = /* @__PURE__ */ (() => ({
     plain: { background: "#f4eedf", lines: "#735a40", vertices: "#857052" },
-    constellations: { background: "#0e1c35", lines: "#e4f4ff", vertices: "#f4faff" },
+    constellations: {
+      background: "#0e1c35",
+      lines: "#e4f4ff",
+      vertices: "#f4faff"
+    },
     blueprint: { background: "#0c2d3e", lines: "#a6e5f3", vertices: "#a5e6ef" },
     obsidian: { background: "#1e2023", lines: "#e3c48a", vertices: "#f1ca89" },
     herbarium: { background: "#eaf0e2", lines: "#566c53", vertices: "#4c6652" },
@@ -4646,7 +5674,16 @@ var SigilConstants = (() => {
     occult: { background: "#2a172d", lines: "#e4a9d1", vertices: "#e6b1d5" },
     primal: { background: "#12372e", lines: "#b3e4ae", vertices: "#b3dba5" },
     tattoo: { background: "#d8ad92", lines: "#252426", vertices: "#252426" },
-    ...Object.fromEntries(Object.entries(TRAIT_THEMES).map(([name, preset]) => [`trait-${name.toLowerCase()}`, { background: preset.background, lines: preset.lines, vertices: preset.vertices }]))
+    ...Object.fromEntries(
+      Object.entries(TRAIT_THEMES).map(([name, preset]) => [
+        `trait-${name.toLowerCase()}`,
+        {
+          background: preset.background,
+          lines: preset.lines,
+          vertices: preset.vertices
+        }
+      ])
+    )
   }))();
   function editorThemes() {
     const DESIGN_DESCRIPTIONS = {
@@ -4674,22 +5711,85 @@ var SigilConstants = (() => {
       tattoo: "Fine dotwork diamonds and sparse ornamental stippling."
     };
     const DESIGN_DEFAULTS = {
-      plain: { dotStyle: "circle", vertexSize: "1", vertexStroke: "1.5", decorations: false, decorationSeed: 101 },
-      constellations: { dotStyle: "star", vertexSize: "0.7", vertexStroke: "1", decorations: false, decorationSeed: 202 },
-      blueprint: { dotStyle: "empty", vertexSize: "0.9", vertexStroke: "1.5", decorations: false, decorationSeed: 303 },
-      obsidian: { dotStyle: "diamond", vertexSize: "0.85", vertexStroke: "1.25", decorations: false, decorationSeed: 404 },
-      herbarium: { dotStyle: "circle", vertexSize: "0.9", vertexStroke: "1.25", decorations: false, decorationSeed: 505 },
-      arcane: { dotStyle: "star", vertexSize: "0.82", vertexStroke: "1.25", decorations: false, decorationSeed: 606 },
-      divine: { dotStyle: "diamond", vertexSize: "1", vertexStroke: "1.5", decorations: false, decorationSeed: 707 },
-      occult: { dotStyle: "star", vertexSize: "0.75", vertexStroke: "1", decorations: false, decorationSeed: 808 },
-      primal: { dotStyle: "hexagon", vertexSize: "0.92", vertexStroke: "1.25", decorations: false, decorationSeed: 909 },
-      tattoo: { dotStyle: "circle", vertexSize: "0.5", vertexStroke: "0.75", decorations: false, decorationSeed: 1010 }
+      plain: {
+        dotStyle: "circle",
+        vertexSize: "1",
+        vertexStroke: "1.5",
+        decorations: false,
+        decorationSeed: 101
+      },
+      constellations: {
+        dotStyle: "star",
+        vertexSize: "0.7",
+        vertexStroke: "1",
+        decorations: false,
+        decorationSeed: 202
+      },
+      blueprint: {
+        dotStyle: "empty",
+        vertexSize: "0.9",
+        vertexStroke: "1.5",
+        decorations: false,
+        decorationSeed: 303
+      },
+      obsidian: {
+        dotStyle: "diamond",
+        vertexSize: "0.85",
+        vertexStroke: "1.25",
+        decorations: false,
+        decorationSeed: 404
+      },
+      herbarium: {
+        dotStyle: "circle",
+        vertexSize: "0.9",
+        vertexStroke: "1.25",
+        decorations: false,
+        decorationSeed: 505
+      },
+      arcane: {
+        dotStyle: "star",
+        vertexSize: "0.82",
+        vertexStroke: "1.25",
+        decorations: false,
+        decorationSeed: 606
+      },
+      divine: {
+        dotStyle: "diamond",
+        vertexSize: "1",
+        vertexStroke: "1.5",
+        decorations: false,
+        decorationSeed: 707
+      },
+      occult: {
+        dotStyle: "star",
+        vertexSize: "0.75",
+        vertexStroke: "1",
+        decorations: false,
+        decorationSeed: 808
+      },
+      primal: {
+        dotStyle: "hexagon",
+        vertexSize: "0.92",
+        vertexStroke: "1.25",
+        decorations: false,
+        decorationSeed: 909
+      },
+      tattoo: {
+        dotStyle: "circle",
+        vertexSize: "0.5",
+        vertexStroke: "0.75",
+        decorations: false,
+        decorationSeed: 1010
+      }
     };
     for (const [trait, preset] of Object.entries(TRAIT_THEMES)) {
       const key = `trait-${trait.toLowerCase()}`;
       DESIGN_DESCRIPTIONS[key] = preset.description;
       DECORATION_DESCRIPTIONS[key] = DECORATION_DESCRIPTIONS[preset.base];
-      DESIGN_DEFAULTS[key] = { ...DESIGN_DEFAULTS[preset.base], decorationSeed: preset.seed };
+      DESIGN_DEFAULTS[key] = {
+        ...DESIGN_DEFAULTS[preset.base],
+        decorationSeed: preset.seed
+      };
     }
     return { DESIGN_DESCRIPTIONS, DECORATION_DESCRIPTIONS, DESIGN_DEFAULTS };
   }
@@ -4724,7 +5824,10 @@ var SigilDownload = (() => {
   });
   async function downloadPng(canvas, filename) {
     const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob((value) => value ? resolve(value) : reject(new Error("PNG creation failed.")), "image/png");
+      canvas.toBlob(
+        (value) => value ? resolve(value) : reject(new Error("PNG creation failed.")),
+        "image/png"
+      );
     });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -4757,8 +5860,7 @@ const attributesFor = (attributes, ids) => ids.map((id) => attributes.find((attr
 const fieldIDs = SPELL_ATTRIBUTES.map((attribute) => attribute.id);
 function $(id) {
   const element = document.getElementById(id);
-  if (!element)
-    throw new Error(`Missing UI element: ${id}`);
+  if (!element) throw new Error(`Missing UI element: ${id}`);
   return element;
 }
 function elementOf(id, type) {
@@ -4774,8 +5876,12 @@ const textarea = (id) => elementOf(id, HTMLTextAreaElement);
 const canvasElement = (id) => elementOf(id, HTMLCanvasElement);
 const editorPanel = $("editorPanel");
 const editorNavigation = $("editorNavigation");
-const editorLinks = Array.from(editorNavigation.querySelectorAll("[data-scroll-target]"));
-const editorSections = editorLinks.map((link) => $(link.dataset.scrollTarget || ""));
+const editorLinks = Array.from(
+  editorNavigation.querySelectorAll("[data-scroll-target]")
+);
+const editorSections = editorLinks.map(
+  (link) => $(link.dataset.scrollTarget || "")
+);
 $("notationSection").before($("designSection"));
 const mobileEditor = window.matchMedia("(max-width:850px)");
 function setEditorSection(section) {
@@ -4808,7 +5914,10 @@ for (const [index, link] of editorLinks.entries()) {
     const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
     setEditorSection(section);
     if (mobileEditor.matches)
-      window.scrollTo({ top: window.scrollY + section.getBoundingClientRect().top - offset, behavior });
+      window.scrollTo({
+        top: window.scrollY + section.getBoundingClientRect().top - offset,
+        behavior
+      });
     else
       editorPanel.scrollTo({
         top: editorPanel.scrollTop + section.getBoundingClientRect().top - editorNavigation.getBoundingClientRect().top - offset,
@@ -4816,7 +5925,9 @@ for (const [index, link] of editorLinks.entries()) {
       });
   });
 }
-editorPanel.addEventListener("scroll", scheduleEditorSection, { passive: true });
+editorPanel.addEventListener("scroll", scheduleEditorSection, {
+  passive: true
+});
 window.addEventListener("scroll", scheduleEditorSection, { passive: true });
 window.addEventListener("resize", scheduleEditorSection);
 editorPanel.addEventListener("toggle", scheduleEditorSection, true);
@@ -4842,8 +5953,14 @@ function setInterfaceMode(mode, persist = true) {
   colorScheme.content = light ? "light" : "dark";
   $("uiModeIcon").textContent = light ? "\u263E" : "\u263C";
   $("uiModeLabel").textContent = light ? "Dark mode" : "Light mode";
-  button("uiModeToggle").setAttribute("aria-label", `Switch to ${light ? "dark" : "light"} mode`);
-  button("uiModeToggle").setAttribute("title", `Switch to ${light ? "dark" : "light"} mode`);
+  button("uiModeToggle").setAttribute(
+    "aria-label",
+    `Switch to ${light ? "dark" : "light"} mode`
+  );
+  button("uiModeToggle").setAttribute(
+    "title",
+    `Switch to ${light ? "dark" : "light"} mode`
+  );
   if (persist) {
     try {
       localStorage.setItem(UI_MODE_STORAGE, light ? "light" : "dark");
@@ -4859,14 +5976,23 @@ try {
   console.warn("Unable to load interface mode:", error);
 }
 setInterfaceMode(initialUiMode, false);
-button("uiModeToggle").addEventListener("click", () => setInterfaceMode(document.documentElement.dataset.uiMode === "light" ? "dark" : "light"));
+button("uiModeToggle").addEventListener(
+  "click",
+  () => setInterfaceMode(
+    document.documentElement.dataset.uiMode === "light" ? "dark" : "light"
+  )
+);
 const canvas = canvasElement("spellCanvas");
 const calculation = new SpellCalculation(
   attributesFor(SPELL_ATTRIBUTES, CHORD_ATTRIBUTE_IDS),
   attributesFor(SPELL_ATTRIBUTES, ORBIT_ATTRIBUTE_IDS)
 );
 const drawing = new SpellDrawing();
-let currentSpell = { edition: "pf2e", name: "Untitled spell", variant: "" };
+let currentSpell = {
+  edition: "pf2e",
+  name: "Untitled spell",
+  variant: ""
+};
 let activeAttributes = SPELL_ATTRIBUTES;
 let catalogue = SpellCatalog.parse(window.DEFAULT_SPELL_CATALOG);
 let selectedEntry = null;
@@ -4895,7 +6021,7 @@ function loadColors() {
   }
   return preferences;
 }
-let colorPreferences = loadColors();
+const colorPreferences = loadColors();
 function refreshColorControls() {
   for (const key of COLOR_KEYS)
     input(COLOR_IDS[key]).value = colorPreferences[currentDesign][key];
@@ -4909,7 +6035,12 @@ function saveColors() {
   }
 }
 const initialDesign = select("designTheme").value;
-const freshDesignPreferences = () => Object.fromEntries(Object.entries(DESIGN_DEFAULTS).map(([key, values]) => [key, { ...values }]));
+const freshDesignPreferences = () => Object.fromEntries(
+  Object.entries(DESIGN_DEFAULTS).map(([key, values]) => [
+    key,
+    { ...values }
+  ])
+);
 let currentDesign = initialDesign;
 let designPreferences = freshDesignPreferences();
 const themeGroups = {
@@ -4923,7 +6054,10 @@ function themeGroupFor(option) {
 function showThemeGroup(group) {
   for (const [name, choices] of Object.entries(themeGroups)) {
     choices.hidden = name !== group;
-    button(`${name}Category`).setAttribute("aria-pressed", String(name === group));
+    button(`${name}Category`).setAttribute(
+      "aria-pressed",
+      String(name === group)
+    );
   }
 }
 const themeRadios = Array.from(select("designTheme").options).map((option) => {
@@ -4938,7 +6072,10 @@ const themeRadios = Array.from(select("designTheme").options).map((option) => {
   const swatch = document.createElement("span");
   swatch.className = "theme-choice-swatch";
   swatch.setAttribute("aria-hidden", "true");
-  swatch.style.setProperty("--swatch-bg", FACTORY_COLORS[option.value].background);
+  swatch.style.setProperty(
+    "--swatch-bg",
+    FACTORY_COLORS[option.value].background
+  );
   swatch.style.setProperty("--swatch-line", FACTORY_COLORS[option.value].lines);
   const title = document.createElement("span");
   title.className = "theme-choice-label";
@@ -4949,12 +6086,14 @@ const themeRadios = Array.from(select("designTheme").options).map((option) => {
 });
 function syncThemeSelector() {
   const source = select("designTheme");
-  for (const radio of themeRadios)
-    radio.checked = radio.value === source.value;
+  for (const radio of themeRadios) radio.checked = radio.value === source.value;
   showThemeGroup(themeGroupFor(source.selectedOptions[0]));
 }
 for (const group of ["surfaces", "traditions", "traits"])
-  button(`${group}Category`).addEventListener("click", () => showThemeGroup(group));
+  button(`${group}Category`).addEventListener(
+    "click",
+    () => showThemeGroup(group)
+  );
 $("themeChoices").addEventListener("change", (event) => {
   if (event.target instanceof HTMLInputElement && event.target.checked) {
     const source = select("designTheme");
@@ -4962,22 +6101,25 @@ $("themeChoices").addEventListener("change", (event) => {
     source.dispatchEvent(new Event("change", { bubbles: true }));
   }
 });
-const initialDrawingValues = Object.fromEntries(DRAWING_CONTROLS.map((id) => {
-  const control = drawingControl(id);
-  return [id, control instanceof HTMLInputElement && control.type === "checkbox" ? control.checked : control.value];
-}));
+const initialDrawingValues = Object.fromEntries(
+  DRAWING_CONTROLS.map((id) => {
+    const control = drawingControl(id);
+    return [
+      id,
+      control instanceof HTMLInputElement && control.type === "checkbox" ? control.checked : control.value
+    ];
+  })
+);
 function resetDrawingControls() {
   for (const [id, value] of Object.entries(initialDrawingValues)) {
     const control = drawingControl(id);
     if (control instanceof HTMLInputElement && control.type === "checkbox" && typeof value === "boolean")
       control.checked = value;
-    else if (typeof value === "string")
-      control.value = value;
+    else if (typeof value === "string") control.value = value;
   }
 }
 function switchDesign(next) {
-  if (!DESIGN_DEFAULTS[next])
-    return;
+  if (!DESIGN_DEFAULTS[next]) return;
   designPreferences[currentDesign] = {
     dotStyle: select("dotStyle").value,
     vertexSize: input("vertexSize").value,
@@ -5004,19 +6146,26 @@ function replaceOptions(select2, items) {
   }
 }
 function attributesForDataset(entries) {
-  const attrs = SPELL_ATTRIBUTES.map((attribute) => ({ ...attribute, options: attribute.options.map((o) => ({ ...o })) }));
+  const attrs = SPELL_ATTRIBUTES.map((attribute) => ({
+    ...attribute,
+    options: attribute.options.map((o) => ({ ...o }))
+  }));
   const range = attrs.find((a) => a.id === "range");
-  if (!range)
-    throw new Error("Missing range attribute");
+  if (!range) throw new Error("Missing range attribute");
   const existing = new Set(range.options.map((opt) => opt.value));
-  const observed = [...new Set(entries.map((entry) => entry.range))].filter((v) => v && !existing.has(v));
+  const observed = [...new Set(entries.map((entry) => entry.range))].filter(
+    (v) => v && !existing.has(v)
+  );
   observed.sort((a, b) => a.localeCompare(b, void 0, { numeric: true }));
-  const capacity = SpellCalculation.uniqueNecklaces(SpellCalculation.nextPrime(2 * CHORD_ATTRIBUTE_IDS.length + 1)).length;
+  const capacity = SpellCalculation.uniqueNecklaces(
+    SpellCalculation.nextPrime(2 * CHORD_ATTRIBUTE_IDS.length + 1)
+  ).length;
   if (range.options.length + observed.length > capacity) {
-    throw new Error(`Too many distinct ranges in library (max ${capacity - range.options.length} custom ranges).`);
+    throw new Error(
+      `Too many distinct ranges in library (max ${capacity - range.options.length} custom ranges).`
+    );
   }
-  for (const value of observed)
-    range.options.push({ value, label: value });
+  for (const value of observed) range.options.push({ value, label: value });
   return attrs;
 }
 function selectValue(select2, value) {
@@ -5032,11 +6181,13 @@ function readState() {
     name: input("spellName").value.trim() || "Untitled spell",
     variant: input("spellVariant").value.trim()
   };
-  for (const id of fieldIDs)
-    spell[id] = select(id).value;
+  for (const id of fieldIDs) spell[id] = select(id).value;
   return spell;
 }
-function paint(context, width, height, representation = calculation.represent(currentSpell, drawing.settings.rankComplexity)) {
+function paint(context, width, height, representation = calculation.represent(
+  currentSpell,
+  drawing.settings.rankComplexity
+)) {
   drawing.paintNotation(context, width, height, representation);
 }
 function draw(representation) {
@@ -5060,11 +6211,13 @@ function showRenderError(error) {
   $("renderError").textContent = error instanceof Error ? error.message : String(error);
   $("renderError").hidden = false;
 }
-function updateNotationInfo(visible = calculation.represent(currentSpell, drawing.settings.rankComplexity).visible) {
+function updateNotationInfo(visible = calculation.represent(
+  currentSpell,
+  drawing.settings.rankComplexity
+).visible) {
   const filtered = visible.revealCount < visible.totalRevealable;
   const rankMeta = $("rankRevealBadge").parentElement;
-  if (!rankMeta)
-    throw new Error("Missing rank reveal container");
+  if (!rankMeta) throw new Error("Missing rank reveal container");
   rankMeta.hidden = !filtered;
   $("rankRevealBadge").textContent = filtered ? `${Math.round(visible.revealFraction * 100)}% optional detail` : "";
   $("rankRevealHelp").textContent = filtered ? `${visible.optionalVisible} of ${visible.optionalTotal} non-Rank elements shown.` : "";
@@ -5073,7 +6226,10 @@ function updateNotationInfo(visible = calculation.represent(currentSpell, drawin
 function render() {
   const spell = readState();
   try {
-    const representation = calculation.represent(spell, drawing.settings.rankComplexity);
+    const representation = calculation.represent(
+      spell,
+      drawing.settings.rankComplexity
+    );
     currentSpell = { ...spell };
     draw(representation);
     $("renderError").hidden = true;
@@ -5109,11 +6265,12 @@ function closeSpellPicker() {
   $("spellPickerStatus").textContent = "";
 }
 function movePickerActive(index) {
-  if (!pickerOptions.length)
-    return;
+  if (!pickerOptions.length) return;
   pickerActive = (index + pickerOptions.length) % pickerOptions.length;
   const items = $("spellPickerList").querySelectorAll('[role="option"]');
-  items.forEach((item, i) => item.classList.toggle("is-active", i === pickerActive));
+  items.forEach(
+    (item, i) => item.classList.toggle("is-active", i === pickerActive)
+  );
   const active = items[pickerActive];
   input("spellPickerInput").setAttribute("aria-activedescendant", active.id);
   active.scrollIntoView({ block: "nearest" });
@@ -5121,7 +6278,9 @@ function movePickerActive(index) {
 function openSpellPicker(query = "", focusSelected = false) {
   pickerOpen = true;
   const terms = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-  const matching = spellRows.filter((row) => terms.every((term) => row.search.includes(term)));
+  const matching = spellRows.filter(
+    (row) => terms.every((term) => row.search.includes(term))
+  );
   const canChooseCustom = !terms.length || terms.every((term) => "custom spell".includes(term));
   const visible = matching;
   pickerOptions = [
@@ -5140,7 +6299,12 @@ function openSpellPicker(query = "", focusSelected = false) {
     item.className = "spell-picker-option";
     item.id = `spell-picker-option-${index}`;
     item.setAttribute("role", "option");
-    item.setAttribute("aria-selected", String(selectedEntry ? selectedEntry.id === option.id : option.id === "custom"));
+    item.setAttribute(
+      "aria-selected",
+      String(
+        selectedEntry ? selectedEntry.id === option.id : option.id === "custom"
+      )
+    );
     item.dataset.spellId = option.id;
     const name = document.createElement("span");
     name.textContent = option.label;
@@ -5164,47 +6328,45 @@ function openSpellPicker(query = "", focusSelected = false) {
   let active = 0;
   if (focusSelected && selectedEntry) {
     const selectedId = selectedEntry.id;
-    const selectedIndex = pickerOptions.findIndex((option) => option.id === selectedId);
-    if (selectedIndex >= 0)
-      active = selectedIndex;
+    const selectedIndex = pickerOptions.findIndex(
+      (option) => option.id === selectedId
+    );
+    if (selectedIndex >= 0) active = selectedIndex;
   }
   pickerActive = -1;
-  if (pickerOptions.length)
-    movePickerActive(active);
+  if (pickerOptions.length) movePickerActive(active);
 }
 function pickSpellOption(id) {
   closeSpellPicker();
-  if (id === "custom")
-    startCustomSpell();
-  else
-    chooseSpell(id);
+  if (id === "custom") startCustomSpell();
+  else chooseSpell(id);
 }
 function refreshSpellChoices() {
   const available = catalogue.entries;
-  spellRows = available.map((entry) => ({ entry, search: [
-    entry.name,
-    entry.rank,
-    entry.rank === "cantrip" ? "cantrip" : `rank ${entry.rank}`,
-    entry.source,
-    entry.edition === "both" ? "both remaster legacy" : entry.edition,
-    entry.category,
-    entry.tradition,
-    entry.damage,
-    entry.range,
-    ...entry.traits || [],
-    ...entry.traditions || [],
-    ...fieldIDs.map((id) => entry[id])
-  ].filter(Boolean).join(" ").toLocaleLowerCase() }));
+  spellRows = available.map((entry) => ({
+    entry,
+    search: [
+      entry.name,
+      entry.rank,
+      entry.rank === "cantrip" ? "cantrip" : `rank ${entry.rank}`,
+      entry.source,
+      entry.edition === "both" ? "both remaster legacy" : entry.edition,
+      entry.category,
+      entry.tradition,
+      entry.damage,
+      entry.range,
+      ...entry.traits || [],
+      ...entry.traditions || [],
+      ...fieldIDs.map((id) => entry[id])
+    ].filter(Boolean).join(" ").toLocaleLowerCase()
+  }));
   $("catalogCount").textContent = `${available.length.toLocaleString()} spells`;
-  if (pickerOpen)
-    openSpellPicker("");
-  else
-    input("spellPickerInput").value = pickerSelectionLabel();
+  if (pickerOpen) openSpellPicker("");
+  else input("spellPickerInput").value = pickerSelectionLabel();
 }
 function chooseSpell(id) {
   const entry = catalogue.entries.find((e) => e.id === id);
-  if (!entry)
-    return false;
+  if (!entry) return false;
   selectedEntry = entry;
   input("spellName").value = entry.name;
   input("spellVariant").value = entry.variant;
@@ -5217,8 +6379,7 @@ function chooseSpell(id) {
   return true;
 }
 function newCustomId() {
-  if (window.crypto?.randomUUID)
-    return `custom-${window.crypto.randomUUID()}`;
+  if (window.crypto?.randomUUID) return `custom-${window.crypto.randomUUID()}`;
   return `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 function startCustomSpell() {
@@ -5240,13 +6401,15 @@ function loadAllSpells(keepSelection = false) {
   activeAttributes = attributesForDataset(catalogue.entries);
   for (const attribute of activeAttributes)
     replaceOptions(select(attribute.id), attribute.options);
-  calculation.setChordAttributes(attributesFor(activeAttributes, CHORD_ATTRIBUTE_IDS));
-  calculation.setOrbitAttributes(attributesFor(activeAttributes, ORBIT_ATTRIBUTE_IDS));
+  calculation.setChordAttributes(
+    attributesFor(activeAttributes, CHORD_ATTRIBUTE_IDS)
+  );
+  calculation.setOrbitAttributes(
+    attributesFor(activeAttributes, ORBIT_ATTRIBUTE_IDS)
+  );
   const preferred = catalogue.entries.find((entry) => entry.id === oldEntry) || catalogue.entries.find((entry) => entry.name.toLowerCase() === "scrying") || catalogue.entries[0];
-  if (preferred)
-    chooseSpell(preferred.id);
-  else
-    startCustomSpell();
+  if (preferred) chooseSpell(preferred.id);
+  else startCustomSpell();
 }
 function setCatalogue(parsed) {
   attributesForDataset(parsed.entries);
@@ -5254,14 +6417,11 @@ function setCatalogue(parsed) {
   loadAllSpells(true);
 }
 async function loadNeighborCatalog() {
-  if (location.protocol === "file:")
-    return;
+  if (location.protocol === "file:") return;
   try {
     const response = await fetch("../data/spell.json", { cache: "no-store" });
-    if (response.status === 404)
-      return;
-    if (!response.ok)
-      throw new Error(`HTTP ${response.status}`);
+    if (response.status === 404) return;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const parsed = SpellCatalog.parse(await response.json());
     setCatalogue(parsed);
     if (parsed.skipped) {
@@ -5296,7 +6456,10 @@ function updateCanvasOptions() {
   $("inkFeatherValue").textContent = `${Math.round(Number(input("inkFeather").value) * 100)}%`;
   for (const id of ["inkWobble", "inkPressure", "inkFeather"])
     input(id).disabled = !input("handDrawnInk").checked;
-  $("handInkParameters").classList.toggle("is-off", !input("handDrawnInk").checked);
+  $("handInkParameters").classList.toggle(
+    "is-off",
+    !input("handDrawnInk").checked
+  );
   const markerShape = select("identityTickShape").value;
   const lineVisible = markerShape === "line" || markerShape === "mixed";
   const dotVisible = markerShape === "dot" || markerShape === "mixed";
@@ -5359,7 +6522,7 @@ function updateCanvasOptions() {
   draw();
   try {
     updateNotationInfo();
-  } catch (_) {
+  } catch {
   }
 }
 const pickerInput = input("spellPickerInput");
@@ -5371,29 +6534,27 @@ pickerInput.addEventListener("input", () => openSpellPicker(pickerInput.value));
 pickerInput.addEventListener("keydown", (event) => {
   if (event.key === "ArrowDown" || event.key === "ArrowUp") {
     event.preventDefault();
-    if (!pickerOpen)
-      openSpellPicker("", true);
-    else
-      movePickerActive(pickerActive + (event.key === "ArrowDown" ? 1 : -1));
+    if (!pickerOpen) openSpellPicker("", true);
+    else movePickerActive(pickerActive + (event.key === "ArrowDown" ? 1 : -1));
   } else if (event.key === "Enter" && pickerOpen) {
     event.preventDefault();
-    if (pickerActive >= 0)
-      pickSpellOption(pickerOptions[pickerActive].id);
+    if (pickerActive >= 0) pickSpellOption(pickerOptions[pickerActive].id);
   } else if (event.key === "Escape" && pickerOpen) {
     event.preventDefault();
     closeSpellPicker();
-  } else if (event.key === "Tab")
-    closeSpellPicker();
+  } else if (event.key === "Tab") closeSpellPicker();
 });
 button("spellPickerToggle").addEventListener("click", () => {
-  if (pickerOpen)
-    closeSpellPicker();
+  if (pickerOpen) closeSpellPicker();
   else {
     pickerInput.focus();
     openSpellPicker("", true);
   }
 });
-$("spellPickerList").addEventListener("mousedown", (event) => event.preventDefault());
+$("spellPickerList").addEventListener(
+  "mousedown",
+  (event) => event.preventDefault()
+);
 $("spellPickerList").addEventListener("click", (event) => {
   const item = event.target instanceof Element ? event.target.closest("[data-spell-id]") : null;
   if (item instanceof HTMLElement && item.dataset.spellId)
@@ -5407,11 +6568,16 @@ document.addEventListener("pointerdown", (event) => {
   if (pickerOpen && (!(event.target instanceof Node) || !$("spellPicker").contains(event.target)))
     closeSpellPicker();
 });
-[input("spellName"), input("spellVariant"), ...fieldIDs.map(select)].forEach((input2) => {
-  const event = input2.tagName === "INPUT" ? "input" : "change";
-  input2.addEventListener(event, markCustom);
-});
-select("designTheme").addEventListener("change", () => switchDesign(select("designTheme").value));
+[input("spellName"), input("spellVariant"), ...fieldIDs.map(select)].forEach(
+  (input2) => {
+    const event = input2.tagName === "INPUT" ? "input" : "change";
+    input2.addEventListener(event, markCustom);
+  }
+);
+select("designTheme").addEventListener(
+  "change",
+  () => switchDesign(select("designTheme").value)
+);
 for (const key of COLOR_KEYS) {
   const control = input(COLOR_IDS[key]);
   control.addEventListener("input", () => {
@@ -5428,22 +6594,23 @@ button("resetThemeColors").addEventListener("click", () => {
 });
 input("decorations").addEventListener("change", updateCanvasOptions);
 button("rerollDecorations").addEventListener("click", () => {
-  if (!input("decorations").checked)
-    return;
+  if (!input("decorations").checked) return;
   const old = designPreferences[currentDesign].decorationSeed;
   let value;
   if (window.crypto?.getRandomValues) {
     const bytes = new Uint32Array(1);
     window.crypto.getRandomValues(bytes);
     value = bytes[0] >>> 0;
-  } else
-    value = Math.random() * 4294967296 >>> 0;
+  } else value = Math.random() * 4294967296 >>> 0;
   designPreferences[currentDesign].decorationSeed = value === old ? value + 1 >>> 0 : value;
   updateCanvasOptions();
 });
 for (const id of DRAWING_CONTROLS) {
   const control = drawingControl(id);
-  control.addEventListener(control.type === "range" ? "input" : "change", updateCanvasOptions);
+  control.addEventListener(
+    control.type === "range" ? "input" : "change",
+    updateCanvasOptions
+  );
 }
 button("resetSpell").addEventListener("click", () => {
   designPreferences = freshDesignPreferences();
@@ -5457,16 +6624,12 @@ button("resetSpell").addEventListener("click", () => {
 });
 const creditsDialog = dialog("creditsDialog");
 button("creditsOpen").addEventListener("click", () => {
-  if (typeof creditsDialog.showModal === "function")
-    creditsDialog.showModal();
-  else
-    creditsDialog.setAttribute("open", "");
+  if (typeof creditsDialog.showModal === "function") creditsDialog.showModal();
+  else creditsDialog.setAttribute("open", "");
 });
 button("creditsClose").addEventListener("click", () => {
-  if (typeof creditsDialog.close === "function")
-    creditsDialog.close();
-  else
-    creditsDialog.removeAttribute("open");
+  if (typeof creditsDialog.close === "function") creditsDialog.close();
+  else creditsDialog.removeAttribute("open");
 });
 creditsDialog.addEventListener("click", (event) => {
   if (event.target === creditsDialog && typeof creditsDialog.close === "function")
@@ -5481,10 +6644,22 @@ for (const id of ["exportPng", "exportTransparentPng"]) {
       const context = image.getContext("2d");
       if (!context) throw new Error("PNG export needs Canvas 2D.");
       const transparentBackground = id === "exportTransparentPng";
-      const representation = calculation.represent(currentSpell, drawing.settings.rankComplexity);
-      drawing.paintNotation(context, image.width, image.height, representation, { transparentBackground });
+      const representation = calculation.represent(
+        currentSpell,
+        drawing.settings.rankComplexity
+      );
+      drawing.paintNotation(
+        context,
+        image.width,
+        image.height,
+        representation,
+        { transparentBackground }
+      );
       const name = readState().name.toLowerCase().replace(/[^a-z0-9-]+/g, "-") || "spell-circle";
-      await SigilDownload.downloadPng(image, `${name}${transparentBackground ? "-transparent" : ""}.png`);
+      await SigilDownload.downloadPng(
+        image,
+        `${name}${transparentBackground ? "-transparent" : ""}.png`
+      );
     } catch (error) {
       showRenderError(error);
     }
@@ -5504,7 +6679,10 @@ function readCardData() {
 }
 button("exportSpellCard").addEventListener("click", async () => {
   try {
-    const representation = calculation.represent(currentSpell, drawing.settings.rankComplexity);
+    const representation = calculation.represent(
+      currentSpell,
+      drawing.settings.rankComplexity
+    );
     const card = readCardData();
     const image = SpellCard.render(drawing, representation, card);
     const name = card.name.toLowerCase().replace(/[^a-z0-9-]+/g, "-") || "spell";

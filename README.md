@@ -44,12 +44,23 @@ The original attribute controls and source IDs remain available, and the edition
 
 ## Development and verification
 
-Sigil runs in the browser without runtime dependencies. Install development tools with `npm ci`; application code uses TypeScript. See [Architecture](docs/ARCHITECTURE.md) for the source layout. Run `npm run build` after source changes; do not edit generated files directly.
+Sigil runs in the browser without runtime dependencies. For development, use Node.js 22 (22.13 or newer) or 24+, then install tools with `npm ci`; application code uses TypeScript. See [Architecture](docs/ARCHITECTURE.md) for the source layout. Run `npm run build` after source changes; do not edit generated files directly.
+
+Use `npm run format` after editing, then `npm run check` before building or
+submitting changes. Prettier uses two-space indentation, single quotes,
+semicolons and trailing commas; ESLint uses the recommended TypeScript rules.
+Generated files are excluded. The calculation audit reads the canonical example
+and its numerical results directly from the calculation guide.
 
 | Command | Purpose |
 |---|---|
 | `npm run dev` | Start the Node.js development server at `http://localhost:4173` (serves `src/index.html`) |
 | `npm run compile` | Type-check and compile the TypeScript modules |
+| `npm run format` | Format maintained TypeScript, the calculation audit and lint configuration |
+| `npm run format:check` | Verify formatting without editing files |
+| `npm run lint` | Run ESLint with recommended TypeScript rules |
+| `npm run typecheck` | Type-check without emitting files |
+| `npm run check` | Run type checking, linting, formatting verification and all `npm test` tests |
 | `npm run build` | Generate `data/spell-data.js` and the offline `standalone.html` using Node.js |
 | `npm test` | Run renderer, catalogue, spell-card, and calculation audit tests |
 | `npm run test:browser` | Rebuild and check the offline app; compare pixels on the baseline platform |
@@ -66,7 +77,7 @@ Source provenance is recorded in [`SPELL-SOURCES.md`](docs/SPELL-SOURCES.md) and
 ## GitHub Pages
 
 Select **GitHub Actions** in **Settings > Pages > Build and deployment**.
-The [workflow](.github/workflows/pages.yml) runs `npm ci` and `npm run build`
+The [workflow](.github/workflows/pages.yml) runs `npm ci`, `npm run check` and `npm run build`
 on pushes to `main` or manual runs, then publishes `index.html` and
 `standalone.html`. Deployment is restricted to `main`; no custom secrets are needed.
 

@@ -28,7 +28,7 @@ Even nine mechanics cannot identify every spell uniquely: two catalogue records 
 
 | Layer | Encoded input | Representation |
 |---|---|---|
-| **1 — Chords** | Rank, Tradition, Range, Duration, Primary Trait | Five chord families on eleven vertices |
+| **1 - Vertices** | Rank, Tradition, Range, Duration, Primary Trait | Five chord families on eleven vertices |
 | **2 — Orbits** | Damage, Area, Casting time, Casting traits | One weighted circular arc or full circle per active vertex |
 | **3 — Spell fingerprint** | Source/variant ID, **not another mechanical attribute** | Ordered binary markers |
 
@@ -44,7 +44,7 @@ The dictionary is organized around **binary necklaces**. Imagine rotating a stri
 
 The **order of options** is part of the calculation, not just an interface detail. Reproducing or reversing the result requires the same option lists and the same ordered dictionary; this matters especially for Range options appended from a loaded catalogue. No chord, orbit, or fingerprint mark has yet been drawn at this stage.
 
-## 3. Layer 1 — Chords
+## 3. Layer 1 - Vertices
 
 The first layer uses the shared active vertices to create **logical connections between pairs of vertices**. Five primary mechanical attributes need five distinguishable connection rules. The shipped scheme uses **eleven numbered vertices** because eleven is the smallest suitable prime for five distinct undirected chord families.
 
@@ -110,14 +110,65 @@ These percentages **do not apply** to Rank-family chords, the spell fingerprint,
 
 ## 7. One compact worked example
 
-Consider this **constructed example**, chosen to illustrate the calculation; it is **not presented as a published Pathfinder 2e spell**. Its primary values are **Cantrip, Arcane, Self, Instant, Healing**; its orbit values are **Acid, `none`, 1 action, `none`** (in Damage, Area, Casting time, Casting traits order); and its assigned source/variant ID is `demo-1`. The seven non-`none` values are the first options of their respective attribute lists in the supplied source guide, so they use the same rotated bit word.
+This **constructed example** illustrates the calculation; it is **not a published Pathfinder 2e spell**. The following JSON uses the editor's attribute IDs: `effectTrait` is Primary Trait, `castActions` is Casting time, `castTraits` is Casting traits, and `variant` is the source/variant ID.
 
-| Stage | Input from the constructed spell | Calculated or displayed result |
-|---|---|---|
-| **Shared bits and Layer 1** | Rank = `cantrip`, option index `0`; Rank step `k = 1` | Rotated word `00001111000`; vertex **4** is active, so one Rank chord connects **4 to 5**. |
-| **Layer 2** | At vertex **4**, Acid is active (weight **1**) and 1 action is active (weight **4**); Area and Casting traits are `none` | `U = 1 + 4 = 5`, so this vertex has **one 120° orbit** (`5 × 24°`). |
-| **Layer 3** | Source/variant ID `demo-1` | JSON `["spell-id","demo-1"]` uses **21 UTF-8 bytes**; the **16-bit header** plus payload creates **184 ordered marker positions**, not necessarily 184 visible marks. |
-| **Rank filter** | Cantrip displays **20%** of optional mechanical elements | The full calculation has **4 Rank chords**, **16 other chords**, and **4 orbits**. Of the **20 optional** elements, **4** are shown; with all **4 Rank chords**, this yields **8 visible mechanical elements out of 24**. Hidden elements and fingerprint bits remain unchanged. |
+```{.json #worked-example}
+{
+  "rank": "cantrip",
+  "tradition": "Arcane",
+  "range": "Self",
+  "duration": "Instant",
+  "effectTrait": "Healing",
+  "damage": "Acid",
+  "area": "none",
+  "castActions": "1 action",
+  "castTraits": "none",
+  "variant": "demo-1"
+}
+```
+
+The calculation audit reads this input and the results table below directly from
+this guide, then checks them against the application calculation and option lists.
+Arrays list one result per vertex or orbit, in vertex order.
+
+<!-- worked-example-results -->
+| Property | Result |
+|---|---|
+| Non-none bits | `"00001111000"` |
+| None bits | `"00000000000"` |
+| Active vertices | `[4, 5, 6, 7]` |
+| Rank chords | `4` |
+| Other chords | `16` |
+| Orbits | `4` |
+| Orbit units | `[5, 5, 5, 5]` |
+| Orbit sweeps (degrees) | `[120, 120, 120, 120]` |
+| Fingerprint payload bytes | `21` |
+| Fingerprint bits | `184` |
+| Optional elements | `20` |
+| Optional elements shown | `4` |
+| Visible mechanical elements | `8` |
+| Total mechanical elements | `24` |
+<!-- /worked-example-results -->
+
+**Shared bits and Vertices:** every non-`none` value is the first meaningful
+option in its attribute list, so each uses the same rotated word. All four
+active vertices produce a connection for each primary attribute. The Rank
+connections are **4 to 5, 5 to 6, 6 to 7, and 7 to 8**, not just the first pair.
+
+**Orbits:** at each active vertex, Damage contributes weight 1 and Casting time
+contributes weight 4. Area and Casting traits encode zero bits and contribute
+nothing. Thus each orbit has `U = 1 + 4 = 5`, and its sweep is
+`5 * 24 = 120` degrees. These are four partial orbits, not complete circles.
+All four active attribute bits at the same vertex would instead yield
+`U = 15` and a complete 360-degree circle.
+
+**Spell fingerprint:** the JSON payload `["spell-id","demo-1"]` is encoded as UTF-8
+and prefixed with its 16-bit byte length. The resulting bit count describes
+ordered marker positions, not necessarily visible marks.
+
+**Rank filter:** a cantrip shows 20% of the optional pool (other connections and
+whole orbits), rounded upward, plus every Rank connection. Hidden elements and
+fingerprint bits remain unchanged.
 
 The complete internal mechanical encoding can be reconstructed when the same option lists and necklace dictionary are available, and the complete fingerprint bits retain the assigned ID. A **filtered drawing, screenshot, or exported image is not guaranteed to be losslessly decodable**: some calculated strokes may be absent, and visible geometry alone need not preserve every bit.
 
@@ -127,4 +178,9 @@ The complete internal mechanical encoding can be reconstructed when the same opt
 - `ATTRIBUTE-OPTIMIZATION.md`: the historical analysis named in the revision instructions. Its **1,403-record** scope and the **seven-required / nine-maximum** constraints are taken from that brief; the underlying analysis file was **not supplied** for independent inspection.
 - `HOW-IT-IS-CALCULATED(1).qmd`: the supplied baseline for the **current** eleven-vertex, five-chord/four-orbit calculation, fingerprint format, filtering behavior, and stated **1,400-record** catalogue size.
 
-The baseline refers to application files such as `src/spell-calculation.ts`, `src/spell-math.ts`, `src/spell-drawing.ts`, and `src/constants.ts`, but those files were not included here. This rewrite therefore **preserves the behavior documented in the supplied guide without claiming a fresh implementation audit or a rerun of the historical experiment**.
+The current implementation is in `src/spell-calculation.ts`, `src/spell-math.ts`,
+`src/spell-drawing.ts`, and `src/constants.ts`. The calculation audit checks the
+worked example above against those calculation and option definitions, alongside
+independent checks of all sixteen orbit masks, necklace ordering, fingerprint
+encoding, and rank filtering. Run it with `npm run test:math`. These checks do
+not rerun or validate the historical attribute-selection experiment.

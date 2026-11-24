@@ -11,11 +11,20 @@
     "test:browser": "npm run build && node src/tests/browser-test.js",
     "test:visual": "npm run build && node src/tests/browser-test.js --require-render-baseline",
     "test:math": "npm run compile && node src/tools/test-calculation-audit.js",
-    "optimize": "npm run compile && node src/tools/optimize-attributes.js"
+    "optimize": "npm run compile && node src/tools/optimize-attributes.js",
+    "format": "prettier --write \"src/**/*.ts\" src/tools/test-calculation-audit.js eslint.config.mjs",
+    "format:check": "prettier --check \"src/**/*.ts\" src/tools/test-calculation-audit.js eslint.config.mjs",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
   },
   "devDependencies": {
     "playwright": "1.65.1",
     "esbuild": "0.25.12",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.15.0",
+    "prettier": "3.10.1",
+    "typescript-eslint": "8.73.0"
   }
 }
