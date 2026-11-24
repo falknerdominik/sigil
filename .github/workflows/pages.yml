@@ -22,6 +22,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Install Quarto
+        run: sudo sh .devcontainer/install-quarto.sh
       - run: npm run check
       - run: npm run build
       - name: Prepare site

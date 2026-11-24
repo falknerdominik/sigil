@@ -5,14 +5,18 @@ Includes 1,400 spells, custom spell editing, and PNG, transparent PNG, and
 spell-card exports. No runtime dependencies or network connection are required.
 
 Open [standalone.html](standalone.html) in a browser. See
-[Sigil Encoding](docs/explanation.qmd) for the notation, mathematics, and worked
-examples ([rendered HTML](docs/explanation.html)).
+Sigil Encoding in the top bar for the notation, mathematics, and worked examples.
+Its source is [explanation.qmd](docs/explanation.qmd)
+([rendered HTML](docs/explanation.html)).
 
 ![Fireball sigil in the Constellations theme](docs/fireball-sigil.png)
 
 ## Development and verification
 
-Use Node.js 22 (22.13 or newer) or 24+.
+Use Node.js 22 (22.13 or newer) or 24+ and Quarto CLI 1.11.9.
+The devcontainer installs Quarto automatically; on Debian/Ubuntu, run
+`sudo sh .devcontainer/install-quarto.sh` to install the same pinned release.
+Other platforms can use the [official Quarto installer](https://quarto.org/docs/get-started/).
 
 ```sh
 npm ci
@@ -28,8 +32,12 @@ npm run build
 ```
 
 `check` runs type checking, ESLint, Prettier verification, and automated tests.
-`build` regenerates the embedded catalogue and standalone application; do not
-edit generated files directly.
+`build` renders the QMD with embedded math libraries, then bundles the guide,
+catalogue, and application into one offline HTML file. `npm run build:docs`
+renders only the guide. `dev` also renders it before starting the server.
+Rendering requires network access to download the pinned MathJax library;
+the generated files need neither Quarto nor a network connection.
+Do not edit generated files directly.
 
 For browser tests, install Chromium with
 `npx playwright install --only-shell chromium`, then run `npm run test:browser`.

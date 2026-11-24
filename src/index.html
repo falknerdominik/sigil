@@ -18,6 +18,7 @@
 </div>
 <div class="topbar-attribution">
   <button class="ui-mode-button" id="uiModeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode"><span id="uiModeIcon" aria-hidden="true">☼</span><span id="uiModeLabel">Light mode</span></button>
+  <button class="credits-open" id="encodingOpen" type="button" aria-haspopup="dialog" aria-controls="encodingDialog">Sigil Encoding</button>
   <button class="credits-open" id="creditsOpen" type="button" aria-haspopup="dialog" aria-controls="creditsDialog">Credits &amp; licenses</button>
   <a class="coffee-button" href="https://www.buymeacoffee.com/dominikfalkner" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee (external link)"><span aria-hidden="true">☕</span> Buy me a coffee</a>
 </div>
@@ -405,6 +406,16 @@
       <p>Contact: <a href="https://codeberg.org/dominikfalkner" target="_blank" rel="noopener noreferrer">codeberg.org/dominikfalkner</a></p>
     </section>
   </div>
+</dialog>
+<dialog class="credits-dialog encoding-dialog" id="encodingDialog" aria-labelledby="encodingTitle">
+  <div class="credits-header">
+    <div>
+      <p class="credits-eyebrow">SIGIL</p>
+      <h2 id="encodingTitle">Sigil Encoding</h2>
+    </div>
+    <button class="credits-close" type="button" id="encodingClose" aria-label="Close Sigil Encoding" autofocus>&times;</button>
+  </div>
+  <iframe class="encoding-frame" id="encodingFrame" title="Sigil Encoding documentation" src="../docs/explanation.html" loading="lazy"></iframe>
 </dialog>
 <script src="generated/spell-calculation.browser.js"></script>
 <script src="generated/spell-drawing.browser.js"></script>

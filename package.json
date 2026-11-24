@@ -5,8 +5,9 @@
   "description": "Offline Pathfinder 2e spell-circle editor, Node.js build tools",
   "scripts": {
     "compile": "tsc -p tsconfig.json && node src/tools/compile.js",
-    "dev": "npm run compile && node src/tools/dev-server.js",
-    "build": "npm run compile && node src/tools/build-standalone.js",
+    "dev": "npm run compile && npm run build:docs && node src/tools/dev-server.js",
+    "build": "npm run compile && npm run build:docs && node src/tools/build-standalone.js",
+    "build:docs": "node src/tools/build-docs.js",
     "test": "npm run compile && node src/tests/calculation-test.js && node src/tests/test.js && node src/tests/catalog-test.js && node src/tests/card-test.js && node src/tools/test-calculation-audit.js",
     "test:browser": "npm run build && node src/tests/browser-test.js",
     "test:visual": "npm run build && node src/tests/browser-test.js --require-render-baseline",

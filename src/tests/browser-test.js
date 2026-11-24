@@ -925,6 +925,52 @@ async function smokeTest(page) {
   return {sigil:sigil.pixels, card:card.pixels};
 }
 
+async function encodingDialogTest(page) {
+  const preview = await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL());
+  const opener = page.locator('#encodingOpen');
+  await opener.focus();
+  await opener.press('Enter');
+  const dialog = page.locator('#encodingDialog');
+  assert.equal(await dialog.evaluate(element => element.matches(':modal')), true);
+  assert.equal(await page.locator('#encodingClose').evaluate(element => element === document.activeElement), true);
+  const embedded = await page.locator('#encodingFrame').getAttribute('srcdoc');
+  assert.notEqual(embedded, null);
+  assert.equal(digest(embedded.replace('<base href="about:srcdoc">', '')),
+    digest(fs.readFileSync(path.join(root, 'docs/explanation.html'), 'utf8')),
+    'Embedding must preserve the rendered documentation byte-for-byte');
+  const guide = page.frameLocator('#encodingFrame');
+  await guide.locator('mjx-container[display="true"]').first().waitFor();
+  assert.equal(await guide.locator('mjx-container[display="true"]').count(), 7);
+  assert.equal(await guide.locator('[data-mml-node="merror"], mjx-merror').count(), 0);
+  assert.equal(await page.evaluate(() => typeof window.MathJax), 'undefined');
+  assert.equal(await guide.locator('#fig-calculation-example img').evaluate(image =>
+    image.complete && image.naturalWidth > 0), true);
+
+  await guide.locator('#TOC a[href="#worked-example"]').click();
+  assert.equal(await page.locator('#encodingFrame').evaluate(frame =>
+    frame.contentWindow.location.hash), '#worked-example');
+  await guide.locator('a.quarto-xref[href="#eq-vertex-count"]').first().click();
+  assert.equal(await page.locator('#encodingFrame').evaluate(frame =>
+    frame.contentWindow.location.hash), '#eq-vertex-count');
+  const details = guide.locator('details');
+  assert.equal(await details.evaluate(element => element.open), false);
+  await details.locator('summary').click();
+  assert.equal(await details.evaluate(element => element.open), true);
+  assert.equal(await guide.locator('#worked-example-fingerprint').isVisible(), true);
+  await page.emulateMedia({media:'print'});
+  assert.equal(await guide.locator('#TOC').evaluate(element =>
+    getComputedStyle(element).display), 'none');
+  await page.emulateMedia({media:'screen'});
+  await details.locator('summary').press('Escape');
+  assert.equal(await dialog.isVisible(), false);
+  assert.equal(await opener.evaluate(element => element === document.activeElement), true);
+  await opener.click();
+  assert.equal(await dialog.isVisible(), true);
+  await page.locator('#encodingClose').click();
+  assert.equal(await dialog.isVisible(), false);
+  assert.equal(await page.locator('#spellCanvas').evaluate(canvas => canvas.toDataURL()), preview);
+}
+
 async function replacementCatalogueTest(browser) {
   let replacement = 'invalid';
   const server = http.createServer((request, response) => {
@@ -1064,6 +1110,7 @@ async function main() {
       });
       await page.goto(pathToFileURL(path.join(root, 'standalone.html')).href);
       assert.equal(new URL(page.url()).protocol, 'file:');
+      await encodingDialogTest(page);
       await pickerInteractionTest(page);
       const catalogue = await catalogueBaseline(page);
       const render = {
@@ -1120,6 +1167,14 @@ async function main() {
         assert(await mobile.locator('#spellCanvas').isVisible(), 'Canvas must remain visible on mobile');
         assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true,
           'Mobile layout must not overflow horizontally');
+        await mobile.locator('#encodingOpen').tap();
+        await mobile.frameLocator('#encodingFrame').locator('mjx-container[display="true"]').first().waitFor();
+        assert.equal(await mobile.locator('#encodingDialog').evaluate(element => {
+          const bounds = element.getBoundingClientRect();
+          return bounds.left >= 0 && bounds.right <= innerWidth &&
+            bounds.top >= 0 && bounds.bottom <= innerHeight;
+        }), true, 'Documentation dialog must fit the mobile viewport');
+        await mobile.locator('#encodingClose').tap();
         await mobile.locator('#spellPickerInput').fill('Light');
         await mobile.locator('#spellPickerList [data-spell-id="entry-aon-171"]').tap();
         assert.equal(await mobile.locator('#spellName').inputValue(), 'Light');
@@ -1137,7 +1192,7 @@ async function main() {
         fs.writeFileSync(fixturePath, JSON.stringify({catalogue, render}, null, 2) + '\n');
         console.log(`Captured baseline for ${Object.keys(catalogue.records).length} spells.`);
       }
-      console.log('PASS - offline catalogue baseline, rendering, keyboard, mobile, preferences and PNG exports.');
+      console.log('PASS - offline catalogue and encoding guide, rendering, keyboard, mobile, preferences and PNG exports.');
     } finally {
       await context.close();
     }

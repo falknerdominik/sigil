@@ -423,6 +423,10 @@ h2 { font:normal 33px/1.05 Georgia,"Times New Roman",serif; color:#f0eddf; margi
 .credits-policy-notice {border-left:2px solid #b99465;padding-left:13px;background:#223335;
   padding-block:10px;padding-right:9px;}
 .credits-content code {font-size:11px;color:#dbc8a8;}
+.encoding-dialog {width:min(1200px,calc(100vw - 30px));height:90vh;max-height:90vh;overflow:hidden;}
+.encoding-dialog[open] {display:flex;flex-direction:column;}
+.encoding-dialog .credits-header {flex:none;}
+.encoding-frame {display:block;flex:1;width:100%;min-height:0;border:0;background:#fff;}
 @media (max-width:1200px) {
   .topbar-attribution {gap:9px 11px;}
 }

@@ -6,8 +6,8 @@ Sigil is a browser application with no runtime dependencies. Application
 logic is written in TypeScript. Build and test scripts remain JavaScript to
 avoid a separate toolchain for development utilities. The entry point is
 [`src/index.html`](../src/index.html); the generated
-[`standalone.html`](../standalone.html) embeds the application and catalogue
-for direct offline use.
+[`standalone.html`](../standalone.html) embeds the application, catalogue, and
+rendered Sigil Encoding guide for direct offline use.
 
 | Component | Current responsibility |
 |---|---|
@@ -124,12 +124,21 @@ settings rather than importing or inheriting from the drawing class.
 
 ## Build and verification
 
-Install development dependencies with `npm ci`. `npm run compile` type-checks
+Install development dependencies with `npm ci`. Quarto CLI 1.11.9 is installed
+by the devcontainer and CI using
+[install-quarto.sh](../.devcontainer/install-quarto.sh); it is needed only at build
+time. `npm run compile` type-checks
 the calculation, drawing, catalogue and UI modules and generates JavaScript under
-`src/generated/`. `npm run build` also generates
+`src/generated/`. `npm run build` renders
+[`explanation.qmd`](explanation.qmd) through `npm run build:docs`, then generates
 [`data/spell-data.js`](../data/spell-data.js) and inlines scripts and CSS into
-`standalone.html`. Edit source files, not generated outputs.
-`npm run dev` compiles and serves the project through the Node development server.
+`standalone.html`. The guide is embedded in an iframe's `srcdoc` attribute,
+isolating Quarto's styles and scripts from the application. Its embedded SVG
+MathJax renderer needs no network access at runtime. A local base URL preserves
+fragment navigation, and iframe keyboard events share the native dialog's Escape
+handler. Edit source files, not generated outputs.
+`npm run dev` compiles, renders the guide, and serves the project through the Node
+development server; the source page loads the same generated guide by URL.
 `npm test` compiles and runs the calculation, renderer, catalogue and card checks;
 `npm run test:math` runs the calculation audit alone. `npm run test:browser`
 rebuilds the standalone page and runs the offline browser checks. The other files under
@@ -139,8 +148,10 @@ inputs to this build.
 The calculation guide's input table, numerical results, and fingerprint form the
 canonical worked example read by the audit. After editing the guide, run
 `npm run docs:example` to regenerate its annotated picture using Playwright
-Chromium, then `quarto render docs/explanation.qmd` to rebuild the self-contained
-HTML reference. The example is a synthetic spell, not a published spell.
+Chromium, then `npm run build:docs` to rebuild the self-contained HTML reference.
+Rendering downloads the pinned MathJax library; `build` always renders before
+bundling and fails if rendering fails or produces no HTML. The example is a
+synthetic spell, not a published spell.
 
 ### Using calculation without a canvas
 

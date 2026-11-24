@@ -1,15 +1,30 @@
 #!/usr/bin/env node
 'use strict';
-// Generate an offline page and the shared embedded catalogue using Node.js only.
+// Bundle the application, rendered documentation, and shared offline catalogue.
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
+if (!fs.existsSync(path.join(root, 'docs/explanation.html')))
+  throw new Error('Missing docs/explanation.html. Run npm run build to render and bundle Sigil Encoding.');
+const documentation = read('docs/explanation.html');
+if (!documentation.includes('<head>'))
+  throw new Error('Invalid docs/explanation.html: expected a complete rendered HTML document.');
+// Fragment links in srcdoc otherwise resolve against the parent application.
+const embeddedDocumentation = documentation.replace('<head>', '<head><base href="about:srcdoc">')
+  .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/\r/g, '&#13;').replace(/\n/g, '&#10;');
 const spells = JSON.parse(read('data/spell.json'));
 const embedded = '/* Embedded offline spell library: generated from data/spell.json. */\n' +
   'window.DEFAULT_SPELL_CATALOG = ' + JSON.stringify(spells).replace(/</g, '\\u003c') + ';\n';
 fs.writeFileSync(path.join(root, 'data/spell-data.js'), embedded);
 let html = read('src/index.html');
+let frames = 0;
+html = html.replace(/<iframe\b(?=[^>]*\bid="encodingFrame")[^>]*>/g, tag => {
+  frames++;
+  return tag.replace(/\s+src="[^"]*"/, '').replace(/>$/, () => ` srcdoc="${embeddedDocumentation}">`);
+});
+if (frames !== 1) throw new Error(`Expected one Sigil Encoding iframe; found ${frames}`);
 let replacements = 0;
 html = html.replace(/<link\b(?=[^>]*\brel="stylesheet")(?=[^>]*\bhref="styles\.css")[^>]*>/g, () => {
   replacements++;

@@ -765,23 +765,48 @@ button('resetSpell').addEventListener('click', () => {
   updateCanvasOptions();
   loadAllSpells();
 });
-// Credits open locally; all external attribution and support links are optional.
-const creditsDialog = dialog('creditsDialog');
-button('creditsOpen').addEventListener('click', () => {
-  if (typeof creditsDialog.showModal === 'function') creditsDialog.showModal();
-  else creditsDialog.setAttribute('open', '');
-});
-button('creditsClose').addEventListener('click', () => {
-  if (typeof creditsDialog.close === 'function') creditsDialog.close();
-  else creditsDialog.removeAttribute('open');
-});
-creditsDialog.addEventListener('click', (event) => {
-  if (
-    event.target === creditsDialog &&
-    typeof creditsDialog.close === 'function'
-  )
-    creditsDialog.close();
-});
+for (const name of ['credits', 'encoding']) {
+  const panel = dialog(`${name}Dialog`);
+  const opener = button(`${name}Open`);
+  const close = () => {
+    if (typeof panel.close === 'function') panel.close();
+    else panel.removeAttribute('open');
+    opener.focus();
+  };
+  const onEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close();
+    }
+  };
+  opener.addEventListener('click', () => {
+    if (typeof panel.showModal === 'function') panel.showModal();
+    else panel.setAttribute('open', '');
+  });
+  button(`${name}Close`).addEventListener('click', close);
+  panel.addEventListener('keydown', onEscape);
+  panel.addEventListener('click', (event) => {
+    if (event.target === panel) close();
+  });
+  const frame = panel.querySelector('iframe');
+  if (frame) {
+    frame.addEventListener('load', () => {
+      const content = frame.contentDocument;
+      if (!content)
+        throw new Error('Sigil Encoding must load a local document.');
+      content.addEventListener('keydown', onEscape);
+      for (const link of Array.from(
+        content.querySelectorAll<HTMLAnchorElement>('a[href]'),
+      )) {
+        const href = link.getAttribute('href');
+        if (href && !href.startsWith('#')) {
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+        }
+      }
+    });
+  }
+}
 for (const id of ['exportPng', 'exportTransparentPng']) {
   button(id).addEventListener('click', async () => {
     try {
