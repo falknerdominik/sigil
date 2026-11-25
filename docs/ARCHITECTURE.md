@@ -160,8 +160,8 @@ standalone uses the embedded catalogue even when served over HTTP.
 
 On GitHub, set **Settings > Pages > Source** to **GitHub Actions**. The
 [workflow](../.github/workflows/pages.yml) runs `npm run check` and `npm run build`,
-then publishes the same HTML as both `index.html` and `standalone.html` on pushes
-to `main` or manual runs on `main`. It does not publish GitHub Releases.
+then publishes the standalone HTML as `index.html` on pushes to `main` or manual
+runs on `main`. It does not publish GitHub Releases.
 
 The calculation guide's input table, numerical results, and fingerprint form the
 canonical worked example read by the audit. After editing the guide, run
