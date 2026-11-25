@@ -10,9 +10,6 @@ and other upstream Reserved Material are not granted under the ORC License.
 Credit Sigil contributors for any Adapted Licensed Material by Sigil that is
 within the scope of the ORC License.
 
-Verified publisher credits (not a complete Article III attribution notice
-for the development catalogue):
-
 Pathfinder Player Core — Paizo Inc.; named designers: Logan Bonner, Jason Bulmahn,
 Stephen Radney-MacFarland, and Mark Seifter.
 https://store.paizo.com/pathfinder-player-core/
