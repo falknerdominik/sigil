@@ -1,7 +1,9 @@
-# Source index for bundled Pathfinder spell records
+# Source index for development Pathfinder spell records
 
 This index groups the **1,400 entries** by the source label in
-[`data/spell.json`](../data/spell.json).
+[`data/spell.json`](../data/spell.json). This catalogue is used in the full
+local build, not the public editor, which bundles
+[original samples](../data/sample-spells.json).
 Each original spell record retains its full `source` field (including page)
 and `nethysUrl`, where available. These are provenance references, **not**
 complete copyright or ORC/OGL attribution notices; review each original

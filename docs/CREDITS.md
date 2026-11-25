@@ -35,7 +35,8 @@ See the [copyright notice](../licenses/NOTICE.txt),
 [ORC license](../licenses/ORC-LICENSE.txt),
 [ORC attribution notice](../licenses/ORC-NOTICE.txt), and
 [Community Use notice](../licenses/COMMUNITY-USE.txt). The
-[licensing notice](../NOTICE.md) documents the remaining distribution blockers.
+[licensing notice](../NOTICE.md) summarizes the bundled notices. The source index
+records the development catalogue's attribution review.
 
 ### Licensing resources
 

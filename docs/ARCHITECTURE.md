@@ -2,16 +2,17 @@
 
 ## Current structure
 
-Sigil is a browser application with no runtime dependencies. Application
+Sigil runs in the browser without a server or network connection. Application
 logic is written in TypeScript. Build and test scripts remain JavaScript to
 avoid a separate toolchain for development utilities. The entry point is
 [`src/index.html`](../src/index.html); the generated
-[`standalone.html`](../standalone.html) embeds the application, catalogue, and
-rendered Explanation guide for direct offline use.
+[`standalone.html`](../standalone.html) embeds the application, catalogue,
+rendered Explanation guide, and licensing notices for direct offline use.
 
 | Component | Current responsibility |
 |---|---|
-| [`data/spell.json`](../data/spell.json) | Bundled spell records and source information. |
+| [`data/spell.json`](../data/spell.json) | Full development spell catalogue and source information. |
+| [`data/sample-spells.json`](../data/sample-spells.json) | Original sample spells bundled in the public build. |
 | [`spell-catalog.ts`](../src/spell-catalog.ts) | Validates and normalizes catalogue records and assigns IDs. |
 | [`constants.ts`](../src/constants.ts) | Defines ordered attributes, shared limits and theme configuration. |
 | [`app.ts`](../src/app.ts) | Connects the HTML controls to editor state, the picker and the renderer. |
@@ -30,7 +31,7 @@ rendered Explanation guide for direct offline use.
 The current data flow is:
 
 ```text
-spell.json -> embedded catalogue -> SpellCatalog -> app state
+build input -> embedded catalogue -> SpellCatalog -> app state
                                                        |
                           SpellCalculation -> complete / visible notation
                                                        |
@@ -140,6 +141,13 @@ isolating Quarto's styles and scripts from the application. Its embedded SVG
 MathJax renderer needs no network access at runtime. A local base URL preserves
 fragment navigation, and iframe keyboard events share the native dialog's Escape
 handler. Edit source files, not generated outputs.
+
+Both standalone builds render **Legal & Licenses** previews in **Credits** from
+the canonical [notices](../NOTICE.md). Links between bundled previews work
+offline. Links marked **online** require a connection; references marked
+**source repository only** are not bundled. Downloads retain the original
+files and their relative paths.
+
 `npm run dev` compiles, renders the guide, and serves the project through the Node
 development server; the source page loads the same generated guide by URL.
 `npm test` compiles and runs the calculation, renderer, catalogue and card checks;

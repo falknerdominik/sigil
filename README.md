@@ -11,7 +11,8 @@ Export your sigil as a PNG, a transparent PNG, or a spell card.
 
 **[Try Sigil offline](https://falknerdominik.github.io/sigil/standalone.html):**
 Save the page as `standalone.html` and open it in your browser. See
-**Explanation** in the app for how sigils work.
+**Explanation** for how sigils work. Under **Credits**, open **Legal & Licenses**
+to read or download the bundled notices offline.
 
 ## Gallery
 
@@ -75,8 +76,9 @@ See the [copyright notice](licenses/NOTICE.txt),
 [ORC license](licenses/ORC-LICENSE.txt),
 [ORC attribution notice](licenses/ORC-NOTICE.txt), and
 [Community Use notice](licenses/COMMUNITY-USE.txt). The
-[licensing notice](NOTICE.md) summarizes the bundled notices; the [Credits](docs/CREDITS.md)
-include official references and developer contact details.
+[licensing notice](NOTICE.md) summarizes the bundled notices, including
+[third-party software licenses](licenses/THIRD-PARTY.txt). See
+[Credits](docs/CREDITS.md) for official references and developer contact details.
 
 ## AI use
 
