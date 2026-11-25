@@ -3,16 +3,17 @@
 Turn Pathfinder 2e spells into sigils that encode their rules, not just
 illustrate them. Each spell has a unique sigil.
 
-Choose a spell from the full Pathfinder 2e catalogue or create your own.
+Choose from 1,400 bundled Pathfinder 2e spells or create your own.
 Start with one of 41 themes
 (6 surfaces, 4 traditions, and 31 traits), then customize colors, shapes,
 ink, and ornaments to give each school, spell, or wizard a distinct style.
 Export your sigil as a PNG, a transparent PNG, or a spell card.
 
-**[Try Sigil offline](https://falknerdominik.github.io/sigil/standalone.html):**
-Save the page as `standalone.html` and open it in your browser. See
-**Explanation** for how sigils work. Under **Credits**, open **Legal & Licenses**
-to read or download the bundled notices offline.
+**[Open Sigil](https://falknerdominik.github.io/sigil/standalone.html)**
+
+To use Sigil offline, save the page as `standalone.html` and reopen the saved
+file in your browser. See **Explanation** for how sigils work. Under **Credits**,
+open **Legal & Licenses** to read or download the bundled notices offline.
 
 ## Gallery
 
@@ -58,7 +59,7 @@ details and GitHub Pages deployment.
 ### Content & Licensing
 
 Sigil's [application code](src/) is [GPL-3.0-or-later](LICENSE). Both local and
-hosted builds bundle the full Pathfinder [spell catalogue](data/spell.json).
+hosted builds include the same [spell catalogue](data/spell.json).
 
 Use each record's `source` (including page) and `nethysUrl` to locate the
 original publication.

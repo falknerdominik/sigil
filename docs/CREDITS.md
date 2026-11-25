@@ -34,6 +34,8 @@ See the [copyright notice](../licenses/NOTICE.txt),
 [ORC license](../licenses/ORC-LICENSE.txt), and
 [Community Use notice](../licenses/COMMUNITY-USE.txt). The
 [licensing notice](../NOTICE.md) summarizes the bundled notices.
+For source code and build instructions, use the revision of the Sigil
+repository that matches your copy of the app.
 The [ORC attribution notice](../licenses/ORC-NOTICE.txt) is available in the source repository.
 
 ### Licensing resources
