@@ -9,7 +9,7 @@ Start with one of 41 themes
 ink, and ornaments to give each school, spell, or wizard a distinct style.
 Export your sigil as a PNG, a transparent PNG, or a spell card.
 
-**[Open Sigil](https://falknerdominik.github.io/sigil/)**
+**[Open the Sigil editor](https://falknerdominik.github.io/sigil/)**
 
 To use Sigil offline, save the page as `standalone.html` and reopen the saved
 file in your browser. See **Explanation** for how sigils work. Under **Credits**,
