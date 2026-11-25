@@ -25,12 +25,21 @@
   [license information](https://2e.aonprd.com/Licenses.aspx). These
   references do not grant redistribution rights.
 
-Sigil uses trademarks and/or copyrights owned by Paizo Inc., used under
-[Paizo's Community Use Policy](https://paizo.com/licenses/communityuse).
-We are expressly prohibited from charging you to use or access this content.
-Sigil is not published, endorsed, or specifically approved by Paizo. For more
-information about Paizo Inc. and Paizo products, visit [paizo.com](https://paizo.com/).
-This notice is not a license to reproduce the full catalogue.
+## Copyright & Licensing
+
+See the [copyright notice](../licenses/NOTICE.txt),
+[OGL 1.0a and Section 15 notices](../licenses/OGL-1.0a.txt),
+[ORC license](../licenses/ORC-LICENSE.txt),
+[ORC attribution notice](../licenses/ORC-NOTICE.txt), and
+[Community Use notice](../licenses/COMMUNITY-USE.txt). The
+[licensing notice](../NOTICE.md) documents the remaining distribution blockers.
+
+### Licensing resources
+
+- [OGL 1.0a licensing and trademarks reference](https://lorespire.paizo.com/tiki-index.php?page=site._.Licenses-And-Trademarks)
+- [Paizo ORC License and FAQ](https://paizo.com/orclicense)
+- [Paizo Community Use Policy](https://paizo.com/licenses/communityuse)
+- [Paizo Licensing Information](https://paizo.com/licenses)
 
 ## Support and contact
 

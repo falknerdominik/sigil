@@ -14,25 +14,33 @@ works, or trademarks. Third-party components retain their own licenses.
 
 ## Pathfinder rules material
 
-This product is licensed under the ORC License located at the Library of
-Congress at TX 9-307-067 and available online at various locations. All
-warranties are disclaimed as set forth therein.
+The [copyright notice](licenses/NOTICE.txt),
+[OGL license and Section 15 notices](licenses/OGL-1.0a.txt),
+[ORC license](licenses/ORC-LICENSE.txt) and
+[ORC attribution notice](licenses/ORC-NOTICE.txt), and
+[Community Use notice](licenses/COMMUNITY-USE.txt) are bundled with Sigil.
 
-This notice applies only to Pathfinder rules material covered by the
-[Open RPG Creative License](LICENSES/ORC.pdf) in its upstream source and to
-any adaptations covered by that license. Recipients may reuse and adapt
-those rules under ORC, including its attribution and share-alike terms.
-ORC is not the license for Sigil's software. It does not grant rights to
-trademarks, artwork, setting lore, other Reserved Material, or OGL-only text.
-Sigil's own branding and original illustrations remain Reserved Material.
-Sigil does not expressly designate any Reserved Material as ORC Licensed
-Material. For covered adaptations by Sigil, credit **Sigil contributors**.
+### Release blockers
 
-**Attribution and release status.** See [Credits](docs/CREDITS.md) and the
-[catalogue source index](docs/SPELL-SOURCES.md) for provenance. The current
-[catalogue](data/spell.json) still contains both Remaster and Legacy material,
-including full descriptions. The index does not reproduce all required upstream
-attributions or verify which passages are licensed. This notice does not clear
-the entire catalogue for redistribution. Before redistributing it, identify
-the covered text, reproduce the applicable source notices and credits, and
-clear or omit material not covered by the chosen license.
+Do not distribute the full [development catalogue](data/spell.json), its
+generated files, or repository history containing them until the following are
+resolved:
+
+- The [source index](docs/SPELL-SOURCES.md) is not a rights inventory. Match
+  each record and any later rules annotations to their original publications,
+  identify covered passages and their licenses, and obtain permission for or
+  omit text with unknown origin, Product Identity, or Reserved Material.
+- Verify and reproduce each applicable publication's exact OGL Section 15
+  notices, ORC Article III attributions and declarations, and any separate
+  copyright, trademark, or creator credits. The current files contain only
+  verified partial attributions.
+- Verify that the combined product can satisfy both licenses without
+  imposing one license on the other's content. Edition metadata is not
+  sufficient to make that determination. Paizo's Community Use Policy does
+  not authorize blanket republication of sourcebook descriptions.
+
+The public editor bundles [original sample spells](data/sample-spells.json)
+instead. Before publishing a public source copy, separately review the README
+spell-card images and source-index annotations for reproduced text and clear
+or omit it. Building the public standalone does not remove anything from the
+repository, its history, or its source archives.

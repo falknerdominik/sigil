@@ -1,0 +1,11 @@
+Sigil uses trademarks and/or copyrights owned by Paizo Inc., used under Paizo's Community Use Policy (paizo.com/licenses/communityuse). We are expressly prohibited from charging you to use or access this content. Sigil is not published, endorsed, or specifically approved by Paizo. For more information about Paizo Inc. and Paizo products, visit paizo.com.
+
+Paizo Community Use Policy: https://paizo.com/licenses/communityuse
+Official downloadable policy: https://downloads.paizo.com/CommunityUsePolicy.pdf
+
+Policy summary (the linked official text controls): a project must be free,
+unofficial and use only material within the policy's permissions. It must
+reproduce applicable copyright, trademark and creator credits, provide visible
+contact information, and obtain permissions from other rights holders. The
+policy does not clear the mixed catalogue's full spell descriptions or turn
+Product Identity or Reserved Material into open material.

@@ -15,8 +15,9 @@ const documentation = read('docs/explanation.html');
 if (!documentation.includes('<head>'))
   throw new Error('Invalid docs/explanation.html: expected a complete rendered HTML document.');
 // Fragment links in srcdoc otherwise resolve against the parent application.
-const embeddedDocumentation = documentation.replace('<head>', '<head><base href="about:srcdoc">')
-  .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const escapeHtml = text => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+  .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const embeddedDocumentation = escapeHtml(documentation.replace('<head>', '<head><base href="about:srcdoc">'))
   .replace(/\r/g, '&#13;').replace(/\n/g, '&#10;');
 const catalogue = publicBuild ? 'data/sample-spells.json' : 'data/spell.json';
 const spells = JSON.parse(read(catalogue));
@@ -25,11 +26,23 @@ const embedded = `/* Embedded offline spell library: generated from ${catalogue}
   (publicBuild ? 'window.PUBLIC_SPELL_BUILD = true;\n' : '');
 if (!publicBuild) fs.writeFileSync(path.join(root, 'data/spell-data.js'), embedded);
 let html = read('src/index.html');
+const noticeSlot = '<div id="creditsNotices"></div>';
+if (html.split(noticeSlot).length !== 2)
+  throw new Error('Expected one inline licensing notice slot');
+const notice = read('licenses/NOTICE.txt').trim().split(/\r?\n\r?\n/);
+const [communityDisclaimer] = read('licenses/COMMUNITY-USE.txt').trim().split(/\r?\n\r?\n/);
+html = html.replace(noticeSlot, () => '<div id="creditsNotices">' +
+  notice.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join('') +
+  `<p class="credits-policy-notice">${escapeHtml(communityDisclaimer)}</p></div>`);
 for (const [file, type] of [
   ['LICENSE', 'text/plain'],
-  ['NOTICE.md', 'text/markdown'],
   ['docs/CREDITS.md', 'text/markdown'],
-  ['LICENSES/ORC.pdf', 'application/pdf'],
+  ['licenses/NOTICE.txt', 'text/plain'],
+  ['licenses/COMMUNITY-USE.txt', 'text/plain'],
+  ['licenses/OGL-1.0a.txt', 'text/plain'],
+  ['licenses/ORC-LICENSE.txt', 'text/plain'],
+  ['licenses/ORC-NOTICE.txt', 'text/plain'],
+  ['licenses/ORC.pdf', 'application/pdf'],
 ]) {
   const link = `href="../${file}" download`;
   if (html.split(link).length !== 2)

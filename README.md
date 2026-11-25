@@ -61,8 +61,25 @@ and/or reviewed by humans.
 
 ## Licensing and credits
 
-Sigil's original code is [GPL-3.0-or-later](LICENSE). The bundled Pathfinder
-catalogue is not GPL-licensed: the [ORC License](LICENSES/ORC.pdf) applies
-only to covered rules material and does not clear the mixed catalogue for
-redistribution. See the [licensing notice](NOTICE.md),
-[credits](docs/CREDITS.md), and [source index](docs/SPELL-SOURCES.md).
+### Content & Licensing
+
+Sigil's [application code](src/) is [GPL-3.0-or-later](LICENSE). The public
+editor bundles only [original sample spells](data/sample-spells.json). The
+development [spell.json](data/spell.json), its generated
+[spell-data.js](data/spell-data.js), and the full local
+[standalone.html](standalone.html) contain the mixed Pathfinder catalogue.
+The public build does not bundle those development files.
+
+Use each record's `source` (including page) and `nethysUrl`, together with the
+[source index](docs/SPELL-SOURCES.md), to locate the original publication.
+`legacy content` is an edition hint, not a license field. The original
+publication determines which material is OGL Open Game Content or ORC Licensed
+Material; neither is relicensed as the other.
+
+See the [copyright notice](licenses/NOTICE.txt),
+[OGL 1.0a and Section 15 notices](licenses/OGL-1.0a.txt),
+[ORC license](licenses/ORC-LICENSE.txt),
+[ORC attribution notice](licenses/ORC-NOTICE.txt), and
+[Community Use notice](licenses/COMMUNITY-USE.txt). The
+[licensing notice](NOTICE.md) lists release blockers; the [Credits](docs/CREDITS.md)
+include official references and developer contact details.

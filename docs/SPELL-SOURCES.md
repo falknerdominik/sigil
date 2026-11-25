@@ -1,10 +1,37 @@
 # Source index for bundled Pathfinder spell records
 
-This index groups the **1,400 entries** by the source label in `spell.json`.
+This index groups the **1,400 entries** by the source label in
+[`data/spell.json`](../data/spell.json).
 Each original spell record retains its full `source` field (including page)
 and `nethysUrl`, where available. These are provenance references, **not**
 complete copyright or ORC/OGL attribution notices; review each original
-source product's legal text before public distribution.
+source product's legal text before public distribution. See the
+[release blockers](../NOTICE.md#release-blockers).
+
+## Licensing review
+
+The 1,400 development records use 63 distinct first publication labels before
+the first `pg.` marker. All 63 have matching headings in the
+[Archives of Nethys credits index](https://2e.aonprd.com/Licenses.aspx), but
+its Open Game License page also lists Remaster books such as *Player Core*.
+That grouping is not a license classification. The JSON has no rights fields;
+21 records have multiple page markers and 12 carry a `PFS Note` in `source`.
+Review those additional citations and annotations independently of the first
+publication.
+
+| Publication | Evidence checked | Distribution status |
+| --- | --- | --- |
+| *Stolen Fate Player's Guide* | [Paizo's original PDF](https://downloads.paizo.com/StolenFatePlayersGuide.pdf), pp. 15-16. The OGL notice designates game mechanics as Open Game Content but excludes specified Product Identity, including proper nouns. The source's exact Section 15 entries are included in [the OGL notice](../licenses/OGL-1.0a.txt). | **Not cleared as-is.** Unraveling Blast and Rewrite Possibility match the source descriptions after normalizing punctuation, case, and spacing. Invoke the Harrow matches the title and two of three paragraphs under the same comparison; it also contains a named Harrow reference that needs Product Identity review. Text matches establish provenance, not permission for an entire record. |
+| *Player Core* | [Paizo's release announcement](https://paizo.com/blog/pathfinder-second-edition-remaster-project) confirms the Remaster core books' transition to ORC. The [publisher listing](https://store.paizo.com/pathfinder-player-core/) corroborates designer credits. | **Blocked.** The original Article III page, complete contributor credits, and record-level comparison are still required. |
+| *Rage of Elements* | Paizo's [product gallery](https://store.paizo.com/pathfinder-rage-of-elements/) reproduces the printed credits page, including authors and additional writing, now recorded in [the ORC attribution notice](../licenses/ORC-NOTICE.txt). The separate [Remaster Core Preview](https://paizo.com/pathfinder/corepreview) is not the book's legal notice. | **Blocked.** The credits spread does not establish the book's Article III notice or what text is licensed. Check the original legal page and cited spell text before assigning rights. |
+
+For the remaining publications, the index below is a retrieval list, not
+clearance. Use the original edition's legal pages and cited spell pages
+(including errata or organized-play rulings where applicable). Record each
+passage's source, license and exclusions, and keep a record out of the
+release when its rights cannot be established.
+
+## Catalogue source labels
 
 | Source as recorded | Spells |
 | --- | ---: |

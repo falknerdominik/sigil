@@ -730,8 +730,7 @@ async function smokeTest(page) {
   assert.match(await page.locator('#creditsSpellWritingHeading + p').textContent(), /independent adaptation and extension/);
   const credits = page.locator('#creditsDialog');
   assert.match(await credits.getByRole('link', { name: 'GNU GPL v3 or later' }).getAttribute('href'), /^data:text\/plain;base64,/);
-  assert.match(await credits.getByRole('link', { name: 'ORC License', exact: true }).getAttribute('href'), /^data:application\/pdf;base64,/);
-  assert.equal(await credits.getByRole('link', { name: 'paizo.com/licenses/communityuse' }).getAttribute('href'), 'https://paizo.com/licenses/communityuse');
+  assert.match(await credits.getByRole('link', { name: 'ORC License PDF', exact: true }).getAttribute('href'), /^data:application\/pdf;base64,/);
   await page.locator('#creditsClose').click();
   assert.equal(await page.locator('#creditsDialog').isVisible(), false);
   await page.evaluate(() => {
@@ -1137,6 +1136,24 @@ async function publicCatalogueTest(browser) {
       await page.locator('#encodingOpen').click();
       await page.frameLocator('#encodingFrame')
         .getByRole('heading', {name:'Explanation', exact:true}).waitFor();
+      await page.locator('#encodingClose').click();
+      await page.locator('#creditsOpen').click();
+      const legal = page.getByRole('region', {name:'Legal & Licenses'});
+      const community = fs.readFileSync(path.join(root, 'licenses/COMMUNITY-USE.txt'), 'utf8');
+      assert.equal(await legal.locator('.credits-policy-notice').textContent(), community.split(/\r?\n\r?\n/)[0]);
+      assert.equal(await legal.getByRole('link', {name:'Dominik Falkner'}).isVisible(), true);
+      for (const file of ['NOTICE.txt','COMMUNITY-USE.txt','OGL-1.0a.txt','ORC-LICENSE.txt','ORC-NOTICE.txt','ORC.pdf']) {
+        const href = await legal.locator(`a[download="${file}"]`).getAttribute('href');
+        assert.match(href, /^data:(?:text\/plain|application\/pdf);base64,/);
+        assert.deepEqual(Buffer.from(href.split(',')[1], 'base64'), fs.readFileSync(path.join(root, 'licenses', file)), file);
+      }
+      if (offline) {
+        const download = page.waitForEvent('download');
+        await legal.getByRole('link', {name:'ORC notice and attributions'}).click();
+        const result = await download;
+        assert.equal(result.suggestedFilename(), 'ORC-NOTICE.txt');
+        assert.equal(await result.failure(), null);
+      }
       assert.deepEqual(errors, [], 'The public app must load without browser errors');
       assert.deepEqual(requests, url === hosted ? [hosted] : [],
         'The public standalone must not fetch an adjacent catalogue or require network assets');
