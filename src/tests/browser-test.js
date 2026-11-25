@@ -727,10 +727,10 @@ async function smokeTest(page) {
   await page.locator('#creditsOpen').click();
   assert.equal(await page.locator('#creditsDialog').isVisible(), true);
   assert.equal(await page.locator('#creditsLead').textContent(), 'Sigil is a free, unofficial Pathfinder fan project.');
-  assert.match(await page.locator('#creditsSpellWritingHeading + p').textContent(), /independent adaptation and extension/);
   const credits = page.locator('#creditsDialog');
-  assert.match(await credits.getByRole('link', { name: 'GNU GPL v3 or later' }).getAttribute('href'), /^data:text\/plain;base64,/);
-  assert.match(await credits.getByRole('link', { name: 'ORC License PDF', exact: true }).getAttribute('href'), /^data:application\/pdf;base64,/);
+  assert.match(await credits.locator('#legal-credits').textContent(), /inspired Sigil's notation/);
+  assert.match(await credits.locator('a[download="LICENSE"]').getAttribute('href'), /^data:text\/plain;base64,/);
+  assert.match(await credits.locator('a[download="ORC.pdf"]').getAttribute('href'), /^data:application\/pdf;base64,/);
   await page.locator('#creditsClose').click();
   assert.equal(await page.locator('#creditsDialog').isVisible(), false);
   await page.evaluate(() => {
@@ -1093,8 +1093,8 @@ async function pickerInteractionTest(page) {
     'Browsing, cancelling and empty results must not change the spell');
 }
 
-async function publicCatalogueTest(browser) {
-  const file = path.join(root, '_site/standalone.html');
+async function standaloneCatalogueTest(browser) {
+  const file = path.join(root, 'standalone.html');
   const server = http.createServer((request, response) => {
     if (request.url !== '/standalone.html') return response.writeHead(404).end();
     response.writeHead(200, {'Content-Type':'text/html; charset=utf-8'});
@@ -1111,10 +1111,10 @@ async function publicCatalogueTest(browser) {
   } finally {
     await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
-  console.log('PASS - the public catalogue works over HTTP and offline, with card export and the guide.');
+  console.log('PASS - the full standalone catalogue works over HTTP and offline, with card export and the guide.');
 
   async function checkPage(url, offline) {
-    const context = await browser.newContext({offline});
+    const context = await browser.newContext({offline, locale:'en-US'});
     try {
       const page = await context.newPage();
       const errors = [];
@@ -1124,11 +1124,11 @@ async function publicCatalogueTest(browser) {
         if (/^https?:/.test(request.url())) requests.push(request.url());
       });
       await page.goto(url);
-      assert.equal(await page.locator('#catalogCount').textContent(), '2 spells');
-      assert.equal(await page.locator('#spellName').inputValue(), 'Moonward');
-      await page.locator('#spellPickerInput').fill('Tideglass');
-      await page.locator('#spellPickerList [data-spell-id="entry-sigil-tideglass"]').click();
-      assert.equal(await page.locator('#spellName').inputValue(), 'Tideglass');
+      assert.equal(await page.locator('#catalogCount').textContent(), '1,400 spells');
+      assert.equal(await page.locator('#spellName').inputValue(), 'Scrying');
+      await page.locator('#spellPickerInput').fill('Fireball');
+      await page.locator('#spellPickerList [data-spell-id]').first().click();
+      assert.equal(await page.locator('#spellName').inputValue(), 'Fireball');
       await pngDownload(page, '#exportSpellCard');
       await page.locator('#spellPickerInput').fill('custom spell');
       await page.locator('#spellPickerInput').press('Enter');
@@ -1149,24 +1149,27 @@ async function publicCatalogueTest(browser) {
         assert.deepEqual(Buffer.from(href.split(',')[1], 'base64'), fs.readFileSync(path.join(root, 'licenses', file)), file);
       }
       if (offline) {
-        await page.getByText('Read the project credits', {exact:true}).click();
+        await legal.getByText('Project credits', {exact:true}).click();
         const preview = page.locator('#legal-credits');
         assert.equal(await preview.locator('a:not([href^="#"]):not([href^="https://"])').count(), 0);
-        assert.match(await preview.textContent(), /source index \(source repository only\)/);
         await preview.getByRole('link', {name:'third-party licenses'}).click();
         const thirdParty = legal.locator('#legal-third-party');
         await thirdParty.waitFor();
-        assert.equal(await thirdParty.locator('pre').textContent(),
-          fs.readFileSync(path.join(root, 'licenses/THIRD-PARTY.txt'), 'utf8'));
+        const thirdPartySource = thirdParty.getByRole('link', {name:'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/LICENSE'});
+        assert.equal(await thirdPartySource.getAttribute('target'), '_blank');
+        await legal.getByText('Community Use policy references', {exact:true}).click();
+        assert.equal(await legal.getByText(community.split(/\r?\n\r?\n/)[0], {exact:true}).count(), 1);
+        assert.equal(await legal.locator('#legal-community').getByRole('link', {name:'https://paizo.com/licenses/communityuse', exact:true}).isVisible(), true);
+        await legal.getByText('ORC notice and attributions', {exact:true}).click();
         const download = page.waitForEvent('download');
-        await legal.getByRole('link', {name:'ORC notice and attributions'}).click();
+        await legal.getByRole('link', {name:'Download the ORC notice and attributions'}).click();
         const result = await download;
         assert.equal(result.suggestedFilename(), 'ORC-NOTICE.txt');
         assert.equal(await result.failure(), null);
       }
-      assert.deepEqual(errors, [], 'The public app must load without browser errors');
+      assert.deepEqual(errors, [], 'The standalone app must load without browser errors');
       assert.deepEqual(requests, url === hosted ? [hosted] : [],
-        'The public standalone must not fetch an adjacent catalogue or require network assets');
+        'The standalone must not fetch an adjacent catalogue or require network assets');
     } finally {
       await context.close();
     }
@@ -1179,7 +1182,7 @@ async function main() {
     args:['--disable-gpu']
   });
   try {
-    if (process.argv.includes('--public')) return await publicCatalogueTest(browser);
+    await standaloneCatalogueTest(browser);
     await navigationTest(browser);
     const context = await browser.newContext({
       offline:true,

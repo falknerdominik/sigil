@@ -16,9 +16,8 @@
 
 ## Pathfinder catalogue
 
-- **Paizo source books** — see the [source index](SPELL-SOURCES.md) and
-  the source book and page in each catalogue entry. For the applicable
-  permissions and required attributions, consult the original products'
+- **Paizo source books** — see the source book and page in each catalogue
+  entry. For applicable permissions and required attributions, consult the original products'
   notices, the [ORC License and FAQ](https://paizo.com/orclicense), and
   the [OGL v1.0a](https://opengamingfoundation.org/ogl.html) for Legacy
   entries that use OGL material.
@@ -35,8 +34,7 @@ See the [copyright notice](../licenses/NOTICE.txt),
 [ORC license](../licenses/ORC-LICENSE.txt),
 [ORC attribution notice](../licenses/ORC-NOTICE.txt), and
 [Community Use notice](../licenses/COMMUNITY-USE.txt). The
-[licensing notice](../NOTICE.md) summarizes the bundled notices. The source index
-records the development catalogue's attribution review.
+[licensing notice](../NOTICE.md) summarizes the bundled notices.
 
 ### Licensing resources
 

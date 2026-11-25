@@ -21,5 +21,5 @@ The [copyright notice](licenses/NOTICE.txt),
 [ORC license](licenses/ORC-LICENSE.txt) and
 [ORC attribution notice](licenses/ORC-NOTICE.txt), and
 [Community Use notice](licenses/COMMUNITY-USE.txt) are bundled with Sigil.
-See the [source index](docs/SPELL-SOURCES.md) for provenance and attribution
-review of the development catalogue.
+See each entry in the [spell catalogue](data/spell.json) for its source and
+reference link where available.

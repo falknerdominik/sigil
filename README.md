@@ -3,7 +3,7 @@
 Turn Pathfinder 2e spells into sigils that encode their rules, not just
 illustrate them. Each spell has a unique sigil.
 
-Try the included sample spells, Moonward and Tideglass, or create your own.
+Choose a spell from the full Pathfinder 2e catalogue or create your own.
 Start with one of 41 themes
 (6 surfaces, 4 traditions, and 31 traits), then customize colors, shapes,
 ink, and ornaments to give each school, spell, or wizard a distinct style.
@@ -39,17 +39,16 @@ editable description. Select a card to view it at full size.
 
 Sigil is built with TypeScript and Canvas 2D. To develop it, use Node.js
 22.13+ (or 24+) and Quarto CLI 1.11.9. The devcontainer installs Quarto
-automatically. To verify and build the public edition:
+automatically. To verify and build the app:
 
 ```sh
 npm ci
-npm run check:public
-npm run build:public
+npm run check
+npm run build
 ```
 
-Open `_site/standalone.html` to preview the public build. If you have the full
-local development catalogue, `npm run dev`, `npm run check`, and `npm run build`
-use it instead.
+Open [standalone.html](standalone.html) to use the same build that GitHub Pages
+publishes, or run `npm run dev` for local development.
 Building requires internet access to fetch MathJax; the resulting app runs
 offline. See [Architecture](docs/ARCHITECTURE.md) for Quarto setup, build
 details, browser tests, and GitHub Pages deployment.
@@ -58,15 +57,11 @@ details, browser tests, and GitHub Pages deployment.
 
 ### Content & Licensing
 
-Sigil's [application code](src/) is [GPL-3.0-or-later](LICENSE). The public
-editor bundles only [original sample spells](data/sample-spells.json). The
-development [spell.json](data/spell.json), its generated
-[spell-data.js](data/spell-data.js), and the full local
-[standalone.html](standalone.html) contain the mixed Pathfinder catalogue.
-The GitHub Pages site serves the public build, not those development files.
+Sigil's [application code](src/) is [GPL-3.0-or-later](LICENSE). Both local and
+hosted builds bundle the full Pathfinder [spell catalogue](data/spell.json).
 
-Use each record's `source` (including page) and `nethysUrl`, together with the
-[source index](docs/SPELL-SOURCES.md), to locate the original publication.
+Use each record's `source` (including page) and `nethysUrl` to locate the
+original publication.
 `legacy content` is an edition hint, not a license field. The original
 publication determines which material is OGL Open Game Content or ORC Licensed
 Material; neither is relicensed as the other.

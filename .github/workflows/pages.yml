@@ -25,10 +25,13 @@ jobs:
       - run: npm ci
       - name: Install Quarto
         run: sudo sh .devcontainer/install-quarto.sh
-      - run: npm run check:public
-      - run: npm run build:public
+      - run: npm run check
+      - run: npm run build
       - name: Prepare site
-        run: cp _site/standalone.html _site/index.html
+        run: |
+          mkdir -p _site
+          cp standalone.html _site/standalone.html
+          cp standalone.html _site/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

@@ -1,8 +1,8 @@
-The development edition of this application contains spell descriptions, statistics, traits, and game mechanics from Pathfinder Second Edition (PF2e), including Legacy and Remaster publications. The public editor bundles only original sample spells.
+This application bundles the full Sigil catalogue of Pathfinder Second Edition (PF2e) spells, including spell descriptions, statistics, traits, and game mechanics from Legacy and Remaster publications.
 
 The original copyrighted content belongs to Paizo Inc. and its respective copyright holders.
 
-Where granted by the original publication, covered material remains under the Open Game License (OGL) Version 1.0a or the Open RPG Creative (ORC) License, as applicable. The licenses are not interchangeable. The mixed development catalogue is not cleared for public redistribution.
+Where granted by the original publication, covered material remains under the Open Game License (OGL) Version 1.0a or the Open RPG Creative (ORC) License, as applicable. The licenses are not interchangeable.
 
 Pathfinder, Paizo, and associated trademarks are the property of Paizo Inc.
 

@@ -2,15 +2,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {SpellCatalog}=require('../generated/spell-catalog.cjs');
 const {SpellCalculation}=require('../generated/spell-calculation.cjs');
-if (process.argv.includes('--public')) {
-  const {entries,skipped}=SpellCatalog.parse(require('../../data/sample-spells.json'));
-  assert.equal(skipped,0);
-  assert.deepEqual(entries.map(({name,rank,tradition,area,damage})=>[name,rank,tradition,area,damage]),[
-    ['Moonward','5','Divine','Emanation','Spirit'],
-    ['Tideglass','7','Primal','Cone','Cold']
-  ]);
-  console.log('PASS - the public catalogue contains both original sample spells.');
-} else {
+{
   const spellRows=JSON.parse(fs.readFileSync(__dirname+'/../../data/spell.json','utf-8'));
   const demo=SpellCatalog.parse(spellRows);
   assert.equal(demo.entries.length,1400,'deduplicated spell list is bundled');

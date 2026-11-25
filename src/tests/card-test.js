@@ -5,8 +5,7 @@ assert.deepEqual(SpellCard.rgb('#abc'), [36, 42, 49],
   'Cards must retain their own fallback for invalid colors');
 assert.equal(SpellCard.rgba('not-a-color', 0.5), 'rgba(36,42,49,0.5)');
 const {SpellCatalog}=require('../generated/spell-catalog.cjs');
-const publicBuild=process.argv.includes('--public');
-const spellRows=publicBuild ? require('../../data/sample-spells.json') : require('../../data/spell.json');
+const spellRows=require('../../data/spell.json');
 const catalogue=SpellCatalog.parse(spellRows).entries;
 assert.equal(catalogue.length,spellRows.length);
 for(let i=0;i<catalogue.length;i++){
@@ -27,7 +26,7 @@ const ctx={font:'25px Arial',measureText(text){
   const size=Number.parseInt(this.font.match(/(\d+)px/)?.[1]||'25',10);
   return {width:[...String(text)].length*size*.52};
 }};
-const normal=catalogue.find(spell=>spell.name===(publicBuild ? 'Moonward' : 'Fireball'));
+const normal=catalogue.find(spell=>spell.name==='Fireball');
 const largest=catalogue.reduce((best,spell)=>
   spell.description.length>best.description.length?spell:best);
 const labels=['Rank','Tradition','Range','Duration','Primary trait','Damage',

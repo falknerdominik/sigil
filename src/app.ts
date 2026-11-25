@@ -24,7 +24,7 @@ export {};
 declare global {
   interface Window {
     DEFAULT_SPELL_CATALOG: unknown;
-    PUBLIC_SPELL_BUILD?: boolean;
+    STANDALONE_SPELL_BUILD?: boolean;
   }
 }
 const {
@@ -573,7 +573,7 @@ function setCatalogue(parsed: ParsedCatalogue) {
 }
 async function loadNeighborCatalog() {
   // Only HTTP development builds permit replacing the embedded catalogue automatically.
-  if (window.PUBLIC_SPELL_BUILD || location.protocol === 'file:') return;
+  if (window.STANDALONE_SPELL_BUILD || location.protocol === 'file:') return;
   try {
     const response = await fetch('../data/spell.json', { cache: 'no-store' });
     if (response.status === 404) return;

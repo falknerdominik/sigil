@@ -423,12 +423,19 @@ h2 { font:normal 33px/1.05 Georgia,"Times New Roman",serif; color:#f0eddf; margi
 .credits-policy-notice {border-left:2px solid #b99465;padding-left:13px;background:#223335;
   padding-block:10px;padding-right:9px;}
 .credits-content code {font-size:11px;color:#dbc8a8;}
-.legal-preview {margin-top:9px;font-size:12.5px;line-height:1.6;}
-.legal-preview > summary {cursor:pointer;}
-.legal-preview pre {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;}
-.legal-preview [id] {scroll-margin-top:100px;}
-.legal-preview:has(> div:empty),
-#creditsNotices:empty ~ .legal-preview-info {display:none;}
+.credits-content h4 {margin:20px 0 8px;color:inherit;font-size:13px;}
+.legal-preview {margin-top:6px;border:1px solid #3e5352;border-radius:7px;
+  background:#223335;font-size:12.5px;line-height:1.6;}
+.legal-preview > summary {padding:9px 12px;cursor:pointer;font-weight:600;}
+.legal-preview > summary:hover {background:#33484a;}
+.legal-preview > summary:focus-visible {outline:2px solid currentColor;outline-offset:-3px;}
+.legal-preview[open] > summary {border-bottom:1px solid #3e5352;}
+.legal-document {padding:0 12px 9px;scroll-margin-top:145px;}
+.legal-document pre {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;}
+.legal-document h1, .legal-document h2, .legal-document h3 {margin:14px 0 6px;
+  font:inherit;font-weight:700;color:inherit;}
+.legal-downloads {display:flex;flex-wrap:wrap;gap:6px 16px;padding:9px 12px;}
+.credits-policy-notice:empty, .legal-document:empty {display:none;}
 .encoding-dialog {width:min(1200px,calc(100vw - 30px));height:90vh;max-height:90vh;overflow:hidden;}
 .encoding-dialog[open] {display:flex;flex-direction:column;}
 .encoding-dialog .credits-header {flex:none;justify-content:flex-end;padding:6px 12px;}
@@ -586,6 +593,10 @@ html[data-ui-mode="light"] .credits-content a:hover {color:#45300f;}
 html[data-ui-mode="light"] .credits-policy-notice {
   border-left-color:#ac864b; background:#f2f4ee;
 }
+html[data-ui-mode="light"] .legal-preview {background:#f2f4ee;}
+html[data-ui-mode="light"] .legal-preview,
+html[data-ui-mode="light"] .legal-preview[open] > summary {border-color:#d5ded7;}
+html[data-ui-mode="light"] .legal-preview > summary:hover {background:#e5ebe3;}
 html[data-ui-mode="light"] .credits-content code {color:#6e593c;}
 
 /* Scroll navigation keeps the existing editor controls mounted. */

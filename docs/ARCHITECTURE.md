@@ -11,8 +11,7 @@ rendered Explanation guide, and licensing notices for direct offline use.
 
 | Component | Current responsibility |
 |---|---|
-| [`data/spell.json`](../data/spell.json) | Full development spell catalogue and source information. |
-| [`data/sample-spells.json`](../data/sample-spells.json) | Original sample spells bundled in the public build. |
+| [`data/spell.json`](../data/spell.json) | Full spell catalogue and source information, bundled in every build. |
 | [`spell-catalog.ts`](../src/spell-catalog.ts) | Validates and normalizes catalogue records and assigns IDs. |
 | [`constants.ts`](../src/constants.ts) | Defines ordered attributes, shared limits and theme configuration. |
 | [`app.ts`](../src/app.ts) | Connects the HTML controls to editor state, the picker and the renderer. |
@@ -142,39 +141,28 @@ MathJax renderer needs no network access at runtime. A local base URL preserves
 fragment navigation, and iframe keyboard events share the native dialog's Escape
 handler. Edit source files, not generated outputs.
 
-Both standalone builds render **Legal & Licenses** previews in **Credits** from
-the canonical [notices](../NOTICE.md). Links between bundled previews work
-offline. Links marked **online** require a connection; references marked
-**source repository only** are not bundled. Downloads retain the original
-files and their relative paths.
+The standalone build renders **Legal & Licenses** previews in **Credits** from
+the canonical [notices](../NOTICE.md). Expand a document to read it and download
+the original. Internal links open the relevant preview offline. Links marked
+**online** require a connection; references marked **source repository only**
+are not bundled. The Community Use disclaimer stays visible above the Pathfinder
+documents.
 
 `npm run dev` compiles, renders the guide, and serves the project through the Node
 development server; the source page loads the same generated guide by URL.
 `npm test` compiles and runs the calculation, renderer, catalogue and card checks;
 `npm run test:math` runs the calculation audit alone. `npm run test:browser`
-rebuilds the standalone page and runs the offline browser checks.
-`data/optimization-results.json` is analysis output, not a runtime input.
+rebuilds the standalone page and checks it offline and over HTTP.
 
-### Public builds and GitHub Pages
+### GitHub Pages
 
-`npm run build:public` creates `_site/standalone.html` with the original sample
-spells [Moonward and Tideglass](../data/sample-spells.json). You can also create
-custom spells. The public editor does not request an adjacent catalogue over
-HTTP, and the build does not overwrite the local catalogue or full standalone.
-Use `npm run check:public` to run source checks and tests against the sample
-catalogue without the development files.
-With Playwright Chromium installed, `npm run test:browser:public` also checks
-the public bundle both offline and over HTTP.
+`npm run build` creates `standalone.html` with the full catalogue. The
+standalone uses the embedded catalogue even when served over HTTP.
 
 On GitHub, set **Settings > Pages > Source** to **GitHub Actions**. The
-[workflow](../.github/workflows/pages.yml) builds and deploys this public
-edition on pushes to `main` or manual runs on `main`. It does not publish
-GitHub Releases.
-
-The Pages build leaves tracked source files and Git history unchanged; source
-archives still contain the tracked development catalogue. Do not publish this
-repository or its source archives until the issues in the
-[catalogue licensing review](SPELL-SOURCES.md#licensing-review) are resolved.
+[workflow](../.github/workflows/pages.yml) runs `npm run check` and `npm run build`,
+then publishes the same HTML as both `index.html` and `standalone.html` on pushes
+to `main` or manual runs on `main`. It does not publish GitHub Releases.
 
 The calculation guide's input table, numerical results, and fingerprint form the
 canonical worked example read by the audit. After editing the guide, run

@@ -32,13 +32,12 @@ Pathfinder Stolen Fate Player’s Guide © 2023, Paizo Inc.; Authors: James Jaco
 
 END OF LICENSE
 
-Sigil Open Game Content declaration and review status
+Sigil Open Game Content declaration
 
-Sigil does not designate its software or original sample spells as Open Game
-Content. No development-catalogue records are designated here as cleared Open
-Game Content: the portions actually covered by each original publication's
-declaration, and the complete upstream Section 15 notices, must still be
-verified before distribution. Product Identity is not Open Game Content.
+Sigil does not designate its software as Open Game Content. For the bundled
+catalogue, Open Game Content is limited to material designated as such by its
+original publication. Product Identity is not Open Game Content. Material
+licensed under ORC is not designated as Open Game Content by Sigil.
 
 Sources: https://opengamingfoundation.org/ogl.html (license and base notice);
 https://lorespire.paizo.com/tiki-index.php?page=site._.Licenses-And-Trademarks
