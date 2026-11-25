@@ -77,10 +77,11 @@ Prepared attribute lookups and intermediate bit words
 stay inside calculation; no separate encoded orbit-attribute type is returned.
 The visible view does not repeat the vertex count or identity bits.
 
-In the standalone file the catalogue is embedded. When served over HTTP, the
-app also attempts to load an adjacent `data/spell.json`. A missing file leaves
-the bundled catalogue in place; invalid replacements are reported and the
-bundled catalogue remains available. Skipped records are reported. Interface
+In the standalone file the catalogue is embedded. When a development build
+is served over HTTP, it also attempts to load an adjacent `data/spell.json`.
+A missing file leaves the bundled catalogue in place; invalid replacements
+are reported and the bundled catalogue remains available. Skipped records
+are reported. Interface
 mode and theme colors are stored locally when browser storage is available.
 
 Source/variant IDs are unique within a catalogue, and picker IDs are derived
@@ -143,9 +144,20 @@ handler. Edit source files, not generated outputs.
 development server; the source page loads the same generated guide by URL.
 `npm test` compiles and runs the calculation, renderer, catalogue and card checks;
 `npm run test:math` runs the calculation audit alone. `npm run test:browser`
-rebuilds the standalone page and runs the offline browser checks. The other files under
-`data/` contain analysis results and a historical control manifest, not runtime
-inputs to this build.
+rebuilds the standalone page and runs the offline browser checks.
+The other files under `data/` contain analysis results and a historical
+control manifest, not runtime inputs to this build.
+
+### Public builds
+
+`npm run build:public` creates `_site/standalone.html` with the original sample
+spells [Moonward and Tideglass](../data/sample-spells.json). You can also create
+custom spells. The public editor does not request an adjacent catalogue over
+HTTP, and the build does not overwrite the local catalogue or full standalone.
+Use `npm run check:public` to run source checks and tests against the sample
+catalogue without the development files.
+With Playwright Chromium installed, `npm run test:browser:public` also checks
+the public bundle both offline and over HTTP.
 
 The calculation guide's input table, numerical results, and fingerprint form the
 canonical worked example read by the audit. After editing the guide, run

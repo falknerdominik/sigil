@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Moonward",
+    "variant": "sigil-moonward",
+    "rank": 5,
+    "tradition": "Divine",
+    "castActions": "2 actions",
+    "range": "touch",
+    "duration": "1 hour",
+    "traits": ["light"],
+    "damage": "spirit",
+    "area": "10-foot emanation",
+    "description": "Trace a pale crescent on a willing creature. For one hour, moonlight follows it in a 10-foot emanation. The first time a hostile creature enters that light, the crescent flares, deals 4d6 spirit damage to that creature, and fades."
+  },
+  {
+    "name": "Tideglass",
+    "variant": "sigil-tideglass",
+    "rank": 7,
+    "tradition": "Primal",
+    "castActions": "2 actions",
+    "range": "60 feet",
+    "duration": "sustained",
+    "traits": ["water"],
+    "damage": "cold",
+    "area": "20-foot cone",
+    "description": "Suspend a glassy tide at a point within range. A 20-foot cone of icy spray fans out from that point, dealing 6d6 cold damage to creatures in the cone. When you Sustain the spell, you can turn the tide and send the spray in a new direction."
+  }
+]

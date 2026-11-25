@@ -75,12 +75,13 @@ are Sigil extensions. This reference does not require the original guide.
 
 ## Spell data and preprocessing
 
-The bundled catalogue, [data/spell.json](../data/spell.json), comes from
+The development catalogue comes from
 [fyjham-ts/Pathfinder-2E-Spell-DB](https://github.com/fyjham-ts/Pathfinder-2E-Spell-DB).
 Removing one duplicate record each for Light, Invisibility, and Clairvoyance
 reduced the original 1,403 records to 1,400. Each record retains its description,
 source book and page, and `nethysUrl` linking to
-[Archives of Nethys](https://2e.aonprd.com/Spells.aspx).
+[Archives of Nethys](https://2e.aonprd.com/Spells.aspx). The public editor
+bundles two original sample spells, Moonward and Tideglass, instead.
 
 On import, the parser normalizes raw fields into rank, exact tradition
 combinations, damage, area, range, casting time, duration, Primary Trait, and

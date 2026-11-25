@@ -5,6 +5,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
+const args = process.argv.slice(2);
+const publicBuild = args.length === 1 && args[0] === '--public';
+if (args.length && !publicBuild)
+  throw new Error('Usage: node src/tools/build-standalone.js [--public]');
 if (!fs.existsSync(path.join(root, 'docs/explanation.html')))
   throw new Error('Missing docs/explanation.html. Run npm run build to render and bundle Explanation.');
 const documentation = read('docs/explanation.html');
@@ -14,10 +18,12 @@ if (!documentation.includes('<head>'))
 const embeddedDocumentation = documentation.replace('<head>', '<head><base href="about:srcdoc">')
   .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/\r/g, '&#13;').replace(/\n/g, '&#10;');
-const spells = JSON.parse(read('data/spell.json'));
-const embedded = '/* Embedded offline spell library: generated from data/spell.json. */\n' +
-  'window.DEFAULT_SPELL_CATALOG = ' + JSON.stringify(spells).replace(/</g, '\\u003c') + ';\n';
-fs.writeFileSync(path.join(root, 'data/spell-data.js'), embedded);
+const catalogue = publicBuild ? 'data/sample-spells.json' : 'data/spell.json';
+const spells = JSON.parse(read(catalogue));
+const embedded = `/* Embedded offline spell library: generated from ${catalogue}. */\n` +
+  'window.DEFAULT_SPELL_CATALOG = ' + JSON.stringify(spells).replace(/</g, '\\u003c') + ';\n' +
+  (publicBuild ? 'window.PUBLIC_SPELL_BUILD = true;\n' : '');
+if (!publicBuild) fs.writeFileSync(path.join(root, 'data/spell-data.js'), embedded);
 let html = read('src/index.html');
 for (const [file, type] of [
   ['LICENSE', 'text/plain'],
@@ -58,9 +64,12 @@ for (const [url, file] of [
   let count = 0;
   html = html.replace(re, () => {
     count++;
-    return `<script>\n${read(file).replace(/<\/script/gi, '<\\/script')}\n</script>`;
+    const script = file === 'data/spell-data.js' ? embedded : read(file);
+    return `<script>\n${script.replace(/<\/script/gi, '<\\/script')}\n</script>`;
   });
   if (count !== 1) throw new Error(`Expected one script include for ${url}; found ${count}`);
 }
-fs.writeFileSync(path.join(root, 'standalone.html'), html);
-console.log(`Generated standalone.html with ${spells.length} spell entries`);
+const output = publicBuild ? '_site/standalone.html' : 'standalone.html';
+if (publicBuild) fs.mkdirSync(path.join(root, '_site'), {recursive:true});
+fs.writeFileSync(path.join(root, output), html);
+console.log(`Generated ${output} with ${spells.length} spell entries from ${catalogue}`);

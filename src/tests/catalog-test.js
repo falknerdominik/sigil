@@ -2,29 +2,52 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {SpellCatalog}=require('../generated/spell-catalog.cjs');
 const {SpellCalculation}=require('../generated/spell-calculation.cjs');
-const spellRows=JSON.parse(fs.readFileSync(__dirname+'/../../data/spell.json','utf-8'));
-const demo=SpellCatalog.parse(spellRows);
-assert.equal(demo.entries.length,1400,'deduplicated spell list is bundled');
-assert.equal(demo.skipped,0);
-assert.equal(demo.entries[0].name,'Ancient Dust');
-assert.equal(demo.entries[0].rank,'cantrip');
-assert.equal(demo.entries[0].area,'Cone');
-assert.equal(demo.entries[0].tradition,'Arcane+Divine');
-assert.equal(demo.entries.find(e=>e.name==='Caustic Blast').damage,'Acid');
-assert.equal(demo.entries.find(e=>e.name==='Fireball').rank,'3');
-for (const [name,variant] of [['Light','aon-171'],['Invisibility','aon-164'],['Clairvoyance','aon-40']]) {
-  const matches=demo.entries.filter(entry=>entry.name===name);
-  assert.equal(matches.length,1,`${name} should appear once`);
-  assert.equal(matches[0].variant,variant,`${name} should retain its source ID`);
-}
-const seals=new Set();
-for (const [index,entry] of demo.entries.entries()) {
-  const sourceId=new URL(spellRows[index].nethysUrl).searchParams.get('ID');
-  assert.equal(entry.variant,`aon-${sourceId}`,'bundled source IDs must remain unchanged');
-  const identity=SpellCalculation.encodeIdentity({...entry,edition:entry.edition==='both'?'remaster':entry.edition});
-  assert(!seals.has(identity),'every library row has a distinct identity');
-  seals.add(identity);
-  assert.equal(SpellCalculation.decodeIdentity(identity).variant,entry.variant);
+if (process.argv.includes('--public')) {
+  const {entries,skipped}=SpellCatalog.parse(require('../../data/sample-spells.json'));
+  assert.equal(skipped,0);
+  assert.deepEqual(entries.map(({name,rank,tradition,area,damage})=>[name,rank,tradition,area,damage]),[
+    ['Moonward','5','Divine','Emanation','Spirit'],
+    ['Tideglass','7','Primal','Cone','Cold']
+  ]);
+  console.log('PASS - the public catalogue contains both original sample spells.');
+} else {
+  const spellRows=JSON.parse(fs.readFileSync(__dirname+'/../../data/spell.json','utf-8'));
+  const demo=SpellCatalog.parse(spellRows);
+  assert.equal(demo.entries.length,1400,'deduplicated spell list is bundled');
+  assert.equal(demo.skipped,0);
+  assert.equal(demo.entries[0].name,'Ancient Dust');
+  assert.equal(demo.entries[0].rank,'cantrip');
+  assert.equal(demo.entries[0].area,'Cone');
+  assert.equal(demo.entries[0].tradition,'Arcane+Divine');
+  assert.equal(demo.entries.find(e=>e.name==='Caustic Blast').damage,'Acid');
+  assert.equal(demo.entries.find(e=>e.name==='Fireball').rank,'3');
+  for (const [name,variant] of [['Light','aon-171'],['Invisibility','aon-164'],['Clairvoyance','aon-40']]) {
+    const matches=demo.entries.filter(entry=>entry.name===name);
+    assert.equal(matches.length,1,`${name} should appear once`);
+    assert.equal(matches[0].variant,variant,`${name} should retain its source ID`);
+  }
+  const seals=new Set();
+  for (const [index,entry] of demo.entries.entries()) {
+    const sourceId=new URL(spellRows[index].nethysUrl).searchParams.get('ID');
+    assert.equal(entry.variant,`aon-${sourceId}`,'bundled source IDs must remain unchanged');
+    const identity=SpellCalculation.encodeIdentity({...entry,edition:entry.edition==='both'?'remaster':entry.edition});
+    assert(!seals.has(identity),'every library row has a distinct identity');
+    seals.add(identity);
+    assert.equal(SpellCalculation.decodeIdentity(identity).variant,entry.variant);
+  }
+  const fb=demo.entries.find(e=>e.name==='Fireball'&&e.edition==='remaster');
+  assert.equal(fb.castActions,'2 actions');
+  assert.equal(fb.defense,'Reflex');
+  assert.equal(fb.rarity,'Common');
+  assert.equal(fb.effectTrait,'Fire');
+  assert.equal(fb.castTraits,'Both');
+  assert.equal(fb.heightening,'+1');
+  assert.equal(fb.spellType,'Spell');
+  for(const e of demo.entries) for(const key of ['spellType','castActions','defense',
+    'duration','targets','rarity','effectTrait','castTraits','heightening']){
+    assert(typeof e[key]==='string',key+' is missing for '+e.name);
+  }
+  console.log(`PASS - ${demo.entries.length} supplied spells, unique IDs and complete PF2e metadata.`);
 }
 const aon=SpellCatalog.parse([
   {nethysUrl:'https://2e.aonprd.com/Spells.aspx?ID=1461',name:'Caustic Blast',type:'Cantrip',level:1,
@@ -105,25 +128,7 @@ assert.throws(()=>SpellCatalog.parse({foo:'bar'}),/JSON array/);
 assert.throws(()=>SpellCatalog.parse([]),/No valid spells/);
 assert.throws(()=>SpellCatalog.parse('{'),SyntaxError);
 assert.throws(()=>SpellCatalog.parse([{name:'Malformed',rank:1,damage:[null]}]),/Invalid damage entry/);
-console.log(`PASS - ${demo.entries.length} supplied spells, unique IDs, AoN-style schema, Foundry schema, duplicates, validation`);
-
-// New catalogue fields come from the actual supplied PF2e spell metadata.
-const fb=demo.entries.find(e=>e.name==='Fireball'&&e.edition==='remaster');
-assert.equal(fb.castActions,'2 actions');
-assert.equal(fb.defense,'Reflex');
-assert.equal(fb.rarity,'Common');
-assert.equal(fb.effectTrait,'Fire');
-assert.equal(fb.castTraits,'Both');
-assert.equal(fb.heightening,'+1');
-assert.equal(fb.spellType,'Spell');
-const counts=new Map();
-for(const e of demo.entries) for(const key of ['spellType','castActions','defense',
-  'duration','targets','rarity','effectTrait','castTraits','heightening']){
-  assert(typeof e[key]==='string',key+' is missing for '+e.name);
-  counts.set(key,(counts.get(key)||0)+1);
-}
-assert.equal(counts.get('rarity'),demo.entries.length);
-console.log('PASS - Nine added PF2e metadata categories populated for all catalogue entries.');
+console.log('PASS - AoN-style schema, Foundry schema, duplicates and validation.');
 
 // Multi-tradition combinations stay distinct but occupy just ONE encoded layer.
 const combinations=SpellCatalog.parse([

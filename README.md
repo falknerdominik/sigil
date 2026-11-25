@@ -1,23 +1,20 @@
 # Sigil
 
-Offline Pathfinder 2e spell-sigil editor built with TypeScript and Canvas 2D.
-Includes 1,400 spells, custom spell editing, 41 themes (6 surfaces,
-4 traditions, and 31 traits), and PNG, transparent PNG, and spell-card
-exports. No runtime dependencies or network connection are required.
+Turn Pathfinder 2e spells into sigils that encode their rules, not just
+illustrate them. Each spell has a unique sigil.
 
-Open [standalone.html](standalone.html) in a browser. See
-Explanation in the top bar for the notation, mathematics, and worked examples.
-Its source is [explanation.qmd](docs/explanation.qmd)
-([rendered HTML](docs/explanation.html)).
+Try the included sample spells, Moonward and Tideglass, or create your own.
+Start with one of 41 themes
+(6 surfaces, 4 traditions, and 31 traits), then customize colors, shapes,
+ink, and ornaments to give each school, spell, or wizard a distinct style.
+Export your sigil as a PNG, a transparent PNG, or a spell card.
+
+Open the generated standalone file in your browser to use Sigil offline. See
+**Explanation** in the app for how sigils work.
 
 ## Gallery
 
 ![Sigil workbench showing Scrying in the Constellations theme, with glowing vertices on a deep blue star chart](docs/gallery/workbench.webp)
-
-Fireball uses the Fire trait theme, while Cornucopia pairs the Primal theme
-with a semicircular base. Moonward and Tideglass are custom spells with
-different attributes and drawing settings. All four sigils were exported from
-Sigil with rank filtering turned off.
 
 | Fireball - Fire | Cornucopia - Primal |
 | --- | --- |
@@ -38,39 +35,22 @@ editable description. Select a card to view it at full size.
 
 ## Development and verification
 
-Use Node.js 22 (22.13 or newer) or 24+ and Quarto CLI 1.11.9.
-The devcontainer installs Quarto automatically; on Debian/Ubuntu, run
-`sudo sh .devcontainer/install-quarto.sh` to install the same pinned release.
-Other platforms can use the [official Quarto installer](https://quarto.org/docs/get-started/).
+Sigil is built with TypeScript and Canvas 2D. To develop it, use Node.js
+22.13+ (or 24+) and Quarto CLI 1.11.9. The devcontainer installs Quarto
+automatically. To verify and build the public edition:
 
 ```sh
 npm ci
-npm run dev
+npm run check:public
+npm run build:public
 ```
 
-The development server runs at http://localhost:4173. Before submitting changes:
-
-```sh
-npm run format
-npm run check
-npm run build
-```
-
-`check` runs type checking, ESLint, Prettier verification, and automated tests.
-`build` renders the QMD with embedded math libraries, then bundles the guide,
-catalogue, and application into one offline HTML file. `npm run build:docs`
-renders only the guide. `dev` also renders it before starting the server.
-Rendering requires network access to download the pinned MathJax library;
-the generated files need neither Quarto nor a network connection.
-Do not edit generated files directly.
-
-For browser tests, install Chromium with
-`npx playwright install --only-shell chromium`, then run `npm run test:browser`.
-See [Architecture](docs/ARCHITECTURE.md) for module contracts, controlled pixel
-tests, and documentation-build instructions.
-
-For GitHub Pages, select GitHub Actions as the publishing source. The
-[workflow](.github/workflows/pages.yml) verifies, builds, and deploys `main`.
+Open `_site/standalone.html` to preview the public build. If you have the full
+local development catalogue, `npm run dev`, `npm run check`, and `npm run build`
+use it instead.
+Building requires internet access to fetch MathJax; the resulting app runs
+offline. See [Architecture](docs/ARCHITECTURE.md) for Quarto setup, build
+details and browser tests.
 
 ## AI use
 

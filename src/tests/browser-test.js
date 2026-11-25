@@ -1094,9 +1094,65 @@ async function pickerInteractionTest(page) {
     'Browsing, cancelling and empty results must not change the spell');
 }
 
-async function main() {
-  const browser = await chromium.launch({args:['--disable-gpu']});
+async function publicCatalogueTest(browser) {
+  const file = path.join(root, '_site/standalone.html');
+  const server = http.createServer((request, response) => {
+    if (request.url !== '/standalone.html') return response.writeHead(404).end();
+    response.writeHead(200, {'Content-Type':'text/html; charset=utf-8'});
+    fs.createReadStream(file).pipe(response);
+  });
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const hosted = `http://127.0.0.1:${server.address().port}/standalone.html`;
   try {
+    await checkPage(pathToFileURL(file).href, true);
+    await checkPage(hosted, false);
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
+  console.log('PASS - the public catalogue works over HTTP and offline, with card export and the guide.');
+
+  async function checkPage(url, offline) {
+    const context = await browser.newContext({offline});
+    try {
+      const page = await context.newPage();
+      const errors = [];
+      const requests = [];
+      page.on('pageerror', error => errors.push(error.message));
+      page.on('request', request => {
+        if (/^https?:/.test(request.url())) requests.push(request.url());
+      });
+      await page.goto(url);
+      assert.equal(await page.locator('#catalogCount').textContent(), '2 spells');
+      assert.equal(await page.locator('#spellName').inputValue(), 'Moonward');
+      await page.locator('#spellPickerInput').fill('Tideglass');
+      await page.locator('#spellPickerList [data-spell-id="entry-sigil-tideglass"]').click();
+      assert.equal(await page.locator('#spellName').inputValue(), 'Tideglass');
+      await pngDownload(page, '#exportSpellCard');
+      await page.locator('#spellPickerInput').fill('custom spell');
+      await page.locator('#spellPickerInput').press('Enter');
+      assert.match(await page.locator('#spellVariant').inputValue(), /^custom-/);
+      await page.locator('#encodingOpen').click();
+      await page.frameLocator('#encodingFrame')
+        .getByRole('heading', {name:'Explanation', exact:true}).waitFor();
+      assert.deepEqual(errors, [], 'The public app must load without browser errors');
+      assert.deepEqual(requests, url === hosted ? [hosted] : [],
+        'The public standalone must not fetch an adjacent catalogue or require network assets');
+    } finally {
+      await context.close();
+    }
+  }
+}
+
+async function main() {
+  const browser = await chromium.launch({
+    executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,
+    args:['--disable-gpu']
+  });
+  try {
+    if (process.argv.includes('--public')) return await publicCatalogueTest(browser);
     await navigationTest(browser);
     const context = await browser.newContext({
       offline:true,

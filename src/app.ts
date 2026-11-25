@@ -24,6 +24,7 @@ export {};
 declare global {
   interface Window {
     DEFAULT_SPELL_CATALOG: unknown;
+    PUBLIC_SPELL_BUILD?: boolean;
   }
 }
 const {
@@ -571,9 +572,8 @@ function setCatalogue(parsed: ParsedCatalogue) {
   loadAllSpells(true);
 }
 async function loadNeighborCatalog() {
-  // The offline standalone already embeds all spells. On a web server, an
-  // adjacent spell.json can replace it without affecting the editor's UI.
-  if (location.protocol === 'file:') return;
+  // Only HTTP development builds permit replacing the embedded catalogue automatically.
+  if (window.PUBLIC_SPELL_BUILD || location.protocol === 'file:') return;
   try {
     const response = await fetch('../data/spell.json', { cache: 'no-store' });
     if (response.status === 404) return;

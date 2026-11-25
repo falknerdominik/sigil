@@ -8,9 +8,13 @@
     "compile": "tsc -p tsconfig.json && node src/tools/compile.js",
     "dev": "npm run compile && npm run build:docs && node src/tools/dev-server.js",
     "build": "npm run compile && npm run build:docs && node src/tools/build-standalone.js",
+    "build:public": "npm run compile && npm run build:docs && node src/tools/build-standalone.js --public",
     "build:docs": "node src/tools/build-docs.js",
-    "test": "npm run compile && node src/tests/calculation-test.js && node src/tests/test.js && node src/tests/catalog-test.js && node src/tests/card-test.js && node src/tools/test-calculation-audit.js",
+    "test:core": "npm run compile && node src/tests/calculation-test.js && node src/tests/test.js && node src/tools/test-calculation-audit.js",
+    "test": "npm run test:core && node src/tests/catalog-test.js && node src/tests/card-test.js",
+    "test:public": "npm run test:core && node src/tests/catalog-test.js --public && node src/tests/card-test.js --public",
     "test:browser": "npm run build && node src/tests/browser-test.js",
+    "test:browser:public": "npm run build:public && node src/tests/browser-test.js --public",
     "test:visual": "npm run build && node src/tests/browser-test.js --require-render-baseline",
     "test:math": "npm run compile && node src/tools/test-calculation-audit.js",
     "docs:example": "npm run compile && node src/tools/test-calculation-audit.js --render-example",
@@ -19,7 +23,9 @@
     "format:check": "prettier --check \"src/**/*.ts\" src/tools/test-calculation-audit.js src/tools/render-calculation-example.js eslint.config.mjs",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm test"
+    "check:source": "npm run typecheck && npm run lint && npm run format:check",
+    "check": "npm run check:source && npm test",
+    "check:public": "npm run check:source && npm run test:public"
   },
   "devDependencies": {
     "playwright": "1.65.1",
