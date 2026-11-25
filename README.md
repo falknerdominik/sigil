@@ -9,7 +9,8 @@ Start with one of 41 themes
 ink, and ornaments to give each school, spell, or wizard a distinct style.
 Export your sigil as a PNG, a transparent PNG, or a spell card.
 
-Open the generated standalone file in your browser to use Sigil offline. See
+**[Try Sigil offline](https://falknerdominik.github.io/sigil/standalone.html):**
+Save the page as `standalone.html` and open it in your browser. See
 **Explanation** in the app for how sigils work.
 
 ## Gallery
@@ -50,7 +51,7 @@ local development catalogue, `npm run dev`, `npm run check`, and `npm run build`
 use it instead.
 Building requires internet access to fetch MathJax; the resulting app runs
 offline. See [Architecture](docs/ARCHITECTURE.md) for Quarto setup, build
-details and browser tests.
+details, browser tests, and GitHub Pages deployment.
 
 ## AI use
 
@@ -68,7 +69,7 @@ editor bundles only [original sample spells](data/sample-spells.json). The
 development [spell.json](data/spell.json), its generated
 [spell-data.js](data/spell-data.js), and the full local
 [standalone.html](standalone.html) contain the mixed Pathfinder catalogue.
-The public build does not bundle those development files.
+The GitHub Pages site serves the public build, not those development files.
 
 Use each record's `source` (including page) and `nethysUrl`, together with the
 [source index](docs/SPELL-SOURCES.md), to locate the original publication.

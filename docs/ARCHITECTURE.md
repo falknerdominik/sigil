@@ -147,7 +147,7 @@ development server; the source page loads the same generated guide by URL.
 rebuilds the standalone page and runs the offline browser checks.
 `data/optimization-results.json` is analysis output, not a runtime input.
 
-### Public builds
+### Public builds and GitHub Pages
 
 `npm run build:public` creates `_site/standalone.html` with the original sample
 spells [Moonward and Tideglass](../data/sample-spells.json). You can also create
@@ -157,6 +157,16 @@ Use `npm run check:public` to run source checks and tests against the sample
 catalogue without the development files.
 With Playwright Chromium installed, `npm run test:browser:public` also checks
 the public bundle both offline and over HTTP.
+
+On GitHub, set **Settings > Pages > Source** to **GitHub Actions**. The
+[workflow](../.github/workflows/pages.yml) builds and deploys this public
+edition on pushes to `main` or manual runs on `main`. It does not publish
+GitHub Releases.
+
+The Pages build leaves tracked source files and Git history unchanged; source
+archives still contain the tracked development catalogue. Do not publish this
+repository or its source archives until the
+[licensing blockers](../NOTICE.md#release-blockers) are resolved.
 
 The calculation guide's input table, numerical results, and fingerprint form the
 canonical worked example read by the audit. After editing the guide, run
