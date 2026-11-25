@@ -5,8 +5,7 @@ This index groups the **1,400 entries** by the source label in
 Each original spell record retains its full `source` field (including page)
 and `nethysUrl`, where available. These are provenance references, **not**
 complete copyright or ORC/OGL attribution notices; review each original
-source product's legal text before public distribution. See the
-[release blockers](../NOTICE.md#release-blockers).
+source product's legal text before public distribution.
 
 ## Licensing review
 

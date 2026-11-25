@@ -53,13 +53,6 @@ Building requires internet access to fetch MathJax; the resulting app runs
 offline. See [Architecture](docs/ARCHITECTURE.md) for Quarto setup, build
 details, browser tests, and GitHub Pages deployment.
 
-## AI use
-
-Implementation was AI-assisted, primarily using GPT-6.1 Sol and DeepSeek V4,
-especially for drawing code and HTML. The concept, mathematics, and notation
-extensions are human-designed. Notation-generation code was written manually
-and/or reviewed by humans.
-
 ## Licensing and credits
 
 ### Content & Licensing
@@ -82,5 +75,12 @@ See the [copyright notice](licenses/NOTICE.txt),
 [ORC license](licenses/ORC-LICENSE.txt),
 [ORC attribution notice](licenses/ORC-NOTICE.txt), and
 [Community Use notice](licenses/COMMUNITY-USE.txt). The
-[licensing notice](NOTICE.md) lists release blockers; the [Credits](docs/CREDITS.md)
+[licensing notice](NOTICE.md) summarizes the bundled notices; the [Credits](docs/CREDITS.md)
 include official references and developer contact details.
+
+## AI use
+
+Implementation was AI-assisted, primarily using GPT-6.1 Sol and DeepSeek V4,
+especially for drawing code and HTML. The concept, mathematics, and notation
+extensions are human-designed. Notation-generation code was written manually
+and/or reviewed by humans.

@@ -165,8 +165,8 @@ GitHub Releases.
 
 The Pages build leaves tracked source files and Git history unchanged; source
 archives still contain the tracked development catalogue. Do not publish this
-repository or its source archives until the
-[licensing blockers](../NOTICE.md#release-blockers) are resolved.
+repository or its source archives until the issues in the
+[catalogue licensing review](SPELL-SOURCES.md#licensing-review) are resolved.
 
 The calculation guide's input table, numerical results, and fingerprint form the
 canonical worked example read by the audit. After editing the guide, run
