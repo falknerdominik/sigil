@@ -11,8 +11,6 @@
     "build:docs": "node src/tools/build-docs.js",
     "test:core": "npm run compile && node src/tests/calculation-test.js && node src/tests/test.js && node src/tools/test-calculation-audit.js",
     "test": "npm run test:core && node src/tests/catalog-test.js && node src/tests/card-test.js",
-    "test:browser": "npm run build && node src/tests/browser-test.js",
-    "test:visual": "npm run build && node src/tests/browser-test.js --require-render-baseline",
     "test:math": "npm run compile && node src/tools/test-calculation-audit.js",
     "docs:example": "npm run compile && node src/tools/test-calculation-audit.js --render-example",
     "optimize": "npm run compile && node src/tools/optimize-attributes.js",

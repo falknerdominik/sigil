@@ -51,7 +51,7 @@ Open [standalone.html](standalone.html) to use the same build that GitHub Pages
 publishes, or run `npm run dev` for local development.
 Building requires internet access to fetch MathJax; the resulting app runs
 offline. See [Architecture](docs/ARCHITECTURE.md) for Quarto setup, build
-details, browser tests, and GitHub Pages deployment.
+details and GitHub Pages deployment.
 
 ## Licensing and credits
 
@@ -68,12 +68,12 @@ Material; neither is relicensed as the other.
 
 See the [copyright notice](licenses/NOTICE.txt),
 [OGL 1.0a and Section 15 notices](licenses/OGL-1.0a.txt),
-[ORC license](licenses/ORC-LICENSE.txt),
-[ORC attribution notice](licenses/ORC-NOTICE.txt), and
+[ORC license](licenses/ORC-LICENSE.txt), and
 [Community Use notice](licenses/COMMUNITY-USE.txt). The
 [licensing notice](NOTICE.md) summarizes the bundled notices, including
 [third-party software licenses](licenses/THIRD-PARTY.txt). See
 [Credits](docs/CREDITS.md) for official references and developer contact details.
+The [ORC attribution notice](licenses/ORC-NOTICE.txt) is available in the source repository.
 
 ## AI use
 

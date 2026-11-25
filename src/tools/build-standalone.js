@@ -39,7 +39,6 @@ const legalDocuments = new Map([
   [communityFile, 'legal-community'],
   ['licenses/OGL-1.0a.txt', 'legal-ogl'],
   ['licenses/ORC-LICENSE.txt', 'legal-orc'],
-  ['licenses/ORC-NOTICE.txt', 'legal-orc-notice'],
   ['licenses/THIRD-PARTY.txt', 'legal-third-party'],
 ]);
 function legalPreview(file) {
@@ -61,6 +60,7 @@ function legalPreview(file) {
     if (target) return `[${label}](#${target})`;
     if (resolved === 'data/spell.json')
       return `${label} (source repository only)`;
+    if (resolved === 'licenses/ORC-NOTICE.txt') return label;
     throw new Error(`Unknown legal preview link: ${file} -> ${href}`);
   });
   const result = spawnSync('quarto', ['pandoc', '--from=markdown-smart', '--to=html', '--wrap=none', '--fail-if-warnings'],

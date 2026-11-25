@@ -18,8 +18,8 @@ in the standalone editor's Legal & Licenses panel.
 
 The [copyright notice](licenses/NOTICE.txt),
 [OGL license and Section 15 notices](licenses/OGL-1.0a.txt),
-[ORC license](licenses/ORC-LICENSE.txt) and
-[ORC attribution notice](licenses/ORC-NOTICE.txt), and
+[ORC license](licenses/ORC-LICENSE.txt), and
 [Community Use notice](licenses/COMMUNITY-USE.txt) are bundled with Sigil.
+The [ORC attribution notice](licenses/ORC-NOTICE.txt) is available in the source repository.
 See each entry in the [spell catalogue](data/spell.json) for its source and
 reference link where available.

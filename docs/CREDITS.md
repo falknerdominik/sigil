@@ -31,10 +31,10 @@
 
 See the [copyright notice](../licenses/NOTICE.txt),
 [OGL 1.0a and Section 15 notices](../licenses/OGL-1.0a.txt),
-[ORC license](../licenses/ORC-LICENSE.txt),
-[ORC attribution notice](../licenses/ORC-NOTICE.txt), and
+[ORC license](../licenses/ORC-LICENSE.txt), and
 [Community Use notice](../licenses/COMMUNITY-USE.txt). The
 [licensing notice](../NOTICE.md) summarizes the bundled notices.
+The [ORC attribution notice](../licenses/ORC-NOTICE.txt) is available in the source repository.
 
 ### Licensing resources
 

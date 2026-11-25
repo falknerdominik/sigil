@@ -151,8 +151,7 @@ documents.
 `npm run dev` compiles, renders the guide, and serves the project through the Node
 development server; the source page loads the same generated guide by URL.
 `npm test` compiles and runs the calculation, renderer, catalogue and card checks;
-`npm run test:math` runs the calculation audit alone. `npm run test:browser`
-rebuilds the standalone page and checks it offline and over HTTP.
+`npm run test:math` runs the calculation audit alone.
 
 ### GitHub Pages
 
@@ -238,46 +237,3 @@ presets still inherit their base theme. Texture and randomized ornament are
 deterministic. Tattoo uses fine charcoal ink, nodes without opaque background
 fills, and subtle skin grain; its skin tone uses the existing background
 color control. Transparent PNG omits materials and ornaments.
-
-### Browser baseline
-
-Install development dependencies with `npm ci`, then install the pinned
-browser with `npx playwright install --only-shell chromium`. Run `npm run test:browser`.
-The tests open the generated standalone page using `file:` with networking
-disabled and exercise the editor and exports. A loopback-only server checks
-adjacent catalogue replacement and errors.
-
-[`browser-baseline.json`](../src/tests/browser-baseline.json) records SHA-256
-hashes for each spell's normalized record, search text, editor state, complete
-notation and rank-filtered notation. It also hashes catalogue order and every
-custom attribute option. Before hashing, object keys are sorted recursively, array order is
-preserved, and the result is serialized as UTF-8 JSON. Descriptions are
-covered by their record hash, not duplicated in the fixture. The test
-reads the app's internal state. A test-only adapter reconstructs removed
-diagnostic fields in the original fixture shape. It verifies the current
-full-circle orbit scale before restoring historical sweep metadata for catalogue
-hashing, preserving checks of the original bit mappings, edges, orbit units,
-identity bits and visibility counts. Keep that adapter
-out of the application and retain the same baseline when contracts change.
-
-Five rendering cases (including Tattoo) and the normal sigil and spell-card PNG
-downloads hash raw RGBA pixels, not PNG bytes. Separate checks cover transparent
-export alpha, deterministic theme rendering, decoration seeds, skin colors and
-unchanged notation and geometry across all base themes and trait presets.
-Navigation checks cover all theme radios, keyboard interaction, retained control
-nodes and state, conditional settings, and sidebar/page scrolling at desktop,
-850 px, 390 px and 320 px widths.
-The pixel baseline was captured on Debian 12, Linux arm64 with Playwright's Chromium 159.0.8154.6,
-software rendering, `en-US` locale and device scale factor 1. Pixel checks
-require the same browser and platform; differences in system fonts or graphics
-libraries can also affect them. On another platform `npm run test:browser`
-reports that pixel comparisons were skipped but still runs the other checks.
-Use `npm run test:visual` to require the controlled environment and pixel checks.
-
-To deliberately capture a new baseline after reviewing an intentional behavior
-change, run `npm run build` followed by
-`node src/tests/browser-test.js --capture` in that controlled environment.
-Review the fixture changes; do not recapture merely to make a test pass.
-
-Licensing and catalogue rights remain unresolved; see
-[credits and licenses](CREDITS-AND-LICENSES.md).
