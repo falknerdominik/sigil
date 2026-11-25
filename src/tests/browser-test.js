@@ -1136,18 +1136,28 @@ async function publicCatalogueTest(browser) {
       await page.locator('#encodingOpen').click();
       await page.frameLocator('#encodingFrame')
         .getByRole('heading', {name:'Explanation', exact:true}).waitFor();
+      await page.frameLocator('#encodingFrame').locator('mjx-container[display="true"]').first().waitFor();
       await page.locator('#encodingClose').click();
       await page.locator('#creditsOpen').click();
       const legal = page.getByRole('region', {name:'Legal & Licenses'});
       const community = fs.readFileSync(path.join(root, 'licenses/COMMUNITY-USE.txt'), 'utf8');
       assert.equal(await legal.locator('.credits-policy-notice').textContent(), community.split(/\r?\n\r?\n/)[0]);
       assert.equal(await legal.getByRole('link', {name:'Dominik Falkner'}).isVisible(), true);
-      for (const file of ['NOTICE.txt','COMMUNITY-USE.txt','OGL-1.0a.txt','ORC-LICENSE.txt','ORC-NOTICE.txt','ORC.pdf']) {
+      for (const file of ['NOTICE.txt','COMMUNITY-USE.txt','OGL-1.0a.txt','ORC-LICENSE.txt','ORC-NOTICE.txt','ORC.pdf','THIRD-PARTY.txt']) {
         const href = await legal.locator(`a[download="${file}"]`).getAttribute('href');
         assert.match(href, /^data:(?:text\/plain|application\/pdf);base64,/);
         assert.deepEqual(Buffer.from(href.split(',')[1], 'base64'), fs.readFileSync(path.join(root, 'licenses', file)), file);
       }
       if (offline) {
+        await page.getByText('Read the project credits', {exact:true}).click();
+        const preview = page.locator('#legal-credits');
+        assert.equal(await preview.locator('a:not([href^="#"]):not([href^="https://"])').count(), 0);
+        assert.match(await preview.textContent(), /source index \(source repository only\)/);
+        await preview.getByRole('link', {name:'third-party licenses'}).click();
+        const thirdParty = legal.locator('#legal-third-party');
+        await thirdParty.waitFor();
+        assert.equal(await thirdParty.locator('pre').textContent(),
+          fs.readFileSync(path.join(root, 'licenses/THIRD-PARTY.txt'), 'utf8'));
         const download = page.waitForEvent('download');
         await legal.getByRole('link', {name:'ORC notice and attributions'}).click();
         const result = await download;

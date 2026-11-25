@@ -27,7 +27,8 @@ Linda Zayas-Palmer.
 Source: the printed credits page in Paizo's official preview gallery:
 https://store.paizo.com/pathfinder-rage-of-elements/
 
-The source index (docs/SPELL-SOURCES.md) identifies source labels. Verifying
+The development source index (docs/SPELL-SOURCES.md in the source repository,
+not part of the standalone) identifies source labels. Verifying
 the original books' Article III notices, all upstream credits and designations,
 and rights for any Reserved Material remains a release blocker for the mixed
 development catalogue. The public editor does not bundle that catalogue.

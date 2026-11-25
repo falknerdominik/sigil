@@ -11,6 +11,8 @@ required by the GPL. Private modifications do not have to be published.
 
 The GPL grant does not cover the bundled Pathfinder catalogue, third-party
 works, or trademarks. Third-party components retain their own licenses.
+The [third-party software licenses](licenses/THIRD-PARTY.txt) are included
+in the standalone editor's Legal & Licenses panel.
 
 ## Pathfinder rules material
 

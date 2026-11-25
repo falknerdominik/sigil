@@ -13,6 +13,8 @@ const result = spawnSync('quarto', [
   '--fail-if-warnings',
   '--metadata', 'self-contained-math:true',
   '--mathjax=https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js',
+  // Skip the template's legacy ES6 polyfill; $math$ still embeds MathJax.
+  '--variable=mathjax:',
 ], {cwd:root, stdio:'inherit'});
 if (result.error) {
   throw new Error('Cannot render Explanation. Install Quarto using .devcontainer/install-quarto.sh or rebuild the devcontainer, and ensure quarto is on PATH.', {cause:result.error});

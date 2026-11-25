@@ -423,6 +423,12 @@ h2 { font:normal 33px/1.05 Georgia,"Times New Roman",serif; color:#f0eddf; margi
 .credits-policy-notice {border-left:2px solid #b99465;padding-left:13px;background:#223335;
   padding-block:10px;padding-right:9px;}
 .credits-content code {font-size:11px;color:#dbc8a8;}
+.legal-preview {margin-top:9px;font-size:12.5px;line-height:1.6;}
+.legal-preview > summary {cursor:pointer;}
+.legal-preview pre {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;}
+.legal-preview [id] {scroll-margin-top:100px;}
+.legal-preview:has(> div:empty),
+#creditsNotices:empty ~ .legal-preview-info {display:none;}
 .encoding-dialog {width:min(1200px,calc(100vw - 30px));height:90vh;max-height:90vh;overflow:hidden;}
 .encoding-dialog[open] {display:flex;flex-direction:column;}
 .encoding-dialog .credits-header {flex:none;justify-content:flex-end;padding:6px 12px;}

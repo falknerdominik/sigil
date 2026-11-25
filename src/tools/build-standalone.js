@@ -3,6 +3,7 @@
 // Bundle the application, rendered documentation, and shared offline catalogue.
 const fs = require('node:fs');
 const path = require('node:path');
+const {spawnSync} = require('node:child_process');
 const root = path.resolve(__dirname, '../..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
 const args = process.argv.slice(2);
@@ -34,14 +35,51 @@ const [communityDisclaimer] = read('licenses/COMMUNITY-USE.txt').trim().split(/\
 html = html.replace(noticeSlot, () => '<div id="creditsNotices">' +
   notice.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join('') +
   `<p class="credits-policy-notice">${escapeHtml(communityDisclaimer)}</p></div>`);
+const legalDocuments = new Map([
+  ['LICENSE', 'legal-gpl'],
+  ['NOTICE.md', 'legal-distribution'],
+  ['docs/CREDITS.md', 'legal-credits'],
+  ['licenses/NOTICE.txt', 'legal-copyright'],
+  ['licenses/COMMUNITY-USE.txt', 'legal-community'],
+  ['licenses/OGL-1.0a.txt', 'legal-ogl'],
+  ['licenses/ORC-LICENSE.txt', 'legal-orc'],
+  ['licenses/ORC-NOTICE.txt', 'legal-orc-notice'],
+  ['licenses/THIRD-PARTY.txt', 'legal-third-party'],
+]);
+function legalPreview(file) {
+  const contents = read(file);
+  if (!file.endsWith('.md')) return `<pre>${escapeHtml(contents)}</pre>`;
+  const markdown = contents.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (link, label, href) => {
+    if (/^https?:\/\//.test(href)) return `[${label} (online)](${href})`;
+    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(file), href));
+    const target = legalDocuments.get(resolved);
+    if (target) return `[${label}](#${target})`;
+    if (['docs/SPELL-SOURCES.md', 'data/spell.json', 'data/sample-spells.json'].includes(resolved))
+      return `${label} (source repository only)`;
+    throw new Error(`Unknown legal preview link: ${file} -> ${href}`);
+  });
+  const result = spawnSync('quarto', ['pandoc', '--from=markdown-smart', '--to=html', '--wrap=none', '--fail-if-warnings'],
+    {input:markdown, encoding:'utf8'});
+  if (result.error) throw new Error(`Cannot render ${file} with Quarto Pandoc`, {cause:result.error});
+  if (result.status !== 0 || !result.stdout.trim())
+    throw new Error(`Cannot render ${file} with Quarto Pandoc: ${result.stderr}`);
+  return result.stdout;
+}
+for (const [file, id] of legalDocuments) {
+  const slot = `<div id="${id}"></div>`;
+  if (html.split(slot).length !== 2) throw new Error(`Expected one legal preview slot for ${file}`);
+  html = html.replace(slot, () => `<div id="${id}">${legalPreview(file)}</div>`);
+}
 for (const [file, type] of [
   ['LICENSE', 'text/plain'],
+  ['NOTICE.md', 'text/markdown'],
   ['docs/CREDITS.md', 'text/markdown'],
   ['licenses/NOTICE.txt', 'text/plain'],
   ['licenses/COMMUNITY-USE.txt', 'text/plain'],
   ['licenses/OGL-1.0a.txt', 'text/plain'],
   ['licenses/ORC-LICENSE.txt', 'text/plain'],
   ['licenses/ORC-NOTICE.txt', 'text/plain'],
+  ['licenses/THIRD-PARTY.txt', 'text/plain'],
   ['licenses/ORC.pdf', 'application/pdf'],
 ]) {
   const link = `href="../${file}" download`;

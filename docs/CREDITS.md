@@ -10,6 +10,9 @@
   inspired Sigil's notation. Sigil is not authored, approved, or endorsed
   by the guide's creator. The [MIT license for SpellWriting](https://github.com/GorillaOfDestiny/SpellWriting/blob/main/LICENSE)
   covers that code repository, not the book.
+- **Bundled guide software** — see the
+  [third-party licenses](../licenses/THIRD-PARTY.txt) for MathJax, Quarto's
+  HTML helpers, and their bundled components.
 
 ## Pathfinder catalogue
 
