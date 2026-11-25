@@ -132,6 +132,11 @@ $$
 r(q) = (7q+3)\bmod 11.
 $$ {#eq-rotation}
 
+Necklaces keep option codes distinct under cyclic shifts. Based on how the
+generated sigils look, we shift the bits so some available options use vertex
+`0`, which would otherwise never be active because every dictionary word starts
+with `0`. This is a visual preference, not a guarantee of even spacing.
+
 The simplified rotation in @eq-rotation applies to the shipped eleven-vertex
 layout. Reproduction requires the same dictionary and option ordering, including
 Range choices appended from a catalogue. A tradition subset such as
