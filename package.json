@@ -1,6 +1,6 @@
 {
   "name": "sigil-pf2e",
-  "version": "2.18.0",
+  "version": "1.0.0",
   "private": true,
   "license": "GPL-3.0-or-later",
   "description": "Offline Pathfinder 2e spell-circle editor, Node.js build tools",

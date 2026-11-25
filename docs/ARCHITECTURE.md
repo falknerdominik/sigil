@@ -145,8 +145,7 @@ development server; the source page loads the same generated guide by URL.
 `npm test` compiles and runs the calculation, renderer, catalogue and card checks;
 `npm run test:math` runs the calculation audit alone. `npm run test:browser`
 rebuilds the standalone page and runs the offline browser checks.
-The other files under `data/` contain analysis results and a historical
-control manifest, not runtime inputs to this build.
+`data/optimization-results.json` is analysis output, not a runtime input.
 
 ### Public builds
 
