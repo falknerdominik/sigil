@@ -20,8 +20,8 @@ Save the page as `standalone.html` and open it in your browser. See
 | Fireball - Fire | Cornucopia - Primal |
 | --- | --- |
 | ![Fireball drawn in ember orange in the Fire trait theme](docs/fireball-sigil.png) | ![Cornucopia with a semicircular base and leafy green Primal ornaments](docs/gallery/cornucopia-primal.webp) |
-| **Moonward - Divine** | **Tideglass - Tattoo** |
-| ![Moonward drawn as an angular gold sigil on ivory parchment](docs/gallery/moonward-divine.webp) | ![Tideglass drawn in tapered charcoal ink on a warm skin tone](docs/gallery/tideglass-tattoo.webp) |
+| **[Sunburst](https://2e.aonprd.com/Spells.aspx?ID=1707) - Divine** | **[Howling Blizzard](https://2e.aonprd.com/Spells.aspx?ID=1559) - Tattoo** |
+| ![Sunburst drawn as an angular gold sigil on ivory parchment](docs/gallery/sunburst-divine.webp) | ![Howling Blizzard drawn in tapered charcoal ink on a warm skin tone](docs/gallery/howling-blizzard-tattoo.webp) |
 
 ### Spell cards
 
