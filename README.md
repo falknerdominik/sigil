@@ -19,7 +19,7 @@ open **Legal & Licenses** to read or download the bundled notices offline.
 
 ![Sigil workbench showing Scrying in the Constellations theme, with glowing vertices on a deep blue star chart](docs/gallery/workbench.webp)
 
-| Fireball - Fire | Cornucopia - Primal |
+| **[Fireball](https://2e.aonprd.com/Spells.aspx?ID=1530) - Fire** | **[Cornucopia](https://2e.aonprd.com/Spells.aspx?ID=1856) - Primal** |
 | --- | --- |
 | ![Fireball drawn in ember orange in the Fire trait theme](docs/fireball-sigil.png) | ![Cornucopia with a semicircular base and leafy green Primal ornaments](docs/gallery/cornucopia-primal.webp) |
 | **[Sunburst](https://2e.aonprd.com/Spells.aspx?ID=1707) - Divine** | **[Howling Blizzard](https://2e.aonprd.com/Spells.aspx?ID=1559) - Tattoo** |
