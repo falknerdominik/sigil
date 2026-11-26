@@ -1,30 +1,27 @@
 Open RPG Creative (ORC) notice
 
-This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and available online at various locations. All warranties are disclaimed as set forth therein.
+This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and available online at various locations including https://paizo.com/orclicense and https://azoralaw.com/orclicense. All warranties are disclaimed as set forth therein.
 
-This notice applies only where the original publisher granted ORC rights in
-the material used. Sigil does not convert OGL Open Game Content to ORC Licensed
-Material. Sigil does not expressly designate any Reserved Material as Licensed
-Material. Sigil's software is licensed separately under the GNU GPL. Trademarks
-and other upstream Reserved Material are not granted under the ORC License.
-Credit Sigil contributors for any Adapted Licensed Material by Sigil that is
-within the scope of the ORC License.
+Attribution
 
-Pathfinder Player Core — Paizo Inc.; named designers: Logan Bonner, Jason Bulmahn,
-Stephen Radney-MacFarland, and Mark Seifter.
+This product is based on Licensed Material from Pathfinder Player Core
+© 2023, Paizo Inc. Designers: Logan Bonner, Jason Bulmahn,
+Stephen Radney-MacFarland, and Mark Seifter. Complete printed attribution
+still requires verification before release.
 https://store.paizo.com/pathfinder-player-core/
 
-Pathfinder Rage of Elements — Paizo Inc.
-Authors: Logan Bonner, Sen H.H.S., and Jessica Redekop.
-Additional writing: Jason Bulmahn, James Case, Jessica Catalan, Andrew D. Geels,
-Patrick Hurley, Jason Keeley, Luis Loza, Mark Moreland, Jonathan Morgantini,
-AJ Neuro, Solomon St. John, Michael Sayre, Mark Seifter, Shahreena Shahrani,
-Shay Snow, Levi Steadman, Mari Tokuda, Ruvaid Virk, Andrew White, and
-Linda Zayas-Palmer.
-Source: the printed credits page in Paizo's official preview gallery:
-https://store.paizo.com/pathfinder-rage-of-elements/
+If you use our Licensed Material in your own published works, please credit us
+as follows: Sigil © 2026, Dominik Falkner. This credit does not claim ownership
+of upstream material or convert OGL Open Game Content to ORC Licensed Material.
 
-Individual spell records identify their source publications and reference pages
-where available.
+Reserved Material
+
+Sigil's original branding, logos, artwork, and other elements qualifying as
+Reserved Material are reserved. Application code is licensed separately under
+the GNU GPL, not under ORC. Upstream Reserved Material is not granted by Sigil.
+
+Expressly Designated Licensed Material
+
+None.
 
 Official license and reference: https://paizo.com/orclicense

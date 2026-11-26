@@ -2,24 +2,27 @@
 
 ## Sigil software
 
-Sigil's original application and build-tool code is licensed under the
-[GNU General Public License, version 3 or later](LICENSE) (`GPL-3.0-or-later`).
-You may use, modify, and redistribute it. If you distribute a covered version,
-including a modified version, you must preserve the applicable notices, license
-the covered software under the GPL, and provide its Corresponding Source as
-required by the GPL. Private modifications do not have to be published.
-
-The GPL grant does not cover the bundled Pathfinder catalogue, third-party
-works, or trademarks. Third-party components retain their own licenses.
-The [third-party software licenses](licenses/THIRD-PARTY.txt) are included
-in the standalone editor's Legal & Licenses panel.
+Sigil's application and build tools are [GPL-3.0-or-later](LICENSE). The GPL
+grant does not cover Pathfinder content, trademarks, or third-party components.
+See [third-party software licenses](licenses/THIRD-PARTY.txt) and
+[project credits](docs/CREDITS.md).
 
 ## Pathfinder rules material
 
-The [copyright notice](licenses/NOTICE.txt),
-[OGL license and Section 15 notices](licenses/OGL-1.0a.txt),
-[ORC license](licenses/ORC-LICENSE.txt), and
-[Community Use notice](licenses/COMMUNITY-USE.txt) are bundled with Sigil.
-The [ORC attribution notice](licenses/ORC-NOTICE.txt) is available in the source repository.
-See each entry in the [spell catalogue](data/spell.json) for its source and
-reference link where available.
+- [Copyright notice](licenses/NOTICE.txt) and [Community Use notice](licenses/COMMUNITY-USE.txt)
+- [OGL 1.0a, Section 15 credits, and Open Game Content designation](licenses/OGL-1.0a.txt)
+- [ORC license](licenses/ORC-LICENSE.txt) and [ORC attribution notice](licenses/ORC-NOTICE.txt)
+
+See the [spell catalogue](data/spell.json) for source and reference links.
+The `legacy content` field is an edition hint, not a license designation.
+
+## Release blockers
+
+The 1,400 records have 63 distinct primary source labels. This count does
+not include secondary citations or prove a license assignment.
+
+- Verify Section 15 and the Open Game Content designation against every applicable original edition, including *Rage of Elements* (p. 239). The bundled Section 15 is incomplete. The [consolidated reference](https://github.com/xdy/xdy-pf2e-workbench/blob/main/OpenGameLicense.md) is a lookup aid, not verification.
+- Verify the original *Player Core* ORC notice and carry forward its complete attribution.
+- Verify the rights in the *Wake the Dead* game material, organized-play material, and any site-specific notes or edits. Remove material for which redistribution permission cannot be established.
+- Review bundled names and descriptions for Product Identity and Reserved Material. The notices do not clear all catalog text for redistribution.
+- Confirm the developer email to publish. The project currently lists a public profile in [project credits](docs/CREDITS.md).

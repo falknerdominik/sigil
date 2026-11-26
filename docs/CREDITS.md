@@ -21,8 +21,10 @@
   notices, the [ORC License and FAQ](https://paizo.com/orclicense), and
   the [OGL v1.0a](https://opengamingfoundation.org/ogl.html) for Legacy
   entries that use OGL material.
-- **Archives of Nethys** — the catalogue links to individual spell records
-  in the [Pathfinder 2e reference](https://2e.aonprd.com/Spells.aspx).
+- **Archives of Nethys** — spell data was sourced from its
+  [Pathfinder 2e reference](https://2e.aonprd.com/), with links to individual
+  records. Archives of Nethys is not the creator or copyright holder of the
+  original Paizo game content.
   See its [source book index](https://2e.aonprd.com/Sources.aspx) and
   [license information](https://2e.aonprd.com/Licenses.aspx). These
   references do not grant redistribution rights.
@@ -36,7 +38,6 @@ See the [copyright notice](../licenses/NOTICE.txt),
 [licensing notice](../NOTICE.md) summarizes the bundled notices.
 For source code and build instructions, use the revision of the Sigil
 repository that matches your copy of the app.
-The [ORC attribution notice](../licenses/ORC-NOTICE.txt) is available in the source repository.
 
 ### Licensing resources
 

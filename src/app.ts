@@ -811,12 +811,37 @@ let lastExportButton: HTMLButtonElement | undefined;
 exportFeedback.addEventListener('close', () => {
   lastExportButton?.focus();
 });
+async function exportAttribution(source: string): Promise<string> {
+  const documents = await Promise.all(
+    [
+      'legal-distribution',
+      'legal-copyright',
+      'legal-community',
+      'legal-ogl',
+      'legal-orc-notice',
+      'legal-orc',
+    ].map(async (id) => {
+      const link = document
+        .getElementById(id)
+        ?.closest('details')
+        ?.querySelector<HTMLAnchorElement>('a[download]');
+      if (!link) throw new Error('Missing export license document.');
+      const response = await fetch(link.href);
+      if (!response.ok)
+        throw new Error('Could not load export license document.');
+      return response.text();
+    }),
+  );
+  return [`Spell source: ${source}`, ...documents].join('\n\n');
+}
 async function downloadExport(
   image: HTMLCanvasElement,
   filename: string,
   trigger: HTMLButtonElement,
+  source?: string,
 ) {
-  await SigilDownload.downloadPng(image, filename);
+  const attribution = source ? await exportAttribution(source) : undefined;
+  await SigilDownload.downloadPng(image, filename, attribution);
   lastExportButton = trigger;
   if (!exportFeedback.open) exportFeedback.showModal();
 }
@@ -883,6 +908,7 @@ button('exportSpellCard').addEventListener('click', async () => {
       image,
       `${name}-spell-card.png`,
       button('exportSpellCard'),
+      card.source,
     );
   } catch (error) {
     showRenderError(error);

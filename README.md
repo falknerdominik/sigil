@@ -12,8 +12,7 @@ Export your sigil as a PNG, a transparent PNG, or a spell card.
 **[Open the Sigil editor](https://falknerdominik.github.io/sigil/)**
 
 To use Sigil offline, save the page as `standalone.html` and reopen the saved
-file in your browser. See **Explanation** for how sigils work. Under **Credits**,
-open **Legal & Licenses** to read or download the bundled notices offline.
+file in your browser. See **Explanation** for how sigils work.
 
 ## Gallery
 
@@ -56,25 +55,9 @@ details and GitHub Pages deployment.
 
 ## Licensing and credits
 
-### Content & Licensing
-
-Sigil's [application code](src/) is [GPL-3.0-or-later](LICENSE). Both local and
-hosted builds include the same [spell catalogue](data/spell.json).
-
-Use each record's `source` (including page) and `nethysUrl` to locate the
-original publication.
-`legacy content` is an edition hint, not a license field. The original
-publication determines which material is OGL Open Game Content or ORC Licensed
-Material; neither is relicensed as the other.
-
-See the [copyright notice](licenses/NOTICE.txt),
-[OGL 1.0a and Section 15 notices](licenses/OGL-1.0a.txt),
-[ORC license](licenses/ORC-LICENSE.txt), and
-[Community Use notice](licenses/COMMUNITY-USE.txt). The
-[licensing notice](NOTICE.md) summarizes the bundled notices, including
-[third-party software licenses](licenses/THIRD-PARTY.txt). See
-[Credits](docs/CREDITS.md) for official references and developer contact details.
-The [ORC attribution notice](licenses/ORC-NOTICE.txt) is available in the source repository.
+Sigil's code is [GPL-3.0-or-later](LICENSE). See the [licensing notice](NOTICE.md)
+for the separate Pathfinder terms, copyright notices, and credits. The editor's
+**Licenses & Attribution** dialog includes the same documents offline.
 
 ## Support Sigil
 
