@@ -354,7 +354,7 @@ export const DRAWING_DEFAULTS: DrawingSettings = {
   identitySquareOrientation: 'tangent',
   identityPointStrokeWidth: 1,
   identityMarkerOpacity: 0.45,
-  handDrawnInk: false,
+  handDrawnInk: true,
   inkOnlyLayers1And2: true,
   inkWobble: 0.5,
   inkPressure: 2,

@@ -99,7 +99,7 @@ assert(SpellDrawing.inkNibWidth(0,4,2.5) > SpellDrawing.inkNibWidth(0,4,1),
   'pressure >100% must widen the beginning of a nib stroke');
 assert.equal(SpellDrawing.inkNibWidth(1,4,2.5),SpellDrawing.inkNibWidth(1,4,1),
   'pressure >100% must retain the thin pen-lift width');
-console.log('PASS - deterministic ink sampling, monotonic pressure taper across dashes, unchanged encoding, and default-off treatment.');
+console.log('PASS - deterministic ink sampling, monotonic pressure taper across dashes, and unchanged encoding.');
 
 
 // Layer 3 stores the spell ID only; changing mechanics still leaves it intact.
@@ -353,6 +353,8 @@ const fakeArcCtx={
   arc(...args){drawnArcs.push(args);},
   setLineDash(dashes){arcDashes.push(dashes.slice());}
 };
+assert.equal(compactRenderer.settings.handDrawnInk,true,'ink strokes should be enabled by default');
+compactRenderer.settings.handDrawnInk=false;
 compactRenderer.settings.orbitWidth=2;
 compactRenderer.settings.orbitLineStyle='dashed';
 compactRenderer.paintOrbits(fakeArcCtx,center,arcPoints,arcRadius,compactEncoding.orbits);
