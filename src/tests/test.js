@@ -353,8 +353,7 @@ const fakeArcCtx={
   arc(...args){drawnArcs.push(args);},
   setLineDash(dashes){arcDashes.push(dashes.slice());}
 };
-assert.equal(compactRenderer.settings.handDrawnInk,true,'ink strokes should be enabled by default');
-compactRenderer.settings.handDrawnInk=false;
+assert.equal(compactRenderer.settings.handDrawnInk,false,'ink strokes should be disabled by default');
 compactRenderer.settings.orbitWidth=2;
 compactRenderer.settings.orbitLineStyle='dashed';
 compactRenderer.paintOrbits(fakeArcCtx,center,arcPoints,arcRadius,compactEncoding.orbits);
