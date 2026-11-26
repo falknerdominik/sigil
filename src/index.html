@@ -20,7 +20,6 @@
   <button class="ui-mode-button" id="uiModeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode"><span id="uiModeIcon" aria-hidden="true">☼</span><span id="uiModeLabel">Light mode</span></button>
   <button class="credits-open" id="encodingOpen" type="button" aria-haspopup="dialog" aria-controls="encodingDialog">Explanation</button>
   <button class="credits-open" id="creditsOpen" type="button" aria-haspopup="dialog" aria-controls="creditsDialog">Credits &amp; licenses</button>
-  <a class="coffee-button" href="https://www.buymeacoffee.com/dominikfalkner" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee (external link)"><span aria-hidden="true">☕</span> Buy me a coffee</a>
 </div>
 </header>
 <main class="workspace">
@@ -386,6 +385,18 @@
 </section>
 </main>
 </div>
+<dialog class="credits-dialog export-dialog" id="exportFeedback" aria-labelledby="exportTitle" aria-describedby="exportSupport">
+  <div class="credits-header">
+    <h2 id="exportTitle">Thank you!</h2>
+  </div>
+  <div class="credits-content">
+    <p id="exportSupport">Sigil is free and works offline. If you use it in your campaign, a coffee helps me maintain the editor and improve spell-card exports.</p>
+    <form class="export-actions" method="dialog">
+      <a class="coffee-button" href="https://www.buymeacoffee.com/dominikfalkner" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span> Buy me a coffee</a>
+      <button class="btn-secondary" type="submit" autofocus>Done</button>
+    </form>
+  </div>
+</dialog>
 <dialog class="credits-dialog" id="creditsDialog" aria-labelledby="creditsTitle" aria-describedby="creditsLead">
   <div class="credits-header">
     <div>

@@ -806,6 +806,20 @@ for (const name of ['credits', 'encoding']) {
     });
   }
 }
+const exportFeedback = dialog('exportFeedback') as HTMLDialogElement;
+let lastExportButton: HTMLButtonElement | undefined;
+exportFeedback.addEventListener('close', () => {
+  lastExportButton?.focus();
+});
+async function downloadExport(
+  image: HTMLCanvasElement,
+  filename: string,
+  trigger: HTMLButtonElement,
+) {
+  await SigilDownload.downloadPng(image, filename);
+  lastExportButton = trigger;
+  if (!exportFeedback.open) exportFeedback.showModal();
+}
 for (const id of ['exportPng', 'exportTransparentPng']) {
   button(id).addEventListener('click', async () => {
     try {
@@ -830,9 +844,10 @@ for (const id of ['exportPng', 'exportTransparentPng']) {
         readState()
           .name.toLowerCase()
           .replace(/[^a-z0-9-]+/g, '-') || 'spell-circle';
-      await SigilDownload.downloadPng(
+      await downloadExport(
         image,
         `${name}${transparentBackground ? '-transparent' : ''}.png`,
+        button(id),
       );
     } catch (error) {
       showRenderError(error);
@@ -864,7 +879,11 @@ button('exportSpellCard').addEventListener('click', async () => {
     const image = SpellCard.render(drawing, representation, card);
     const name =
       card.name.toLowerCase().replace(/[^a-z0-9-]+/g, '-') || 'spell';
-    await SigilDownload.downloadPng(image, `${name}-spell-card.png`);
+    await downloadExport(
+      image,
+      `${name}-spell-card.png`,
+      button('exportSpellCard'),
+    );
   } catch (error) {
     showRenderError(error);
   }

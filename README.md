@@ -78,6 +78,8 @@ The [ORC attribution notice](licenses/ORC-NOTICE.txt) is available in the source
 
 ## Support Sigil
 
+Sigil is free and works offline. If you use it in your campaign, a coffee helps me maintain the editor and improve spell-card exports.
+
 [![Buy me a coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/dominikfalkner)
 
 ## AI use
