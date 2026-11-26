@@ -76,6 +76,10 @@ See the [copyright notice](licenses/NOTICE.txt),
 [Credits](docs/CREDITS.md) for official references and developer contact details.
 The [ORC attribution notice](licenses/ORC-NOTICE.txt) is available in the source repository.
 
+## Support Sigil
+
+[![Buy me a coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/dominikfalkner)
+
 ## AI use
 
 Implementation was AI-assisted, primarily using GPT-6.1 Sol and DeepSeek V4,
